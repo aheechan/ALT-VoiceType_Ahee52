@@ -55,7 +55,9 @@ class Qwen3ASREngine(ASREngine):
             ) from exc
 
         if self.device.startswith("cuda") and not torch.cuda.is_available():
-            raise EngineUnavailable("CUDA was requested but torch.cuda.is_available() is False")
+            # PyInstaller commonly ships CPU-only torch. Keep the app usable:
+            # ASR falls back to CPU, while llama.cpp servers can still use GPU.
+            self.device = "cpu"
         dtype = torch.bfloat16 if self.device.startswith("cuda") else torch.float32
         device_map = "cuda:0" if self.device.startswith("cuda") else "cpu"
         try:
