@@ -63,7 +63,8 @@
   },
   "ui": {
     "preview": true,
-    "start_minimized": true
+    "start_minimized": true,
+    "focus_guard": true
   },
   "history": {
     "enabled": true,

@@ -56,6 +56,7 @@ class VoiceAppController:
         self._stop_event: threading.Event | None = None
         self._thread: threading.Thread | None = None
         self._last_result: PipelineResult | None = None
+        self._target_hwnd = 0
         self.history: HistoryStore | None = None
         if self.config.history.enabled:
             try:
@@ -187,6 +188,9 @@ class VoiceAppController:
                 self.on_error(str(exc))
                 return
             self._cancelled = False
+            self._target_hwnd = (
+                self._foreground_window() if self.config.ui.focus_guard else 0
+            )
             self._stop_event = threading.Event()
             self._recording = True
             self._thread = threading.Thread(
@@ -244,7 +248,7 @@ class VoiceAppController:
             result = self._pipeline.process_audio(
                 temp_path,
                 target_lang=self._effective_target(),
-                inject=not self.config.ui.preview,
+                inject=False,
             )
             if self._cancelled:
                 return
@@ -262,6 +266,8 @@ class VoiceAppController:
                     self.on_error(f"写入历史失败：{exc}")
             if result.error:
                 self.on_error(result.error)
+            if not self.config.ui.preview:
+                self._deliver(result, result.output_text)
             self.on_result(result)
         except Exception as exc:
             if not self._cancelled:
@@ -290,13 +296,47 @@ class VoiceAppController:
         if not payload:
             self.on_error("没有可插入的文本")
             return
+        self._deliver(result, payload)
+
+    def _deliver(self, result: PipelineResult, payload: str) -> None:
+        if (
+            self.config.ui.focus_guard
+            and self._target_hwnd
+            and self._foreground_window() not in (0, self._target_hwnd)
+        ):
+            try:
+                self._copy_to_clipboard(payload)
+                self.on_error("焦点已切换，文本已复制到剪贴板，未自动插入")
+            except Exception as exc:
+                self.on_error(f"焦点已切换，无法自动插入：{exc}")
+            return
         assert self._pipeline is not None
         try:
             self._pipeline.injector.inject(payload)
         except InjectionError as exc:
             self.on_error(f"无法插入文本：{exc}")
             return
+        result.injected = True
         self.on_status("已插入")
+
+    @staticmethod
+    def _foreground_window() -> int:
+        if os.name != "nt":
+            return 0
+        try:
+            from .inject.windows import get_foreground_window
+
+            return get_foreground_window()
+        except Exception:
+            return 0
+
+    @staticmethod
+    def _copy_to_clipboard(text: str) -> None:
+        if os.name != "nt":
+            raise InjectionError("clipboard fallback is Windows-only")
+        from .inject.windows import set_clipboard_text
+
+        set_clipboard_text(text)
 
     def set_target_lang(self, code: str) -> None:
         code = normalize_language(code)

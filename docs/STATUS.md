@@ -51,7 +51,7 @@
   PyInstaller 6.22.3 one-folder build succeeds (~147 MB) with PySide6 bundled.
   Inno Setup 6.7.3 compiles `dist/installer/AltVoice-Setup-0.1.0.exe` (~41 MB).
 - GitHub Actions: Windows CI tests and a manual Windows build workflow.
-- 86 unit tests total; 83 run without PySide6, 3 UI smoke tests run when
+- 87 unit tests total; 84 run without PySide6, 3 UI smoke tests run when
   PySide6 is available (`QT_QPA_PLATFORM=offscreen`).
 
 Verified in this session:
@@ -62,6 +62,9 @@ Verified in this session:
   dialog, tray menu and generated icon all construct successfully.
 - Real desktop tray smoke: `TrayApp` starts, tray icon visible, global Alt hook
   running, and clean shutdown after 1.5 s (fake ASR/model stubs).
+- Focus guard: the controller records the foreground window at recording start;
+  if focus changed before insertion, it copies to the clipboard instead of
+  injecting into the wrong application (`ui.focus_guard`).
 - PyInstaller 6.22.3 produces the one-folder app; Inno Setup compiles the
   installer. Launching the windowed exe/installer is still manual because the
   harness blocks GUI process startup.

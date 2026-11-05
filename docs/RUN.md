@@ -81,6 +81,8 @@ Behavior:
 - Release: ASR → correction → translation → preview dialog.
 - Enter inserts, Shift+Enter adds a newline, Esc cancels.
 - Short Alt taps are replayed to the active application.
+- Focus guard: if the active window changes while recording, AltVoice copies the
+  result to the clipboard instead of inserting into the wrong app.
 - Left-click the tray icon toggles recording; right-click selects target language,
   mode (translate / Chinese transcribe), and preview.
 

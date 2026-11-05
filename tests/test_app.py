@@ -10,7 +10,7 @@ from altvoice.config import AppConfig
 from altvoice.correct import NullCorrector
 from altvoice.history import HistoryStore
 from altvoice.inject import NullInjector
-from altvoice.pipeline import VoicePipeline
+from altvoice.pipeline import PipelineResult, VoicePipeline
 from altvoice.translate.base import Translator
 from tests.helpers import workspace_tempdir
 
@@ -35,6 +35,7 @@ class ControllerTests(unittest.TestCase):
     def _controller(self, preview=True, history_path=None):
         config = AppConfig()
         config.ui.preview = preview
+        config.ui.focus_guard = False
         config.asr.engine = "fake"
         config.history.enabled = bool(history_path)
         if history_path:
@@ -102,6 +103,24 @@ class ControllerTests(unittest.TestCase):
         controller, _recorder, _results, _event, _injector = self._controller()
         controller.set_mode("transcribe")
         self.assertEqual(controller._effective_target(), "zh")
+
+    def test_focus_guard_copies_instead_of_injecting(self):
+        controller, _recorder, _results, _event, injector = self._controller(preview=True)
+        controller.config.ui.focus_guard = True
+        controller._target_hwnd = 111
+        controller._foreground_window = lambda: 222  # type: ignore[method-assign]
+        copied: list[str] = []
+        controller._copy_to_clipboard = lambda text: copied.append(text)  # type: ignore[method-assign]
+        result = PipelineResult(
+            raw_text="你好",
+            corrected_text="你好",
+            translation="Hello",
+            target_lang="en",
+        )
+        controller._deliver(result, "Hello")
+        self.assertEqual(injector.last_text, "")
+        self.assertEqual(copied, ["Hello"])
+        self.assertFalse(result.injected)
 
     def test_history_persists_result(self):
         with workspace_tempdir() as tmp:
