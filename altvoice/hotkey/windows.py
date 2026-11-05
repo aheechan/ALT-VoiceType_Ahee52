@@ -71,6 +71,7 @@ class WindowsAltHook:
     def __init__(
         self,
         threshold_ms: int = 280,
+        mode: str = "toggle_alt",
         on_start=None,
         on_stop=None,
         on_cancel=None,
@@ -78,12 +79,14 @@ class WindowsAltHook:
         if not IS_WINDOWS:
             raise HotkeyError("the global Alt hook is only available on Windows")
         self.threshold_ms = max(80, int(threshold_ms))
+        self.mode = mode
         self._on_start = on_start or (lambda: None)
         self._on_stop = on_stop or (lambda: None)
         self._on_cancel = on_cancel or (lambda: None)
         self._lock = threading.RLock()
         self._logic = AltHookLogic(
             threshold_ms=self.threshold_ms,
+            mode="toggle" if mode == "toggle_alt" else "long_press",
             on_start=self._start_recording,
             on_stop=self._stop_recording,
             on_cancel=self._cancel_recording,

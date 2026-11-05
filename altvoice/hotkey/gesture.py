@@ -36,9 +36,15 @@ def _is_alt(key: str) -> bool:
 
 
 class AltGestureDetector:
-    def __init__(self, threshold_ms: int = 280, replay_short_tap: bool = True) -> None:
+    def __init__(
+        self,
+        threshold_ms: int = 280,
+        replay_short_tap: bool = True,
+        mode: str = "long_press",
+    ) -> None:
         self.threshold_ms = max(80, int(threshold_ms))
         self.replay_short_tap = bool(replay_short_tap)
+        self.mode = mode if mode in {"long_press", "toggle"} else "long_press"
         self._state = "idle"
         self._alt_down_at = 0.0
 
@@ -49,6 +55,15 @@ class AltGestureDetector:
     def feed(self, event: KeyEvent) -> list[Action]:
         actions: list[Action] = []
         if _is_alt(event.key):
+            if self.mode == "toggle":
+                if event.down:
+                    if self._state == "idle":
+                        self._state = "recording"
+                        actions.append(Action.START_RECORDING)
+                    elif self._state == "recording":
+                        self._state = "idle"
+                        actions.append(Action.STOP_RECORDING)
+                return actions
             if event.down:
                 if self._state == "idle":
                     self._state = "pending"
@@ -76,7 +91,7 @@ class AltGestureDetector:
         return actions
 
     def tick(self, now_ms: float) -> list[Action]:
-        if self._state == "pending" and now_ms - self._alt_down_at >= self.threshold_ms:
+        if self.mode == "long_press" and self._state == "pending" and now_ms - self._alt_down_at >= self.threshold_ms:
             self._state = "recording"
             return [Action.START_RECORDING]
         return []

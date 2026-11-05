@@ -46,6 +46,14 @@ class GestureTests(unittest.TestCase):
         self.assertEqual(self.detector.state, "recording")
         self.assertEqual(self.detector.feed(KeyEvent("alt", True, 320)), [])
 
+    def test_toggle_mode_starts_and_stops_on_each_press(self):
+        detector = AltGestureDetector(threshold_ms=280, mode="toggle")
+        self.assertEqual(detector.feed(KeyEvent("alt", True, 0)), [Action.START_RECORDING])
+        self.assertEqual(detector.feed(KeyEvent("alt", False, 50)), [])
+        self.assertEqual(detector.state, "recording")
+        self.assertEqual(detector.feed(KeyEvent("alt", True, 1000)), [Action.STOP_RECORDING])
+        self.assertEqual(detector.state, "idle")
+
 
 if __name__ == "__main__":
     unittest.main()

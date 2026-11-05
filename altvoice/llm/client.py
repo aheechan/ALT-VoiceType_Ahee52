@@ -46,6 +46,7 @@ class ChatClient:
         temperature: float = 0.0,
         max_tokens: int = 512,
         retries: int = 1,
+        stop: list[str] | None = None,
     ) -> str:
         payload: dict[str, Any] = {
             "model": self.model,
@@ -55,6 +56,8 @@ class ChatClient:
             "stream": False,
             "chat_template_kwargs": {"enable_thinking": bool(self.enable_thinking)},
         }
+        if stop:
+            payload["stop"] = list(stop)
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         headers = {
             "Content-Type": "application/json",

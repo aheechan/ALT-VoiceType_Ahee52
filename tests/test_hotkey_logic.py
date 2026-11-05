@@ -42,6 +42,15 @@ class HookLogicTests(unittest.TestCase):
         logic.handle_key(0x12, False, False, 500)
         self.assertEqual(self.calls["stop"], 1)
 
+    def test_toggle_mode_starts_and_stops_on_presses(self):
+        logic = self._logic(mode="toggle")
+        self.assertTrue(logic.handle_key(0x12, True, False, 0).suppress)
+        self.assertEqual(self.calls["start"], 1)
+        logic.handle_key(0x12, False, False, 80)
+        self.assertEqual(self.calls["stop"], 0)
+        logic.handle_key(0x12, True, False, 1200)
+        self.assertEqual(self.calls["stop"], 1)
+
     def test_combo_cancels_and_replays_modifier(self):
         logic = self._logic()
         logic.handle_key(0x12, True, False, 0)

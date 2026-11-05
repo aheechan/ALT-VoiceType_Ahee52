@@ -310,10 +310,72 @@ class TrayPanel(QWidget):
         self.activateWindow()
 
 
+class AudioMonitor(QWidget):
+    """A tiny, text-free live input-level visualizer."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            None,
+            Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.WindowStaysOnTopHint
+            | Qt.WindowType.Tool
+            | Qt.WindowType.WindowDoesNotAcceptFocus,
+        )
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
+        self.setFixedSize(168, 46)
+        self.level = 0.0
+        self._decay = QTimer(self)
+        self._decay.setInterval(33)
+        self._decay.timeout.connect(self._decay_level)
+
+    def set_level(self, level: float) -> None:
+        self.level = min(1.0, max(0.0, float(level) * 24.0))
+        self.update()
+
+    def _decay_level(self) -> None:
+        self.level *= 0.84
+        if self.level < 0.01:
+            self.level = 0.0
+        self.update()
+
+    def show_at_corner(self) -> None:
+        screen = QApplication.primaryScreen().availableGeometry()
+        self.move(screen.right() - self.width() - 18, screen.bottom() - self.height() - 18)
+        self.show()
+        self.raise_()
+        self._decay.start()
+
+    def hide_monitor(self) -> None:
+        self._decay.stop()
+        self.level = 0.0
+        self.hide()
+
+    def paintEvent(self, _event) -> None:  # noqa: N802 - Qt API
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(21, 24, 29, 235))
+        painter.drawRoundedRect(0, 0, self.width(), self.height(), 10, 10)
+        bars = 20
+        gap = 4
+        bar_w = max(2, (self.width() - 20 - gap * (bars - 1)) // bars)
+        base = self.height() - 10
+        center = bars // 2
+        for i in range(bars):
+            distance = abs(i - center) / center
+            factor = 0.45 + 0.55 * (1.0 - distance)
+            h = 4 + int(24 * self.level * factor)
+            x = 10 + i * (bar_w + gap)
+            painter.setBrush(QColor(87, 155, 255) if i % 2 else QColor(126, 92, 255))
+            painter.drawRoundedRect(x, base - h, bar_w, h, 2, 2)
+        painter.end()
+
+
 class TrayApp(QObject):
     status_changed = Signal(str)
     result_ready = Signal(object)
     error_raised = Signal(str)
+    audio_level = Signal(float)
 
     def __init__(self, config_path: str | None = None) -> None:
         super().__init__()
@@ -324,19 +386,22 @@ class TrayApp(QObject):
             on_status=self.status_changed.emit,
             on_result=self.result_ready.emit,
             on_error=self.error_raised.emit,
+            on_audio_level=self.audio_level.emit,
         )
         self.hotkey = WindowsAltHook(
             threshold_ms=self.controller.config.hotkey.threshold_ms,
+            mode=self.controller.config.hotkey.mode,
             on_start=self.controller.start_recording,
             on_stop=self.controller.stop_recording,
             on_cancel=self.controller.cancel_recording,
         )
         self.tray = QSystemTrayIcon(_make_icon())
-        self.tray.setToolTip("AltVoice · 长按 Alt 说话")
+        self.tray.setToolTip("AltVoice · 按 Alt 开始 / 再按停止")
         self._setup_dialog: SetupDialog | None = None
         self._history_dialog: HistoryDialog | None = None
         self._settings_dialog: SettingsDialog | None = None
         self._panel: TrayPanel | None = None
+        self._monitor: AudioMonitor | None = None
         self._stopped = False
         self.menu = QMenu()
         self._build_menu()
@@ -345,6 +410,7 @@ class TrayApp(QObject):
         self.status_changed.connect(self._set_status)
         self.error_raised.connect(self._show_error)
         self.result_ready.connect(self._on_result)
+        self.audio_level.connect(self._on_audio_level)
 
     def _build_menu(self) -> None:
         header = self.menu.addAction("AltVoice")
@@ -423,6 +489,10 @@ class TrayApp(QObject):
             if self._panel is not None:
                 self._panel.close()
                 self._panel = None
+            if self._monitor is not None:
+                self._monitor.hide_monitor()
+                self._monitor.close()
+                self._monitor = None
             self.controller.close()
             self.tray.hide()
             QApplication.instance().quit()
@@ -536,11 +606,25 @@ class TrayApp(QObject):
         else:
             self._set_status("已取消")
 
+    def _on_audio_level(self, level: float) -> None:
+        if self._monitor is None:
+            self._monitor = AudioMonitor()
+            self._monitor.show_at_corner()
+        self._monitor.set_level(level)
+
     def _set_status(self, message: str) -> None:
         self.tray.setToolTip(f"AltVoice · {message}")
+        if "录音中" in message:
+            if self._monitor is None:
+                self._monitor = AudioMonitor()
+            self._monitor.show_at_corner()
+        elif self._monitor is not None:
+            self._monitor.hide_monitor()
 
     def _show_error(self, message: str) -> None:
         self._log.error("%s", message)
+        if self._monitor is not None:
+            self._monitor.hide_monitor()
         self.tray.showMessage("AltVoice", message, QSystemTrayIcon.MessageIcon.Warning, 6000)
         self.tray.setToolTip(f"AltVoice · 错误：{message}")
 

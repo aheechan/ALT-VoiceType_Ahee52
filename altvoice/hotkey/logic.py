@@ -28,13 +28,19 @@ class AltHookLogic:
         self,
         threshold_ms: int = 280,
         replay_short_tap: bool = True,
+        mode: str = "long_press",
         on_start: Callable[[], None] | None = None,
         on_stop: Callable[[], None] | None = None,
         on_cancel: Callable[[], None] | None = None,
         replay_alt_tap: Callable[[], None] | None = None,
         replay_alt_down: Callable[[], None] | None = None,
     ) -> None:
-        self.detector = AltGestureDetector(threshold_ms, replay_short_tap=replay_short_tap)
+        self.mode = mode if mode in {"long_press", "toggle"} else "long_press"
+        self.detector = AltGestureDetector(
+            threshold_ms,
+            replay_short_tap=replay_short_tap,
+            mode=self.mode,
+        )
         self.on_start = on_start or (lambda: None)
         self.on_stop = on_stop or (lambda: None)
         self.on_cancel = on_cancel or (lambda: None)
@@ -59,11 +65,11 @@ class AltHookLogic:
             was_idle = self.detector.state == "idle"
             actions = self.detector.feed(KeyEvent("alt", down, now_ms))
             decision = HookDecision(suppress=True)
-            if down:
+            if self.mode == "long_press" and down:
                 if was_idle:
                     decision.start_timer = True
                     self._pending_timer = True
-            else:
+            elif self.mode == "long_press":
                 decision.cancel_timer = True
                 self._pending_timer = False
             self._dispatch(actions)

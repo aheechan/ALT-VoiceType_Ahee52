@@ -125,7 +125,7 @@ def default_config_path() -> Path:
 
 @dataclass
 class HotkeyConfig:
-    mode: str = "long_press_alt"  # long_press_alt | right_alt | double_tap_alt
+    mode: str = "toggle_alt"  # toggle_alt | long_press_alt
     threshold_ms: int = 280
     key: str = "alt"
     replay_short_tap: bool = True
@@ -173,7 +173,7 @@ class TranslatorConfig:
     timeout_s: float = 45.0
     target_language: str = "zh"
     style: str = "daily"
-    max_tokens: int = 1024
+    max_tokens: int = 384
     model_path: str | None = None
     autostart: bool = True
 

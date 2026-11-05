@@ -26,34 +26,28 @@ STYLE_PRESETS: dict[str, str] = {
     ),
 }
 
-SYSTEM_PROMPT = """你是目标语言的母语者，不是在翻译文件。
-
-你的任务是把说话人的一句口语，变成目标语言里真人会说的话：
-- 保留情绪、语气、停顿、犹豫、幽默和意图；
-- 用日常表达，不要书面腔、不要翻译腔、不要“首先/其次/总之”；
-- 不要解释、不要扩写、不要补充原文没有的信息；
-- 人名、数字、代码、专有名词按原文或术语表；
-- 只输出译文本身，不要引号，不要标签，不要 Markdown。"""
+SYSTEM_PROMPT = """你是口译员，不是在翻译文件。把用户的中文口语翻成目标语言，只输出译文本身。
+不要输出原文、标题、标签、解释、引号或 Markdown。译文要自然、口语化，保留情绪、语气和停顿。"""
 
 
 def _format_context(context: list[dict[str, str]] | None) -> str:
     if not context:
-        return "（无）"
+        return ""
     lines: list[str] = []
-    for item in context[-3:]:
+    for item in context[-2:]:
         source = (item.get("corrected") or item.get("source") or "").strip()
         translation = (item.get("translation") or "").strip()
         if source and translation:
-            lines.append(f"- 原文：{source}\n  译文：{translation}")
+            lines.append(f"{source} => {translation}")
         elif source:
-            lines.append(f"- 原文：{source}")
-    return "\n".join(lines) if lines else "（无）"
+            lines.append(source)
+    return "\n".join(lines)
 
 
 def _format_glossary(glossary: dict[str, str] | None) -> str:
     if not glossary:
-        return "（无）"
-    return "\n".join(f"- {k} -> {v}" for k, v in list(glossary.items())[:80])
+        return ""
+    return "\n".join(f"{k} => {v}" for k, v in list(glossary.items())[:80])
 
 
 def build_translation_messages(
@@ -66,33 +60,38 @@ def build_translation_messages(
 ) -> list[dict[str, str]]:
     style_text = STYLE_PRESETS.get(style, STYLE_PRESETS["daily"])
     target = language_prompt_name(target_lang)
-    user = f"""目标语言：{target}
-风格：{style_text}
-源语言：{source_lang}
-
-【上文】
-{_format_context(context)}
-
-【术语表】
-{_format_glossary(glossary)}
-
-【当前口语】
-{text}
-
-只输出{target}译文。"""
+    parts = [
+        f"目标语言：{target}",
+        f"风格：{style_text}",
+    ]
+    glossary_text = _format_glossary(glossary)
+    if glossary_text:
+        parts.append(f"术语：\n{glossary_text}")
+    parts.append(f"原文：\n{text}")
+    parts.append("只输出译文，不要输出“原文”或“译文”标题。")
     return [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": user},
+        {"role": "user", "content": "\n\n".join(parts)},
     ]
 
 
 def clean_translation(text: str) -> str:
+    import re
+
     result = (text or "").strip()
     if result.startswith("```") and result.endswith("```"):
         lines = result.splitlines()
         if len(lines) >= 3:
             result = "\n".join(lines[1:-1]).strip()
-    for prefix in ("译文：", "译文:", "Translation:", "翻译："):
-        if result.startswith(prefix):
-            result = result[len(prefix) :].strip()
-    return result.strip().strip('"').strip("“”").strip()
+    # Models sometimes echo "原文：...\n译文：..." despite the instruction.
+    for marker in ("译文：", "译文:", "Translation:", "翻译：", "Output:"):
+        if marker in result:
+            result = result.rsplit(marker, 1)[-1].strip()
+    result = re.sub(
+        r"^\s*(?:\*\*)?\s*(?:原文|译文|翻译|Translation|Source|Target|Output)\s*[:：]\s*(?:\*\*)?\s*",
+        "",
+        result,
+        flags=re.IGNORECASE,
+    )
+    result = re.sub(r"</?(?:source|target|context|glossary)>", "", result, flags=re.IGNORECASE)
+    return result.strip().strip("*").strip('"').strip("“”").strip()

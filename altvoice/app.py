@@ -33,6 +33,7 @@ class VoiceAppController:
         on_status: Callable[[str], None] | None = None,
         on_result: Callable[[PipelineResult], None] | None = None,
         on_error: Callable[[str], None] | None = None,
+        on_audio_level: Callable[[float], None] | None = None,
         recorder=None,
         pipeline: VoicePipeline | None = None,
         temp_dir: str | None = None,
@@ -45,6 +46,7 @@ class VoiceAppController:
         self.on_status = on_status or (lambda _msg: None)
         self.on_result = on_result or (lambda _result: None)
         self.on_error = on_error or (lambda _msg: None)
+        self.on_audio_level = on_audio_level or (lambda _level: None)
         self._recorder = recorder
         self._pipeline = pipeline
         self._pipeline_lock = threading.RLock()
@@ -164,6 +166,7 @@ class VoiceAppController:
                 samplerate=self.config.audio.samplerate,
                 channels=self.config.audio.channels,
                 device=self.config.audio.device,
+                on_level=self.on_audio_level,
             )
         return self._recorder
 
@@ -200,7 +203,11 @@ class VoiceAppController:
                 daemon=True,
             )
             self._thread.start()
-            self.on_status("录音中…松开 Alt 结束")
+            self.on_status(
+                "录音中…再按 Alt 结束"
+                if self.config.hotkey.mode == "toggle_alt"
+                else "录音中…松开 Alt 结束"
+            )
 
     def stop_recording(self) -> None:
         with self._lock:

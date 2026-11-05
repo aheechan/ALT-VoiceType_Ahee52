@@ -160,10 +160,12 @@ class AudioRecorder:
         samplerate: int = 16000,
         channels: int = 1,
         device: str | int | None = None,
+        on_level=None,
     ) -> None:
         self.samplerate = int(samplerate)
         self.channels = int(channels)
         self.device = device
+        self.on_level = on_level
 
     def _sd(self):
         try:
@@ -202,6 +204,14 @@ class AudioRecorder:
             if status:
                 pass
             chunks.append(indata.copy())
+            if self.on_level is not None:
+                try:
+                    mono = np.asarray(indata, dtype=np.float32)
+                    if mono.ndim > 1:
+                        mono = mono.mean(axis=1)
+                    self.on_level(rms(mono))
+                except Exception:
+                    pass
 
         try:
             with sd.InputStream(

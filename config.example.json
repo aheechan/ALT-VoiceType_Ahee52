@@ -2,7 +2,7 @@
   "profile": "auto",
   "models_dir": "C:/Users/you/AppData/Local/AltVoice/models",
   "hotkey": {
-    "mode": "long_press_alt",
+    "mode": "toggle_alt",
     "threshold_ms": 280,
     "key": "alt",
     "replay_short_tap": true

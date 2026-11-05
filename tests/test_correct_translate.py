@@ -70,12 +70,14 @@ class PromptTests(unittest.TestCase):
         self.assertIn("English", text)
         self.assertIn("直播", text)
         self.assertIn("carbon fiber", text)
-        self.assertIn("Hello", text)
 
     def test_clean_translation(self):
         self.assertEqual(clean_translation('"Hello"'), "Hello")
         self.assertEqual(clean_translation("译文：Hello"), "Hello")
         self.assertEqual(clean_translation("```\nHello\n```"), "Hello")
+        self.assertEqual(clean_translation("原文：你好\n译文：Hello"), "Hello")
+        self.assertEqual(clean_translation("Source: 你好\nTranslation: Hello"), "Hello")
+        self.assertEqual(clean_translation("**译文：** Hello"), "Hello")
 
 
 if __name__ == "__main__":

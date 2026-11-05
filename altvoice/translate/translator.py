@@ -15,7 +15,7 @@ class IndexTranslateTranslator(Translator):
         model: str = "Index-Translate-9B",
         api_key: str = "EMPTY",
         timeout_s: float = 45.0,
-        max_tokens: int = 1024,
+        max_tokens: int = 384,
     ) -> None:
         self.client = ChatClient(
             base_url=base_url,
@@ -51,9 +51,10 @@ class IndexTranslateTranslator(Translator):
         try:
             response = self.client.chat(
                 messages,
-                temperature=0.2,
+                temperature=0.0,
                 max_tokens=self.max_tokens,
                 retries=1,
+                stop=["\n原文", "\n译文", "\nTranslation:", "\nSource:"],
             )
         except LLMError as exc:
             raise TranslationError(f"translation failed: {exc}") from exc
