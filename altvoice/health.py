@@ -20,6 +20,7 @@ class HealthReport:
     models: list[ModelLocation]
     asr_engines: dict[str, bool]
     microphone_available: bool
+    microphone_inputs: int
     ui_available: bool
     server_count: int = 0
     server_ready: int = 0
@@ -84,6 +85,18 @@ def check_health(
                 server_ready += 1
     if not config.asr.model_path and engines["_requested"] in ("qwen3", "auto"):
         notes.append("Qwen3-ASR will download its default checkpoint on first load if missing.")
+    microphone_inputs = 0
+    if importlib.util.find_spec("sounddevice") is not None:
+        try:
+            import sounddevice as sd
+
+            microphone_inputs = sum(
+                1 for device in sd.query_devices() if device.get("max_input_channels", 0) > 0
+            )
+        except Exception as exc:
+            notes.append(f"microphone query failed: {exc}")
+    if importlib.util.find_spec("sounddevice") is not None and microphone_inputs == 0:
+        notes.append("sounddevice is installed, but no microphone input device was found.")
     return HealthReport(
         profile=active,
         models_dir=str(config.models_dir),
@@ -91,7 +104,8 @@ def check_health(
         ffmpeg=shutil.which("ffmpeg"),
         models=items,
         asr_engines=engines,
-        microphone_available=importlib.util.find_spec("sounddevice") is not None,
+        microphone_available=microphone_inputs > 0,
+        microphone_inputs=microphone_inputs,
         ui_available=importlib.util.find_spec("PySide6") is not None,
         server_count=server_count,
         server_ready=server_ready,
@@ -108,7 +122,8 @@ def format_report(
         f"Profile: {report.profile}",
         f"VRAM: {f'{report.vram_gb:.1f} GB' if report.vram_gb else 'not detected'}",
         f"ffmpeg: {report.ffmpeg or 'NOT FOUND'}",
-        f"Microphone (sounddevice): {'yes' if report.microphone_available else 'no'}",
+        f"Microphone (sounddevice): {'yes' if report.microphone_available else 'no'} "
+        f"({report.microphone_inputs} input device(s))",
         f"Tray UI (PySide6): {'yes' if report.ui_available else 'no'}",
         "",
         "Models:",
