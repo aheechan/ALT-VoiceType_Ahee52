@@ -82,12 +82,12 @@ altvoice/
 ├─ benchmarks/               # manifest example + local audio (gitignored)
 ├─ docs/                     # PLAN / ARCHITECTURE / ADR / MODELS / UX
 ├─ tests/                    # stdlib unittest, no GPU required
-├─ scripts/                  # helper scripts
 └─ pyproject.toml
 ```
 
 ## Documentation
 
+- [Status and next steps](docs/STATUS.md)
 - [Development plan](docs/PLAN.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [ADR-0001: stack and 12 GB baseline](docs/ADR/0001-stack-and-12gb-baseline.md)
