@@ -15,15 +15,15 @@ text (or its translation) is inserted into the focused application. Everything r
 
 | Profile | VRAM | ASR | Corrector | Translator |
 |---|---:|---|---|---|
-| `12gb-balanced` **(default baseline)** | 12 GB | FireRedASR2-AED FP16 | Qwen3-1.7B-Instruct Q4 | Index-Translate-9B Q4 |
+| `12gb-balanced` **(default baseline)** | 12 GB | Qwen3-ASR-1.7B BF16 | Qwen3-1.7B-Instruct Q4 | Index-Translate-9B Q4 |
 | `12gb-safe` | 12 GB | Qwen3-ASR-0.6B | Qwen3-1.7B Q4 | Index-Translate-2B Q4 |
-| `16gb-quality` | 16 GB | FireRedASR2-AED FP16 | Qwen3-4B-Instruct Q4 | Index-Translate-9B Q4 |
-| `24gb-quality` | 24 GB | FireRedASR2-AED FP16 | Qwen3-4B-Instruct Q4 | Index-Translate-9B Q4 |
+| `16gb-quality` | 16 GB | Qwen3-ASR-1.7B BF16 | Qwen3-4B-Instruct Q4 | Index-Translate-9B Q4 |
+| `24gb-quality` | 24 GB | Qwen3-ASR-1.7B BF16 | Qwen3-4B-Instruct Q4 | Index-Translate-9B Q4 |
 | `cpu-safe` | CPU | SenseVoice-Small (sherpa-onnx) | rules only | Index-Translate-2B Q4 (~2.1 GB total) |
 
-`12gb-balanced` is tuned for an RTX 3070 12 GB and scales upward by changing the profile.
-Models are lazy-loaded and can be unloaded when idle; the 9B translator may be swapped for the 2B
-model automatically after an OOM.
+`12gb-balanced` is tuned for an RTX 3070 12 GB (~10.6 GB of weights) and scales upward by
+changing the profile. Qwen3-ASR is the Windows default because FireRedASR2S is only tested
+on Ubuntu 22.04 upstream; FireRedASR2-AED remains an optional quality engine if you can run it.
 
 ## Quick start (development)
 
@@ -96,6 +96,7 @@ altvoice/
 - [Development plan](docs/PLAN.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [ADR-0001: stack and 12 GB baseline](docs/ADR/0001-stack-and-12gb-baseline.md)
+- [ADR-0002: Windows default ASR](docs/ADR/0002-windows-asr-default.md)
 - [Models and licenses](docs/MODELS.md)
 - [Interaction design](docs/UX.md)
 - [M0 ASR bake-off](docs/M0-BAKEOFF.md)

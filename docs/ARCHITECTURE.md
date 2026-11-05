@@ -73,8 +73,8 @@ pipeline API.
 
 | Adapter | Package | Input | Notes |
 |---|---|---|---|
-| `firered` | `fireredasr` / FireRedASR2S repo | 16 kHz WAV | 1.1B AED, up to 60 s, GPU |
-| `qwen3` | `qwen-asr` | path / ndarray | 0.6B/1.7B, streaming optional |
+| `qwen3` | `qwen-asr` | path / ndarray | **Windows default**, 0.6B/1.7B, streaming, 22 dialects |
+| `firered` | `fireredasr2s` / FireRedASR2S repo | 16 kHz WAV | optional quality engine, 1.1B AED, up to 60 s, GPU |
 | `sherpa` | `sherpa-onnx` | 16 kHz samples | CPU fallback, SenseVoice/Paraformer |
 | `none` | — | — | tests and dry runs |
 

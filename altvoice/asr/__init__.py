@@ -55,11 +55,14 @@ def create_engine(
 ) -> ASREngine:
     key = _ALIASES.get((name or "auto").strip().lower(), (name or "auto").strip().lower())
     if key == "auto":
-        if model_path:
-            key = "firered"
-        elif importlib.util.find_spec("qwen_asr") is not None:
+        if importlib.util.find_spec("qwen_asr") is not None:
             key = "qwen3"
-        elif importlib.util.find_spec("fireredasr") is not None:
+        elif (
+            importlib.util.find_spec("fireredasr2s") is not None
+            or importlib.util.find_spec("fireredasr") is not None
+        ):
+            key = "firered"
+        elif model_path:
             key = "firered"
         elif importlib.util.find_spec("sherpa_onnx") is not None:
             key = "sherpa"

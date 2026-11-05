@@ -1,5 +1,9 @@
 # ADR-0001: Stack and 12 GB baseline
 
+> **Update:** the ASR-primary part of this ADR is superseded by
+> [ADR-0002](0002-windows-asr-default.md). Qwen3-ASR-1.7B is the Windows default;
+> FireRedASR2-AED remains an optional quality engine.
+
 - Status: Accepted
 - Date: 2026-11-05
 - Deciders: AltVoice project

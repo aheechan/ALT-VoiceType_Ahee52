@@ -140,8 +140,8 @@ MODEL_CATALOG: dict[str, ModelSpec] = {
 
 PROFILES: dict[str, dict[str, str]] = {
     "12gb-balanced": {
-        "description": "RTX 3070 12 GB baseline: best Mandarin ASR + 9B translation",
-        "asr": "firered_asr_aed",
+        "description": "RTX 3070 12 GB baseline: Qwen3-ASR + 9B translation",
+        "asr": "qwen3_asr_1_7b",
         "corrector": "qwen3_1_7b_instruct_q4",
         "translator": "index_translate_9b_q4",
     },
@@ -152,14 +152,14 @@ PROFILES: dict[str, dict[str, str]] = {
         "translator": "index_translate_2b_q4",
     },
     "16gb-quality": {
-        "description": "16 GB: 4B corrector + 9B translation",
-        "asr": "firered_asr_aed",
+        "description": "16 GB: ASR + 4B corrector + 9B translation",
+        "asr": "qwen3_asr_1_7b",
         "corrector": "qwen3_4b_instruct_q4",
         "translator": "index_translate_9b_q4",
     },
     "24gb-quality": {
-        "description": "24 GB: 4B corrector + 9B translation, more context headroom",
-        "asr": "firered_asr_aed",
+        "description": "24 GB: ASR + 4B corrector + 9B translation, more context headroom",
+        "asr": "qwen3_asr_1_7b",
         "corrector": "qwen3_4b_instruct_q4",
         "translator": "index_translate_9b_q4",
     },

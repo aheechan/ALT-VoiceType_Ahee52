@@ -23,13 +23,13 @@ detects VRAM at startup (`nvidia-smi`), picks a profile, and lets the user overr
 
 | Profile | ASR | Corrector | Translator | Est. weights |
 |---|---|---|---|---:|
-| `12gb-balanced` | FireRedASR2-AED FP16 (~2.5 GB) | Qwen3-1.7B Q4 (~1.3 GB) | Index-Translate-9B Q4 (~5.7 GB) | ~9.5 GB |
+| `12gb-balanced` | Qwen3-ASR-1.7B BF16 (~3.6 GB) | Qwen3-1.7B Q4 (~1.3 GB) | Index-Translate-9B Q4 (~5.7 GB) | ~10.6 GB |
 | `12gb-safe` | Qwen3-ASR-0.6B (~1.5 GB) | Qwen3-1.7B Q4 (~1.3 GB) | Index-Translate-2B Q4 (~1.6 GB) | ~4.4 GB |
-| `16gb-quality` | FireRedASR2-AED (~2.5 GB) | Qwen3-4B Q4 (~2.6 GB) | Index-Translate-9B Q4 (~5.7 GB) | ~10.8 GB |
-| `24gb-quality` | FireRedASR2-AED (~2.5 GB) | Qwen3-4B Q4 (~2.6 GB) | Index-Translate-9B Q4 (~5.7 GB) | ~10.8 GB |
+| `16gb-quality` | Qwen3-ASR-1.7B (~3.6 GB) | Qwen3-4B Q4 (~2.6 GB) | Index-Translate-9B Q4 (~5.7 GB) | ~11.9 GB |
+| `24gb-quality` | Qwen3-ASR-1.7B (~3.6 GB) | Qwen3-4B Q4 (~2.6 GB) | Index-Translate-9B Q4 (~5.7 GB) | ~11.9 GB |
 | `cpu-safe` | SenseVoice-Small (~0.3 GB) | rules only | Index-Translate-2B Q4 (~1.6 GB) | ~2.1 GB |
 
-The 12 GB profile keeps ~2 GB for KV cache, CUDA context and the desktop. If the translator
+The 12 GB profile keeps ~1.5 GB for KV cache, CUDA context and the desktop. If the translator
 cannot fit, it is lazy-loaded after ASR or swapped to the 2B model.
 
 ## 3. Technology choices
@@ -39,12 +39,21 @@ cannot fit, it is lazy-loaded after ASR or swapped to the 2B model.
 | UI | PySide6 (LGPL) | Native tray/overlay on Windows; permissive linking |
 | Hotkey | Win32 low-level keyboard hook | Need Alt down/up and long-press discrimination, not just a registered combo |
 | Audio | `sounddevice` + 16 kHz mono + Silero/energy VAD | Low-latency capture; simple WAV path for tests |
-| ASR primary | FireRedASR2-AED 1.1B | Best Mandarin CER tier, Apache-2.0, fits 12 GB |
-| ASR alternatives | Qwen3-ASR-1.7B/0.6B, SenseVoice/Sherpa | Streaming, dialects, CPU fallback |
+| ASR primary | Qwen3-ASR-1.7B | Windows-friendly PyTorch/qwen-asr, 52 languages/dialects, 22 Chinese dialects |
+| ASR quality option | FireRedASR2-AED 1.1B | Best Mandarin CER tier, Apache-2.0; upstream tested on Ubuntu only |
 | Corrector | Qwen3-1.7B/4B-Instruct Q4 via llama.cpp | Minimal-edit Chinese correction at low latency |
 | Translator | Index-Translate-9B Q4 via llama.cpp | Chinese-centric, 150 languages, offline |
 | Injection | Clipboard paste + SendInput Unicode | Works in most apps; TSF deferred |
 | Packaging | PyInstaller one-folder + Inno Setup | Large models stay outside the installer |
+
+### Why Qwen3-ASR is the Windows default
+
+FireRedASR2-AED has the best Mandarin CER in the FireRedASR2S comparison (3.05% vs 3.76% for
+Qwen3-ASR-1.7B), but the upstream FireRedASR2S repository explicitly says its code has only been
+tested on Ubuntu 22.04. AltVoice targets Windows 10/11, so the default is Qwen3-ASR-1.7B:
+native PyTorch/Transformers, `qwen-asr`, 22 Chinese dialects, streaming support, Apache-2.0.
+FireRedASR2-AED stays selectable as a quality option for users who can run it (WSL/Linux or a
+tested Windows setup).
 
 ### Why not Whisper as the primary ASR
 
@@ -63,7 +72,7 @@ Index-Translate only for text translation.
 Alt long-press
   -> capture 16 kHz mono
   -> trim silence / VAD
-  -> ASR (FireRedASR2-AED)
+  -> ASR (Qwen3-ASR-1.7B; optional FireRedASR2-AED)
   -> punctuation (model built-in or CT-punc)
   -> context corrector (Qwen3 + glossary + recent utterances)
   -> translator (Index-Translate-9B; skipped when target is Chinese)

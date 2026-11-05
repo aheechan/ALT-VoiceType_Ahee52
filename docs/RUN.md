@@ -50,9 +50,9 @@ If you only want Chinese dictation, leave the translator server off and set
 
 Copy `config.example.json` to `%APPDATA%\AltVoice\config.json` and set:
 
-- `asr.engine`: `firered` or `qwen3`
-- `asr.model_path`: local model directory (FireRed) or leave empty for the
-  `qwen-asr` default checkpoint
+- `asr.engine`: `qwen3` (Windows default) or `firered` (optional quality engine)
+- `asr.model_path`: local model directory. Leave empty for Qwen3-ASR's default checkpoint;
+  set a path for FireRedASR2-AED or a downloaded Qwen3-ASR directory.
 - `asr.device`: `cuda`
 
 Run `python -m altvoice doctor` to see what is detected.

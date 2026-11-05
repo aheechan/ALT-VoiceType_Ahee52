@@ -74,7 +74,7 @@ class ProfileTests(unittest.TestCase):
     def test_12gb_profile_fits(self):
         self.assertLess(estimate_vram("12gb-balanced"), 12.0)
         models = profile_models("12gb-balanced")
-        self.assertEqual(models["asr"].key, "firered_asr_aed")
+        self.assertEqual(models["asr"].key, "qwen3_asr_1_7b")
         self.assertEqual(models["translator"].key, "index_translate_9b_q4")
 
     def test_all_profiles_have_three_roles(self):

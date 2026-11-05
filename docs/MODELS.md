@@ -19,11 +19,14 @@ under `%LOCALAPPDATA%\AltVoice\models` (or set `models_dir` in `config.json`).
 
 Sizes are approximate and vary by quantizer/revision. Always verify the SHA256 of downloaded files.
 
-## Recommended 12 GB setup (RTX 3070)
+## Recommended 12 GB setup (RTX 3070, Windows)
 
-1. **ASR:** FireRedASR2-AED, FP16.
+1. **ASR:** Qwen3-ASR-1.7B (BF16, `qwen-asr`).
 2. **Corrector:** Qwen3-1.7B-Instruct, Q4_K_M, served by llama.cpp on `127.0.0.1:8091`.
 3. **Translator:** Index-Translate-9B, Q4_K_M, served by llama.cpp on `127.0.0.1:8092`.
+
+Qwen3-ASR is the Windows default. FireRedASR2-AED can replace it if you have a tested
+Linux/WSL setup; its upstream code is only tested on Ubuntu 22.04.
 
 If the translator OOMs while all three are resident, either:
 
@@ -33,19 +36,20 @@ If the translator OOMs while all three are resident, either:
 
 ## Download notes
 
-FireRedASR2S:
-
-```bash
-git clone https://github.com/FireRedTeam/FireRedASR2S.git
-# follow its README to download FireRedASR2-AED weights into pretrained_models/
-```
-
 Qwen3-ASR:
 
 ```bash
 pip install -U qwen-asr
 # weights download on first from_pretrained, or:
 modelscope download --model Qwen/Qwen3-ASR-1.7B --local_dir ./models/Qwen3-ASR-1.7B
+```
+
+FireRedASR2S (optional quality engine):
+
+```bash
+git clone https://github.com/FireRedTeam/FireRedASR2S.git
+modelscope download --model xukaituo/FireRedASR2-AED --local_dir ./models/FireRedASR2-AED
+# set PYTHONPATH to the repo root; current API is fireredasr2s.fireredasr2.FireRedAsr2
 ```
 
 SenseVoice / sherpa-onnx:

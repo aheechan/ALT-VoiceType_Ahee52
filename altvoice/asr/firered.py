@@ -1,15 +1,21 @@
 """FireRedASR2 adapter.
 
-FireRedASR2S ships an AED 1.1B model with strong Mandarin accuracy and a
-60-second input limit. The import path follows the upstream Python example:
+Supports both the current FireRedASR2S Python API and the older FireRedASR v1
+API. FireRedASR2-AED is the primary 12 GB Chinese engine: 1.1B parameters,
+Apache-2.0, 60 s input limit, strong Mandarin and dialect accuracy.
+
+Current API (FireRedASR2S)::
+
+    from fireredasr2s.fireredasr2 import FireRedAsr2, FireRedAsr2Config
+    cfg = FireRedAsr2Config(use_gpu=True, beam_size=3, ...)
+    model = FireRedAsr2.from_pretrained("aed", model_dir, cfg)
+    results = model.transcribe([uttid], [wav])
+
+Older API (FireRedASR v1)::
 
     from fireredasr.models.fireredasr import FireRedAsr
     model = FireRedAsr.from_pretrained("aed", model_dir)
-    model.transcribe([uttid], [wav], {"use_gpu": 1, ...})
-
-If your FireRedASR2S checkout exposes a different module path, set
-``ALTVOICE_FIRERED_MODULE`` / ``ALTVOICE_FIRERED_CLASS`` or use the CLI wrapper
-until the adapter is updated.
+    results = model.transcribe([uttid], [wav], {...})
 """
 
 from __future__ import annotations
@@ -38,6 +44,14 @@ def _extract_text(item: object) -> str:
     return ""
 
 
+def _extract_confidence(item: object) -> float | None:
+    if isinstance(item, dict):
+        value = item.get("confidence")
+        if isinstance(value, (int, float)):
+            return float(value)
+    return None
+
+
 class FireRedASREngine(ASREngine):
     name = "firered"
 
@@ -46,11 +60,43 @@ class FireRedASREngine(ASREngine):
         model_path: str | None = None,
         device: str = "cuda",
         beam_size: int = 3,
+        use_half: bool = False,
     ) -> None:
         self.model_path = model_path or os.environ.get("FIRERED_ASR_MODEL")
         self.device = device
         self.beam_size = int(beam_size)
+        self.use_half = bool(use_half)
         self._model = None
+        self._api = ""
+
+    def _load_v2(self) -> bool:
+        module_name = os.environ.get("ALTVOICE_FIRERED_MODULE", "fireredasr2s.fireredasr2")
+        class_name = os.environ.get("ALTVOICE_FIRERED_CLASS", "FireRedAsr2")
+        module = importlib.import_module(module_name)
+        cls = getattr(module, class_name)
+        config_cls = getattr(module, "FireRedAsr2Config", None)
+        assert config_cls is not None
+        config = config_cls(
+            use_gpu=self.device.startswith("cuda"),
+            use_half=self.use_half,
+            beam_size=self.beam_size,
+            nbest=1,
+            decode_max_len=0,
+            softmax_smoothing=1.25,
+            aed_length_penalty=0.6,
+            eos_penalty=1.0,
+            return_timestamp=False,
+        )
+        self._model = cls.from_pretrained("aed", self.model_path, config)
+        self._api = "v2"
+        return True
+
+    def _load_v1(self) -> bool:
+        from fireredasr.models.fireredasr import FireRedAsr  # type: ignore[import-not-found]
+
+        self._model = FireRedAsr.from_pretrained("aed", self.model_path)
+        self._api = "v1"
+        return True
 
     def load(self) -> None:
         if self._model is not None:
@@ -63,47 +109,51 @@ class FireRedASREngine(ASREngine):
         if not Path(self.model_path).exists():
             raise EngineUnavailable(f"FireRedASR model path does not exist: {self.model_path}")
 
-        module_name = os.environ.get("ALTVOICE_FIRERED_MODULE", "fireredasr.models.fireredasr")
-        class_name = os.environ.get("ALTVOICE_FIRERED_CLASS", "FireRedAsr")
-        try:
-            module = importlib.import_module(module_name)
-            cls = getattr(module, class_name)
-        except (ImportError, AttributeError) as exc:
-            raise EngineUnavailable(
-                "FireRedASR is not importable. Clone FireRedTeam/FireRedASR2S, install its "
-                "requirements, and make its package importable (or set ALTVOICE_FIRERED_MODULE)."
-            ) from exc
-
-        try:
-            self._model = cls.from_pretrained("aed", self.model_path)
-        except Exception as exc:  # model loading can fail for many reasons
-            raise EngineUnavailable(f"failed to load FireRedASR: {exc}") from exc
+        errors: list[str] = []
+        for loader in (self._load_v2, self._load_v1):
+            try:
+                if loader():
+                    return
+            except Exception as exc:
+                errors.append(f"{loader.__name__}: {exc}")
+        raise EngineUnavailable(
+            "FireRedASR is not importable or failed to load. Clone FireRedTeam/FireRedASR2S, "
+            "install its requirements, and set PYTHONPATH to the repository root "
+            "(or set ALTVOICE_FIRERED_MODULE/ALTVOICE_FIRERED_CLASS).\n"
+            + "\n".join(errors)
+        )
 
     def transcribe(self, audio_path: str, language: str = "zh") -> ASRResult:
         self.load()
         assert self._model is not None
         uttid = f"altvoice-{uuid.uuid4().hex[:8]}"
-        opts = {
-            "use_gpu": 1 if self.device.startswith("cuda") else 0,
-            "beam_size": self.beam_size,
-            "nbest": 1,
-            "decode_max_len": 0,
-            "softmax_smoothing": 1.25,
-            "aed_length_penalty": 0.6,
-            "eos_penalty": 1.0,
-        }
         start = time.perf_counter()
         try:
-            results = self._model.transcribe([uttid], [str(audio_path)], opts)
+            if self._api == "v2":
+                results = self._model.transcribe([uttid], [str(audio_path)])
+            else:
+                results = self._model.transcribe(
+                    [uttid],
+                    [str(audio_path)],
+                    {
+                        "use_gpu": 1 if self.device.startswith("cuda") else 0,
+                        "beam_size": self.beam_size,
+                        "nbest": 1,
+                        "decode_max_len": 0,
+                        "softmax_smoothing": 1.25,
+                        "aed_length_penalty": 0.6,
+                        "eos_penalty": 1.0,
+                    },
+                )
         except Exception as exc:
             raise EngineUnavailable(f"FireRedASR transcription failed: {exc}") from exc
         elapsed = (time.perf_counter() - start) * 1000.0
         item = results[0] if isinstance(results, (list, tuple)) and results else results
-        text = _extract_text(item)
         raw = item if isinstance(item, dict) else {"result": item}
         return ASRResult(
-            text=text,
+            text=_extract_text(item),
             language=language,
+            confidence=_extract_confidence(item),
             latency_ms=elapsed,
             engine=self.name,
             raw=raw if isinstance(raw, dict) else {},
@@ -111,6 +161,7 @@ class FireRedASREngine(ASREngine):
 
     def close(self) -> None:
         self._model = None
+        self._api = ""
         try:
             import torch
 

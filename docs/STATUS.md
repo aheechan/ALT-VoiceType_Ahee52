@@ -7,10 +7,11 @@
 - Local git repository initialized on `main`.
 - Product plan, architecture, ADR, model catalog, UX, run guide and bake-off guide.
 - 12 GB-first VRAM profiles:
-  - `12gb-balanced`: FireRedASR2-AED + Qwen3-1.7B + Index-Translate-9B (~9.5 GB of weights).
+  - `12gb-balanced`: Qwen3-ASR-1.7B + Qwen3-1.7B + Index-Translate-9B (~10.6 GB of weights).
   - `12gb-safe`: Qwen3-ASR-0.6B + Qwen3-1.7B + Index-Translate-2B (~4.4 GB).
-  - `16gb-quality` / `24gb-quality`: 4B corrector + 9B translator.
+  - `16gb-quality` / `24gb-quality`: Qwen3-ASR-1.7B + 4B corrector + 9B translator (~11.9 GB).
   - `cpu-safe`: SenseVoice + rules + 2B translator.
+- Windows default ASR is Qwen3-ASR (ADR-0002); FireRedASR2-AED remains an optional quality engine.
 - ASR adapters: FireRedASR2, Qwen3-ASR, sherpa-onnx/SenseVoice, fake.
 - Context correction prompt + diff guard + glossary/context store.
 - Natural translation prompt with style presets and context pairs.
