@@ -222,6 +222,46 @@ def cmd_download(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_audio(args: argparse.Namespace) -> int:
+    try:
+        import sounddevice as sd
+    except ImportError:
+        print("sounddevice is not installed; pip install 'altvoice[audio]'", file=sys.stderr)
+        return 2
+
+    if args.list:
+        default = sd.default.device
+        print(f"default devices: {default}")
+        for index, device in enumerate(sd.query_devices()):
+            if device.get("max_input_channels", 0) <= 0:
+                continue
+            print(
+                f"  [{index}] {device['name']}  "
+                f"in={device['max_input_channels']}  "
+                f"rate={device.get('default_samplerate')}"
+            )
+        return 0
+
+    from .audio import AudioRecorder, write_wav
+
+    try:
+        recorder = AudioRecorder(
+            samplerate=16000,
+            channels=1,
+            device=args.device,
+        )
+        samples, rate = recorder.record(max_seconds=args.seconds)
+    except Exception as exc:
+        print(f"recording failed: {exc}", file=sys.stderr)
+        return 1
+    if len(samples) == 0:
+        print("no audio captured", file=sys.stderr)
+        return 1
+    write_wav(args.out, samples, rate)
+    print(f"wrote {args.out} ({len(samples) / rate:.1f}s at {rate} Hz)")
+    return 0
+
+
 def cmd_health(args: argparse.Namespace) -> int:
     cfg = _config(args)
     from .health import check_health, format_report
@@ -306,6 +346,13 @@ def build_parser() -> argparse.ArgumentParser:
     health.add_argument("--servers", action="store_true", help="also probe configured model servers")
     health.add_argument("--no-commands", action="store_true")
     health.set_defaults(func=cmd_health)
+
+    audio = sub.add_parser("audio", help="list microphones or record a test WAV")
+    audio.add_argument("--list", action="store_true")
+    audio.add_argument("--seconds", type=float, default=3.0)
+    audio.add_argument("--out", default="altvoice-test.wav")
+    audio.add_argument("--device", type=int, default=None)
+    audio.set_defaults(func=cmd_audio)
 
     history = sub.add_parser("history", help="show or clear local dictation history")
     history.add_argument("--limit", type=int, default=10)

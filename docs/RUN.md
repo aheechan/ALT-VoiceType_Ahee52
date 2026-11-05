@@ -90,13 +90,16 @@ Behavior:
 
 ## Current limitations
 
-- PySide6 is not installed in the development sandbox used for M0, so the tray itself
-  has not been launched here. The hook was installed/uninstalled successfully, and the
-  controller/gesture logic is covered by unit tests.
-- Microphone capture and text injection need a real interactive Windows session.
-- No installer/model downloader yet; models are started manually or by `servers.autostart`.
+- The tray and dialogs pass offscreen UI tests; a full interactive Alt-to-insert test
+  still needs a real desktop with a microphone.
+- This development session has no microphone input device (`altvoice audio --list`
+  shows none), so the microphone path is untested.
+- PyInstaller/Inno Setup builds exist, but this harness cannot launch the windowed
+  installer for an install/uninstall test.
 - The first recording can take several seconds while the ASR model loads; the tray
   warms up the ASR pipeline in the background at startup.
+- Use `python -m altvoice download --profile ...` for models, or configure
+  `servers.autostart` after downloading manually.
 - Do not expose the local LLM servers on `0.0.0.0`; they have no authentication.
 
 ## Troubleshooting
@@ -105,6 +108,7 @@ Behavior:
 |---|---|
 | `Tray UI unavailable` | `pip install -e ".[ui]"` |
 | `SetWindowsHookExW failed` | Run the app in the interactive desktop session, not a service |
+| `no input device(s)` | `python -m altvoice audio --list`; check Windows microphone privacy settings |
 | `microphone capture failed` | Check Windows microphone permission and `audio.device` |
 | `ASR unavailable` | Install a backend and set `asr.model_path` |
 | Alt menu flashes | Increase `hotkey.threshold_ms`; report the app for testing |

@@ -41,6 +41,7 @@ python -m altvoice setup --profile 12gb-balanced
 python -m altvoice models --profile 12gb-balanced --commands
 python -m altvoice download --profile 12gb-balanced
 python -m altvoice health
+python -m altvoice audio --list
 python -m altvoice history --limit 5
 
 # ASR bake-off: compare engines on your own recordings

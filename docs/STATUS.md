@@ -43,6 +43,8 @@
   download for a profile (Qwen3-ASR/Qwen3/Index-Translate).
 - `health.py` + `python -m altvoice health`: one-shot readiness check for models,
   ASR engine, microphone and PySide6.
+- `python -m altvoice audio --list` / `--seconds` / `--out`: microphone
+  diagnostics and test recording.
 - Tray first-run/environment dialog: missing paths, download-missing-models
   button (background thread), copy commands, open model folder, recheck.
 - History/glossary persistence in SQLite (`history.py`), seeded into the
