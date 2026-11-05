@@ -79,6 +79,8 @@ if IS_WINDOWS:
     user32.SendInput.restype = wintypes.UINT
     user32.GetForegroundWindow.argtypes = []
     user32.GetForegroundWindow.restype = wintypes.HWND
+    user32.SetForegroundWindow.argtypes = [wintypes.HWND]
+    user32.SetForegroundWindow.restype = wintypes.BOOL
 
     kernel32.GlobalAlloc.argtypes = [wintypes.UINT, ctypes.c_size_t]
     kernel32.GlobalAlloc.restype = wintypes.HGLOBAL
@@ -106,6 +108,13 @@ def _open_clipboard(retries: int = 8) -> bool:
 def get_foreground_window() -> int:
     _require_windows()
     return int(user32.GetForegroundWindow() or 0)
+
+
+def set_foreground_window(hwnd: int) -> bool:
+    _require_windows()
+    if not hwnd:
+        return False
+    return bool(user32.SetForegroundWindow(int(hwnd)))
 
 
 def get_clipboard_text() -> str | None:

@@ -338,6 +338,17 @@ class VoiceAppController:
 
         set_clipboard_text(text)
 
+    def restore_target_focus(self) -> bool:
+        """Best-effort refocus of the window captured at recording start."""
+        if os.name != "nt" or not self._target_hwnd:
+            return False
+        try:
+            from .inject.windows import set_foreground_window
+
+            return set_foreground_window(self._target_hwnd)
+        except Exception:
+            return False
+
     def set_target_lang(self, code: str) -> None:
         code = normalize_language(code)
         if code:

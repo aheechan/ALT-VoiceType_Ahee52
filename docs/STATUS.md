@@ -70,7 +70,8 @@ Verified in this session:
   running, and clean shutdown after 1.5 s (fake ASR/model stubs).
 - Focus guard: the controller records the foreground window at recording start;
   if focus changed before insertion, it copies to the clipboard instead of
-  injecting into the wrong application (`ui.focus_guard`).
+  injecting into the wrong application (`ui.focus_guard`). The preview dialog
+  attempts to refocus that window before `commit()`.
 - PyInstaller 6.22.3 produces the one-folder app; Inno Setup compiles the
   installer. Launching the windowed exe/installer is still manual because the
   harness blocks GUI process startup.

@@ -306,6 +306,7 @@ class TrayApp(QObject):
             return
         dialog = PreviewDialog(result)
         if dialog.exec() == QDialog.DialogCode.Accepted:
+            self.controller.restore_target_focus()
             self.controller.commit(result, dialog.text())
         else:
             self._set_status("已取消")
