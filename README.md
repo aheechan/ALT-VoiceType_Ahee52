@@ -5,9 +5,11 @@
 AltVoice is a system-tray voice input assistant: hold `Alt`, speak, release, and the corrected
 text (or its translation) is inserted into the focused application. Everything runs locally.
 
-> **Status: M0 scaffold.** The repository currently contains the architecture, model profiles,
-> ASR adapters, correction/translation prompt layer, Windows text-injection primitives and the
-> ASR bake-off harness. The tray UI and global `Alt` hook land in M1.
+> **Status: M1 preview.** The repository contains the architecture, model profiles,
+> ASR adapters, correction/translation prompt layer, Windows text-injection primitives,
+> the global Alt hook, controller, tray/preview UI and the ASR bake-off harness.
+> PySide6, a microphone and model weights are required to run the interactive app;
+> see [docs/RUN.md](docs/RUN.md).
 
 ## Target hardware
 
@@ -39,6 +41,9 @@ python -m altvoice bakeoff --manifest benchmarks/asr_manifest.example.jsonl --dr
 
 # Unit tests do not need a GPU or model weights
 python -m unittest discover -s tests -v
+
+# Interactive tray (needs the ui/audio extras and an ASR model)
+python -m altvoice run
 ```
 
 Optional runtime dependencies are intentionally split so the core can be tested on a clean machine:
@@ -94,6 +99,7 @@ altvoice/
 - [Models and licenses](docs/MODELS.md)
 - [Interaction design](docs/UX.md)
 - [M0 ASR bake-off](docs/M0-BAKEOFF.md)
+- [Running the M1 tray preview](docs/RUN.md)
 
 ## Licenses
 

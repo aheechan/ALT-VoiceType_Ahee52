@@ -1,0 +1,104 @@
+import threading
+import unittest
+from pathlib import Path
+
+import numpy as np
+
+from altvoice.app import VoiceAppController
+from altvoice.asr import FakeASR
+from altvoice.config import AppConfig
+from altvoice.correct import NullCorrector
+from altvoice.inject import NullInjector
+from altvoice.pipeline import VoicePipeline
+from altvoice.translate.base import Translator
+from tests.helpers import workspace_tempdir
+
+
+class EchoTranslator(Translator):
+    def translate(self, text, target_lang, context=None, style="daily", glossary=None, source_lang="zh"):
+        return f"{target_lang}:{text}"
+
+
+class FakeRecorder:
+    def __init__(self, seconds=1.0):
+        self.seconds = seconds
+        self.started = threading.Event()
+
+    def record_push_to_talk(self, stop_event, max_seconds):
+        self.started.set()
+        stop_event.wait(1.0)
+        return np.full(int(16000 * self.seconds), 0.1, dtype=np.float32), 16000
+
+
+class ControllerTests(unittest.TestCase):
+    def _controller(self, preview=True):
+        config = AppConfig()
+        config.ui.preview = preview
+        config.asr.engine = "fake"
+        injector = NullInjector()
+        pipeline = VoicePipeline(
+            asr=FakeASR("你好，世界。"),
+            corrector=NullCorrector(),
+            translator=EchoTranslator(),
+            injector=injector,
+        )
+        recorder = FakeRecorder()
+        results = []
+        event = threading.Event()
+
+        def on_result(result):
+            results.append(result)
+            event.set()
+
+        controller = VoiceAppController(
+            config=config,
+            pipeline=pipeline,
+            recorder=recorder,
+            temp_dir=str(Path(__file__).resolve().parent / "_tmp"),
+            on_result=on_result,
+        )
+        return controller, recorder, results, event, injector
+
+    def test_record_preview_then_commit(self):
+        with workspace_tempdir() as tmp:
+            controller, recorder, results, event, injector = self._controller(preview=True)
+            controller._temp_dir = tmp
+            controller.start_recording()
+            self.assertTrue(recorder.started.wait(1.0))
+            controller.stop_recording()
+            self.assertTrue(event.wait(3.0))
+            self.assertEqual(len(results), 1)
+            self.assertEqual(results[0].output_text, "en:你好，世界。")
+            self.assertFalse(results[0].injected)
+            controller.commit(results[0])
+            self.assertEqual(injector.last_text, "en:你好，世界。")
+
+    def test_direct_insert_when_preview_off(self):
+        with workspace_tempdir() as tmp:
+            controller, recorder, results, event, injector = self._controller(preview=False)
+            controller._temp_dir = tmp
+            controller.start_recording()
+            self.assertTrue(recorder.started.wait(1.0))
+            controller.stop_recording()
+            self.assertTrue(event.wait(3.0))
+            self.assertTrue(results[0].injected)
+            self.assertEqual(injector.last_text, "en:你好，世界。")
+
+    def test_cancel_does_not_emit_result(self):
+        with workspace_tempdir() as tmp:
+            controller, recorder, results, event, _injector = self._controller()
+            controller._temp_dir = tmp
+            controller.start_recording()
+            self.assertTrue(recorder.started.wait(1.0))
+            controller.cancel_recording()
+            self.assertFalse(event.wait(0.5))
+            self.assertEqual(results, [])
+
+    def test_transcribe_mode_targets_chinese(self):
+        controller, _recorder, _results, _event, _injector = self._controller()
+        controller.set_mode("transcribe")
+        self.assertEqual(controller._effective_target(), "zh")
+
+
+if __name__ == "__main__":
+    unittest.main()

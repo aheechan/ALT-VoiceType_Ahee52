@@ -174,6 +174,15 @@ def cmd_translate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_run(args: argparse.Namespace) -> int:
+    try:
+        from .ui.tray import run_tray
+    except SystemExit as exc:
+        print(f"Tray UI unavailable: {exc}", file=sys.stderr)
+        return 2
+    return run_tray(args.config)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="altvoice", description="Offline voice input")
     parser.add_argument("--config", default=None, help="path to config.json")
@@ -184,6 +193,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     profiles = sub.add_parser("profiles", help="list VRAM/model profiles")
     profiles.set_defaults(func=cmd_profiles)
+
+    run = sub.add_parser("run", help="start the system-tray voice input app")
+    run.set_defaults(func=cmd_run)
 
     bakeoff = sub.add_parser("bakeoff", help="compare ASR engines on a JSONL manifest")
     bakeoff.add_argument("--manifest", required=True)

@@ -10,6 +10,8 @@ venv/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.piptmp/
+.pylibs/
 
 # Local config and secrets
 config.local.json

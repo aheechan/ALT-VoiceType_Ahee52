@@ -23,6 +23,7 @@ INPUT_KEYBOARD = 1
 KEYEVENTF_KEYUP = 0x0002
 KEYEVENTF_UNICODE = 0x0004
 VK_CONTROL = 0x11
+VK_MENU = 0x12
 VK_RETURN = 0x0D
 VK_V = 0x56
 
@@ -173,6 +174,20 @@ def send_ctrl_v() -> None:
             _key_event(VK_CONTROL, up=True),
         ]
     )
+
+
+def send_alt_down() -> None:
+    _send_input([_key_event(VK_MENU)])
+
+
+def send_alt_up() -> None:
+    _send_input([_key_event(VK_MENU, up=True)])
+
+
+def send_alt_tap() -> None:
+    send_alt_down()
+    time.sleep(0.03)
+    send_alt_up()
 
 
 def _unicode_event(unit: int, up: bool = False) -> INPUT:

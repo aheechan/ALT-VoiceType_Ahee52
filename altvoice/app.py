@@ -1,0 +1,278 @@
+"""Application controller: hotkey -> record -> pipeline -> UI callback.
+
+This module has no Qt dependency so it can be tested headlessly. The tray UI in
+``altvoice.ui.tray`` is a thin adapter over this controller.
+"""
+
+from __future__ import annotations
+
+import os
+import tempfile
+import threading
+from pathlib import Path
+from typing import Callable
+
+from .asr import create_engine
+from .audio import AudioRecorder, trim_silence, write_wav
+from .config import AppConfig, normalize_language
+from .context import ContextStore
+from .correct import LLMCorrector, NullCorrector
+from .inject import InjectionError, get_injector
+from .models import detect_vram_gb, select_profile
+from .pipeline import PipelineResult, VoicePipeline
+from .translate import IndexTranslateTranslator, NullTranslator
+
+
+class VoiceAppController:
+    def __init__(
+        self,
+        config: AppConfig | None = None,
+        config_path: str | Path | None = None,
+        on_status: Callable[[str], None] | None = None,
+        on_result: Callable[[PipelineResult], None] | None = None,
+        on_error: Callable[[str], None] | None = None,
+        recorder=None,
+        pipeline: VoicePipeline | None = None,
+        temp_dir: str | None = None,
+    ) -> None:
+        self.config = config or AppConfig.load(config_path)
+        self.profile = select_profile(detect_vram_gb(), self.config.profile)
+        self.target_lang = normalize_language(self.config.translator.target_language) or "en"
+        self.mode = "translate"
+        self.on_status = on_status or (lambda _msg: None)
+        self.on_result = on_result or (lambda _result: None)
+        self.on_error = on_error or (lambda _msg: None)
+        self._recorder = recorder
+        self._pipeline = pipeline
+        self._pipeline_lock = threading.RLock()
+        self._warming = False
+        self._temp_dir = temp_dir
+        self._lock = threading.RLock()
+        self._recording = False
+        self._cancelled = False
+        self._stop_event: threading.Event | None = None
+        self._thread: threading.Thread | None = None
+        self._last_result: PipelineResult | None = None
+
+    @property
+    def recording(self) -> bool:
+        return self._recording
+
+    @property
+    def last_result(self) -> PipelineResult | None:
+        return self._last_result
+
+    def ensure_pipeline(self) -> VoicePipeline:
+        with self._pipeline_lock:
+            if self._pipeline is not None:
+                return self._pipeline
+            cfg = self.config
+            self.on_status(f"加载 ASR（{cfg.asr.engine}）…")
+            engine = create_engine(
+                cfg.asr.engine,
+                model_path=cfg.asr.model_path,
+                device=cfg.asr.device,
+                language=cfg.asr.language,
+                beam_size=cfg.asr.beam_size,
+            )
+            corrector = NullCorrector()
+            if cfg.corrector.enabled and self.profile != "cpu-safe":
+                corrector = LLMCorrector(
+                    base_url=cfg.corrector.base_url,
+                    model=cfg.corrector.model,
+                    api_key=cfg.corrector.api_key,
+                    timeout_s=cfg.corrector.timeout_s,
+                    max_edit_ratio=cfg.corrector.max_edit_ratio,
+                    max_tokens=cfg.corrector.max_tokens,
+                )
+            translator = NullTranslator()
+            if cfg.translator.enabled:
+                translator = IndexTranslateTranslator(
+                    base_url=cfg.translator.base_url,
+                    model=cfg.translator.model,
+                    api_key=cfg.translator.api_key,
+                    timeout_s=cfg.translator.timeout_s,
+                    max_tokens=cfg.translator.max_tokens,
+                )
+            injector = get_injector(
+                cfg.injection.method,
+                restore_clipboard=cfg.injection.restore_clipboard,
+            )
+            self._pipeline = VoicePipeline(
+                asr=engine,
+                corrector=corrector,
+                translator=translator,
+                injector=injector,
+                context=ContextStore(scene="daily"),
+                style=cfg.translator.style,
+            )
+            self.on_status("就绪：长按 Alt 说话")
+            return self._pipeline
+
+    def warm_up(self) -> None:
+        """Load the ASR pipeline in the background.
+
+        The low-level keyboard hook must never block on a multi-second model
+        load, so the tray starts this before the user presses Alt.
+        """
+        with self._pipeline_lock:
+            if self._pipeline is not None or self._warming:
+                return
+            self._warming = True
+
+        def worker() -> None:
+            try:
+                self.ensure_pipeline()
+            except Exception as exc:
+                self.on_error(f"模型加载失败：{exc}")
+            finally:
+                self._warming = False
+
+        threading.Thread(target=worker, name="altvoice-warmup", daemon=True).start()
+
+    def _ensure_recorder(self) -> AudioRecorder:
+        if self._recorder is None:
+            self._recorder = AudioRecorder(
+                samplerate=self.config.audio.samplerate,
+                channels=self.config.audio.channels,
+                device=self.config.audio.device,
+            )
+        return self._recorder
+
+    def toggle_recording(self) -> None:
+        if self._recording:
+            self.stop_recording()
+        else:
+            self.start_recording()
+
+    def start_recording(self) -> None:
+        with self._lock:
+            if self._recording:
+                return
+            if self._pipeline is None:
+                self.on_error("模型加载中，请稍候再按 Alt")
+                self.warm_up()
+                return
+            try:
+                self._ensure_recorder()
+            except Exception as exc:
+                self.on_error(str(exc))
+                return
+            self._cancelled = False
+            self._stop_event = threading.Event()
+            self._recording = True
+            self._thread = threading.Thread(
+                target=self._record_worker,
+                name="altvoice-record",
+                daemon=True,
+            )
+            self._thread.start()
+            self.on_status("录音中…松开 Alt 结束")
+
+    def stop_recording(self) -> None:
+        with self._lock:
+            if self._stop_event is not None:
+                self._stop_event.set()
+
+    def cancel_recording(self) -> None:
+        with self._lock:
+            self._cancelled = True
+            if self._stop_event is not None:
+                self._stop_event.set()
+            self.on_status("已取消")
+
+    def _record_worker(self) -> None:
+        stop_event = self._stop_event
+        assert stop_event is not None
+        temp_path: str | None = None
+        try:
+            samples, sample_rate = self._recorder.record_push_to_talk(
+                stop_event,
+                max_seconds=self.config.audio.max_seconds,
+            )
+            if self._cancelled:
+                return
+            if len(samples) == 0:
+                self.on_error("没有录到声音，请检查麦克风")
+                return
+            if self.config.audio.trim_silence:
+                samples = trim_silence(
+                    samples,
+                    sample_rate,
+                    threshold=self.config.audio.silence_threshold,
+                    padding_ms=self.config.audio.padding_ms,
+                )
+            if len(samples) < sample_rate * 0.15:
+                self.on_error("语音太短，请再说一次")
+                return
+            fd, temp_path = tempfile.mkstemp(
+                prefix="altvoice_",
+                suffix=".wav",
+                dir=self._temp_dir,
+            )
+            os.close(fd)
+            write_wav(temp_path, samples, sample_rate)
+            assert self._pipeline is not None
+            result = self._pipeline.process_audio(
+                temp_path,
+                target_lang=self._effective_target(),
+                inject=not self.config.ui.preview,
+            )
+            if self._cancelled:
+                return
+            self._last_result = result
+            if result.error:
+                self.on_error(result.error)
+            self.on_result(result)
+        except Exception as exc:
+            if not self._cancelled:
+                self.on_error(f"识别失败：{exc}")
+        finally:
+            if temp_path:
+                try:
+                    os.unlink(temp_path)
+                except OSError:
+                    pass
+            with self._lock:
+                self._recording = False
+                self._stop_event = None
+                self._thread = None
+
+    def _effective_target(self) -> str:
+        if self.mode == "transcribe":
+            return "zh"
+        return self.target_lang
+
+    def commit(self, result: PipelineResult | None = None, text: str | None = None) -> None:
+        result = result or self._last_result
+        if result is None:
+            return
+        payload = (text if text is not None else result.output_text).strip()
+        if not payload:
+            self.on_error("没有可插入的文本")
+            return
+        assert self._pipeline is not None
+        try:
+            self._pipeline.injector.inject(payload)
+        except InjectionError as exc:
+            self.on_error(f"无法插入文本：{exc}")
+            return
+        self.on_status("已插入")
+
+    def set_target_lang(self, code: str) -> None:
+        code = normalize_language(code)
+        if code:
+            self.target_lang = code
+            self.mode = "translate"
+            self.on_status(f"目标语言：{code}")
+
+    def set_mode(self, mode: str) -> None:
+        if mode not in {"translate", "transcribe"}:
+            raise ValueError(f"unknown mode: {mode}")
+        self.mode = mode
+        self.on_status("模式：中文转写" if mode == "transcribe" else "模式：翻译")
+
+    def close(self) -> None:
+        self.cancel_recording()
+        if self._pipeline is not None:
+            self._pipeline.close()
