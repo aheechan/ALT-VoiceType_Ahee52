@@ -6,6 +6,10 @@
 #define MyAppPublisher "AltVoice contributors"
 #define MyAppExeName "AltVoice.exe"
 
+#ifndef SourceDir
+#define SourceDir "..\dist\AltVoice"
+#endif
+
 [Setup]
 AppId={{8E4E3F6A-2B7A-4E1B-9C1A-000000000001}
 AppName={#MyAppName}
@@ -31,7 +35,7 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 Name: "autostart"; Description: "Start AltVoice when I sign in"; GroupDescription: "Startup:"
 
 [Files]
-Source: "..\dist\AltVoice\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
+Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

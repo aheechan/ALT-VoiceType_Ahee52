@@ -53,5 +53,7 @@ and prints missing-file checks. Download the models, then launch `AltVoice.exe`.
 - Code signing is not configured. A signed build reduces SmartScreen/antivirus friction
   caused by the global keyboard hook.
 - The PyInstaller one-folder build was verified with PyInstaller 6.22.3 + PySide6 6.12
-  (~147 MB). The Inno Setup installer has not been compiled yet.
+  (~147 MB). Inno Setup 6.7.3 compiled `AltVoice-Setup-0.1.0.exe` (~41 MB); the
+  installer is unsigned and its silent install still needs a real desktop test.
+- To package a custom build directory, pass `/DSourceDir=...` to ISCC.
 - Do not run the local llama.cpp servers on `0.0.0.0`; they have no authentication.
