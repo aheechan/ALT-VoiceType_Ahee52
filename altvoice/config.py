@@ -199,7 +199,7 @@ class InjectionConfig:
 
 @dataclass
 class UIConfig:
-    preview: bool = True
+    preview: bool = False
     start_minimized: bool = True
     focus_guard: bool = True
 

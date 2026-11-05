@@ -268,6 +268,9 @@ class VoiceAppController:
             if result.error:
                 self.on_error(result.error)
             if not self.config.ui.preview:
+                # Put the caret back where the user started speaking, then paste.
+                if self.config.ui.focus_guard:
+                    self.restore_target_focus()
                 self._deliver(result, result.output_text)
             self.on_result(result)
         except Exception as exc:

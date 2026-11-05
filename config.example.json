@@ -62,7 +62,7 @@
     "paste_delay_ms": 80
   },
   "ui": {
-    "preview": true,
+    "preview": false,
     "start_minimized": true,
     "focus_guard": true
   },

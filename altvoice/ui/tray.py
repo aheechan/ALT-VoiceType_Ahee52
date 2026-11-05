@@ -237,7 +237,7 @@ class TrayPanel(QWidget):
         self.mode_label.setObjectName("mode")
         layout.addWidget(self.mode_label)
 
-        self.preview = QCheckBox("插入前预览")
+        self.preview = QCheckBox("显示确认弹窗（关闭则直接粘贴）")
         self.preview.setChecked(tray.controller.config.ui.preview)
         self.preview.toggled.connect(self._preview_changed)
         layout.addWidget(self.preview)
@@ -363,7 +363,7 @@ class TrayApp(QObject):
             self.language_group.addAction(action)
             language_menu.addAction(action)
 
-        self.preview_action = QAction("插入前预览", self)
+        self.preview_action = QAction("显示确认弹窗", self)
         self.preview_action.setCheckable(True)
         self.preview_action.setChecked(self.controller.config.ui.preview)
         self.preview_action.toggled.connect(self._set_preview)
@@ -496,7 +496,7 @@ class TrayApp(QObject):
             result.injected,
         )
         if not self.controller.config.ui.preview:
-            self._set_status("已插入")
+            self._set_status("已粘贴" if result.injected else "结果已复制到剪贴板")
             return
         dialog = PreviewDialog(result)
         if dialog.exec() == QDialog.DialogCode.Accepted:
