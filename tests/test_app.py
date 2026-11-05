@@ -120,6 +120,25 @@ class ControllerTests(unittest.TestCase):
             self.assertEqual(recent[0]["corrected"], "你好，世界。")
             self.assertEqual(recent[0]["translation"], "en:你好，世界。")
 
+    def test_history_seeds_context(self):
+        with workspace_tempdir() as tmp:
+            history_path = Path(tmp) / "history.db"
+            with HistoryStore(history_path) as store:
+                store.add_utterance("上次说的话", "上次说的话。", "Last time.", "en", "zh")
+            config = AppConfig()
+            config.asr.engine = "fake"
+            config.servers.enabled = False
+            config.corrector.enabled = False
+            config.translator.enabled = False
+            config.history.path = str(history_path)
+            controller = VoiceAppController(config=config, temp_dir=tmp)
+            try:
+                pipeline = controller.ensure_pipeline()
+                self.assertEqual(len(pipeline.context), 1)
+                self.assertEqual(pipeline.context.recent(1)[0]["corrected"], "上次说的话。")
+            finally:
+                controller.close()
+
 
 if __name__ == "__main__":
     unittest.main()

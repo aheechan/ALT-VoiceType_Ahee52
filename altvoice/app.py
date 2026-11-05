@@ -116,6 +116,14 @@ class VoiceAppController:
             context = ContextStore(scene="daily")
             if self.history is not None:
                 context.set_glossary(self.history.get_glossary())
+                for item in self.history.recent(5):
+                    context.add(
+                        source=item["source"],
+                        corrected=item["corrected"],
+                        translation=item["translation"],
+                        app=item["app"],
+                        scene=item["scene"],
+                    )
             self._pipeline = VoicePipeline(
                 asr=engine,
                 corrector=corrector,
