@@ -11,7 +11,7 @@ under `%LOCALAPPDATA%\AltVoice\models` (or set `models_dir` in `config.json`).
 | `qwen3_asr_1_7b` | ASR | 1.7B | BF16 | ~3.4 GB | ~3.6 GB | Apache-2.0 | [Qwen3-ASR](https://github.com/QwenLM/Qwen3-ASR) |
 | `qwen3_asr_0_6b` | ASR | 0.6B | BF16 | ~1.2 GB | ~1.5 GB | Apache-2.0 | [Qwen3-ASR](https://github.com/QwenLM/Qwen3-ASR) |
 | `sensevoice_small` | ASR | 234M | FP32/ONNX | ~0.3 GB | ~0.5 GB | Apache-2.0 | [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) |
-| `qwen3_1_7b_instruct_q4` | Corrector | 1.7B | Q4_K_M | ~1.2 GB | ~1.3 GB | Apache-2.0 | Qwen3 |
+| `qwen3_1_7b_instruct_q4` | Corrector | 1.7B | Q8_0 | ~1.8 GB | ~1.9 GB | Apache-2.0 | Qwen3 (only Q8 ships upstream) |
 | `qwen3_4b_instruct_q4` | Corrector | 4B | Q4_K_M | ~2.5 GB | ~2.6 GB | Apache-2.0 | Qwen3 |
 | `rules_only` | Corrector | — | rules | 0 | 0 | Apache-2.0 | built-in (CPU profile) |
 | `index_translate_9b_q4` | Translator | 9B | Q4_K_M | ~5.5 GB | ~5.7 GB | check model card | [Index-Translate](https://github.com/bilibili/Index-Translate) |
@@ -24,11 +24,11 @@ Sizes are approximate and vary by quantizer/revision. Always verify the SHA256 o
 **Balanced (default):**
 
 1. **ASR:** Qwen3-ASR-0.6B (BF16, `qwen-asr`).
-2. **Corrector:** Qwen3-1.7B-Instruct, Q4_K_M, served by llama.cpp on `127.0.0.1:8091`.
+2. **Corrector:** Qwen3-1.7B-Instruct, Q8_0 (the only 1.7B GGUF upstream), port `8091`.
 3. **Translator:** Index-Translate-9B, Q4_K_M, served by llama.cpp on `127.0.0.1:8092`.
 
-This is ~8.5 GB of weights and leaves room for the desktop. `12gb-max` swaps in
-Qwen3-ASR-1.7B (~10.6 GB) but is tight; close background GPU apps.
+This is ~9.1 GB of weights and leaves room for the desktop. `12gb-max` swaps in
+Qwen3-ASR-1.7B (~11.2 GB) but is tight; close background GPU apps.
 
 Qwen3-ASR is the Windows default. FireRedASR2-AED can replace it if you have a tested
 Linux/WSL setup; its upstream code is only tested on Ubuntu 22.04.

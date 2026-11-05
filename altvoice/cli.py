@@ -207,6 +207,21 @@ def cmd_history(args: argparse.Namespace) -> int:
         store.close()
 
 
+def cmd_download(args: argparse.Namespace) -> int:
+    cfg = _config(args)
+    profile = args.profile or select_profile(detect_vram_gb(), cfg.profile)
+    from .downloader import download_profile
+
+    errors = download_profile(cfg, profile, progress=print)
+    if errors:
+        print("\nDownload errors:", file=sys.stderr)
+        for error in errors:
+            print(f"  - {error}", file=sys.stderr)
+        return 1
+    print("Model download complete.")
+    return 0
+
+
 def cmd_health(args: argparse.Namespace) -> int:
     cfg = _config(args)
     from .health import check_health, format_report
@@ -305,6 +320,10 @@ def build_parser() -> argparse.ArgumentParser:
     models.add_argument("--check", action="store_true", help="exit 1 when a model is missing")
     models.add_argument("--commands", action="store_true")
     models.set_defaults(func=cmd_models)
+
+    download = sub.add_parser("download", help="download missing Hugging Face models")
+    download.add_argument("--profile", default=None)
+    download.set_defaults(func=cmd_download)
 
     setup = sub.add_parser("setup", help="write a first-run config with model paths")
     setup.add_argument("--profile", default="12gb-balanced")

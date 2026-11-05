@@ -7,8 +7,9 @@
 - Local git repository initialized on `main`.
 - Product plan, architecture, ADR, model catalog, UX, run guide and bake-off guide.
 - 12 GB-first VRAM profiles:
-  - `12gb-balanced`: Qwen3-ASR-1.7B + Qwen3-1.7B + Index-Translate-9B (~10.6 GB of weights).
-  - `12gb-safe`: Qwen3-ASR-0.6B + Qwen3-1.7B + Index-Translate-2B (~4.4 GB).
+  - `12gb-balanced`: Qwen3-ASR-0.6B + Qwen3-1.7B Q8 + Index-Translate-9B (~9.1 GB).
+  - `12gb-max`: Qwen3-ASR-1.7B + Qwen3-1.7B Q8 + Index-Translate-9B (~11.2 GB).
+  - `12gb-safe`: Qwen3-ASR-0.6B + Qwen3-1.7B Q8 + Index-Translate-2B (~5.0 GB).
   - `16gb-quality` / `24gb-quality`: Qwen3-ASR-1.7B + 4B corrector + 9B translator (~11.9 GB).
   - `cpu-safe`: SenseVoice + rules + 2B translator.
 - Windows default ASR is Qwen3-ASR (ADR-0002); FireRedASR2-AED remains an optional quality engine.
@@ -38,6 +39,8 @@
   checks and download commands.
 - `setup_wizard.py` + `python -m altvoice setup`: first-run config with profile,
   model paths and download instructions.
+- `downloader.py` + `python -m altvoice download`: Hugging Face resumable model
+  download for a profile (Qwen3-ASR/Qwen3/Index-Translate).
 - `health.py` + `python -m altvoice health`: one-shot readiness check for models,
   ASR engine, microphone and PySide6.
 - Tray first-run/environment dialog: missing paths, copy download commands,
@@ -51,7 +54,7 @@
   PyInstaller 6.22.3 one-folder build succeeds (~147 MB) with PySide6 bundled.
   Inno Setup 6.7.3 compiles `dist/installer/AltVoice-Setup-0.1.0.exe` (~41 MB).
 - GitHub Actions: Windows CI tests and a manual Windows build workflow.
-- 87 unit tests total; 84 run without PySide6, 3 UI smoke tests run when
+- 88 unit tests total; 85 run without PySide6, 3 UI smoke tests run when
   PySide6 is available (`QT_QPA_PLATFORM=offscreen`).
 
 Verified in this session:
@@ -84,8 +87,8 @@ Verified in this session:
   `Transactions even almost came to a standstill.` and injected it through the
   test injector.
 - GPU observation: 9B + 1.7B servers plus the desktop are heavy on 12 GB. Default
-  `12gb-balanced` now uses Qwen3-ASR-0.6B (~8.5 GB weights); `12gb-max` keeps the
-  1.7B ASR (~10.6 GB) for users who close background GPU apps.
+  `12gb-balanced` now uses Qwen3-ASR-0.6B (~9.1 GB weights); `12gb-max` keeps the
+  1.7B ASR (~11.2 GB) for users who close background GPU apps.
 - Local OpenAI-compatible correction/translation HTTP path tested against an
   in-process mock server (prompt, JSON parsing, diff guard, target-zh skip).
 - Clipboard set/get/restore verified with real Unicode text. No microphone input

@@ -23,9 +23,9 @@ detects VRAM at startup (`nvidia-smi`), picks a profile, and lets the user overr
 
 | Profile | ASR | Corrector | Translator | Est. weights |
 |---|---|---|---|---:|
-| `12gb-balanced` | Qwen3-ASR-0.6B (~1.5 GB) | Qwen3-1.7B Q4 (~1.3 GB) | Index-Translate-9B Q4 (~5.7 GB) | ~8.5 GB |
-| `12gb-max` | Qwen3-ASR-1.7B BF16 (~3.6 GB) | Qwen3-1.7B Q4 (~1.3 GB) | Index-Translate-9B Q4 (~5.7 GB) | ~10.6 GB |
-| `12gb-safe` | Qwen3-ASR-0.6B (~1.5 GB) | Qwen3-1.7B Q4 (~1.3 GB) | Index-Translate-2B Q4 (~1.6 GB) | ~4.4 GB |
+| `12gb-balanced` | Qwen3-ASR-0.6B (~1.5 GB) | Qwen3-1.7B Q8 (~1.9 GB) | Index-Translate-9B Q4 (~5.7 GB) | ~9.1 GB |
+| `12gb-max` | Qwen3-ASR-1.7B BF16 (~3.6 GB) | Qwen3-1.7B Q8 (~1.9 GB) | Index-Translate-9B Q4 (~5.7 GB) | ~11.2 GB |
+| `12gb-safe` | Qwen3-ASR-0.6B (~1.5 GB) | Qwen3-1.7B Q8 (~1.9 GB) | Index-Translate-2B Q4 (~1.6 GB) | ~5.0 GB |
 | `16gb-quality` | Qwen3-ASR-1.7B (~3.6 GB) | Qwen3-4B Q4 (~2.6 GB) | Index-Translate-9B Q4 (~5.7 GB) | ~11.9 GB |
 | `24gb-quality` | Qwen3-ASR-1.7B (~3.6 GB) | Qwen3-4B Q4 (~2.6 GB) | Index-Translate-9B Q4 (~5.7 GB) | ~11.9 GB |
 | `cpu-safe` | SenseVoice-Small (~0.3 GB) | rules only | Index-Translate-2B Q4 (~1.6 GB) | ~2.1 GB |

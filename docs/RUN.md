@@ -57,6 +57,8 @@ Create the config with the expected model paths:
 
 ```powershell
 python -m altvoice setup --profile 12gb-balanced
+pip install -e ".[download]"
+python -m altvoice download --profile 12gb-balanced
 ```
 
 Then edit `%APPDATA%\AltVoice\config.json` if needed:

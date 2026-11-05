@@ -15,15 +15,15 @@ text (or its translation) is inserted into the focused application. Everything r
 
 | Profile | VRAM | ASR | Corrector | Translator |
 |---|---:|---|---|---|
-| `12gb-balanced` **(default baseline)** | 12 GB | Qwen3-ASR-0.6B | Qwen3-1.7B-Instruct Q4 | Index-Translate-9B Q4 |
-| `12gb-max` | 12 GB | Qwen3-ASR-1.7B BF16 | Qwen3-1.7B Q4 | Index-Translate-9B Q4 |
-| `12gb-safe` | 12 GB | Qwen3-ASR-0.6B | Qwen3-1.7B Q4 | Index-Translate-2B Q4 |
+| `12gb-balanced` **(default baseline)** | 12 GB | Qwen3-ASR-0.6B | Qwen3-1.7B-Instruct Q8 | Index-Translate-9B Q4 |
+| `12gb-max` | 12 GB | Qwen3-ASR-1.7B BF16 | Qwen3-1.7B Q8 | Index-Translate-9B Q4 |
+| `12gb-safe` | 12 GB | Qwen3-ASR-0.6B | Qwen3-1.7B Q8 | Index-Translate-2B Q4 |
 | `16gb-quality` | 16 GB | Qwen3-ASR-1.7B BF16 | Qwen3-4B-Instruct Q4 | Index-Translate-9B Q4 |
 | `24gb-quality` | 24 GB | Qwen3-ASR-1.7B BF16 | Qwen3-4B-Instruct Q4 | Index-Translate-9B Q4 |
 | `cpu-safe` | CPU | SenseVoice-Small (sherpa-onnx) | rules only | Index-Translate-2B Q4 (~2.1 GB total) |
 
-`12gb-balanced` is tuned for an RTX 3070 12 GB (~8.5 GB of weights); `12gb-max` uses the
-1.7B ASR and is tight (~10.6 GB), best with background GPU apps closed. Qwen3-ASR is the
+`12gb-balanced` is tuned for an RTX 3070 12 GB (~9.1 GB of weights); `12gb-max` uses the
+1.7B ASR and is tight (~11.2 GB), best with background GPU apps closed. Qwen3-ASR is the
 Windows default because FireRedASR2S is only tested on Ubuntu 22.04 upstream; FireRedASR2-AED
 remains an optional quality engine if you can run it.
 
@@ -39,6 +39,7 @@ python -m altvoice doctor
 python -m altvoice profiles
 python -m altvoice setup --profile 12gb-balanced
 python -m altvoice models --profile 12gb-balanced --commands
+python -m altvoice download --profile 12gb-balanced
 python -m altvoice health
 python -m altvoice history --limit 5
 
@@ -58,6 +59,7 @@ Optional runtime dependencies are intentionally split so the core can be tested 
 pip install -e ".[audio]"       # microphone capture
 pip install -e ".[asr-qwen]"    # Qwen3-ASR via qwen-asr
 pip install -e ".[asr-sherpa]"  # CPU fallback via sherpa-onnx
+pip install -e ".[download]"   # huggingface_hub + hf_xet model downloader
 pip install -e ".[llm]"         # local OpenAI-compatible clients
 pip install -e ".[ui]"          # PySide6 tray (M1)
 ```

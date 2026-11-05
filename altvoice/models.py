@@ -81,14 +81,14 @@ MODEL_CATALOG: dict[str, ModelSpec] = {
     "qwen3_1_7b_instruct_q4": ModelSpec(
         key="qwen3_1_7b_instruct_q4",
         role="corrector",
-        display_name="Qwen3-1.7B-Instruct Q4",
+        display_name="Qwen3-1.7B-Instruct Q8",
         params_b=1.7,
-        quant="Q4_K_M",
-        disk_gb=1.2,
-        vram_gb=1.3,
+        quant="Q8_0",
+        disk_gb=1.8,
+        vram_gb=1.9,
         license="Apache-2.0",
         source="https://huggingface.co/Qwen",
-        notes="Default 12 GB corrector.",
+        notes="Default 12 GB corrector; official repo only ships Q8_0.",
     ),
     "qwen3_4b_instruct_q4": ModelSpec(
         key="qwen3_4b_instruct_q4",
@@ -149,7 +149,7 @@ _MODEL_SOURCES: dict[str, tuple[str, str, str]] = {
     "sensevoice_small": ("iic/SenseVoiceSmall", "", "dir"),
     "qwen3_1_7b_instruct_q4": (
         "Qwen/Qwen3-1.7B-GGUF",
-        "Qwen3-1.7B-Q4_K_M.gguf",
+        "Qwen3-1.7B-Q8_0.gguf",
         "file",
     ),
     "qwen3_4b_instruct_q4": (

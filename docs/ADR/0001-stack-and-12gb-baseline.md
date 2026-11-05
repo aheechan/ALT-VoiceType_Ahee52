@@ -30,7 +30,7 @@ The main constraints are:
   and fits the 12 GB budget.
 - **ASR alternates:** Qwen3-ASR-1.7B/0.6B (streaming/dialects) and sherpa-onnx + SenseVoice-Small
   (CPU fallback).
-- **Corrector:** Qwen3-1.7B-Instruct Q4 for the 12 GB profile; Qwen3-4B Q4 for 16 GB+.
+- **Corrector:** Qwen3-1.7B-Instruct Q8 for the 12 GB profile; Qwen3-4B Q4 for 16 GB+.
 - **Translator:** Index-Translate-9B Q4 for 12 GB+; Index-Translate-2B Q4 for safe/CPU profiles.
 - **Inference runtime:** llama.cpp OpenAI-compatible server for correction and translation;
   PyTorch (FireRed) or qwen-asr for ASR, isolated behind adapters.
@@ -41,7 +41,7 @@ The main constraints are:
 
 Positive:
 
-- 12 GB profile fits: ~9.5 GB of weights + ~2 GB runtime/KV cache.
+- 12 GB profile fits: ~9.1 GB of weights + ~2 GB runtime/KV cache.
 - All core models are Apache-2.0 or permissive; the code can be Apache-2.0.
 - The OpenAI-compatible boundary keeps the app independent of vLLM/SGLang/llama.cpp internals.
 - CPU fallback is possible with sherpa-onnx and the 2B translator.
