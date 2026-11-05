@@ -11,24 +11,33 @@ or the path configured in config.json.
 
 from pathlib import Path
 
+from PyInstaller.utils.hooks import collect_submodules
+
 project_root = Path(SPECPATH).resolve().parent  # noqa: F821 - PyInstaller injects SPECPATH
+
+hiddenimports = [
+    "altvoice.ui.tray",
+    "altvoice.asr.qwen3",
+    "altvoice.asr.firered",
+    "altvoice.asr.sherpa",
+    "altvoice.asr.fake",
+    "altvoice.servers",
+    "qwen_asr",
+    "huggingface_hub",
+    "six",
+]
+# transformers uses lazy imports; qwen-asr needs AutoConfig/AutoProcessor etc.
+hiddenimports += collect_submodules("transformers")
 
 a = Analysis(  # noqa: F821
     [str(project_root / "altvoice" / "__main__.py")],
     pathex=[str(project_root)],
     binaries=[],
     datas=[],
-    hiddenimports=[
-        "altvoice.ui.tray",
-        "altvoice.asr.qwen3",
-        "altvoice.asr.firered",
-        "altvoice.asr.sherpa",
-        "altvoice.asr.fake",
-        "altvoice.servers",
-    ],
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=[str(project_root / "packaging" / "rthook_optional.py")],
     excludes=["pytest", "ruff"],
     noarchive=False,
     optimize=0,

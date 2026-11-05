@@ -53,8 +53,8 @@
   clear-all with confirmation.
 - `python -m altvoice servers --command`.
 - Packaging: PyInstaller spec, Inno Setup script, `scripts/build_windows.ps1`.
-  PyInstaller 6.22.3 one-folder build succeeds (~147 MB) with PySide6 bundled.
-  Inno Setup 6.7.3 compiles `dist/installer/AltVoice-Setup-0.1.0.exe` (~41 MB).
+  PyInstaller 6.22.3 one-folder build succeeds (~1.37 GB with `asr-qwen`/torch).
+  Inno Setup 6.7.3 compiles `dist/installer/AltVoice-Setup-0.1.0.exe` (~341 MB).
 - GitHub Actions: Windows core tests, offscreen UI smoke tests, and a manual
   build workflow that produces the PyInstaller app + Inno installer artifact.
 - 89 unit tests total; 85 run without PySide6, 4 UI smoke tests run when
@@ -77,6 +77,10 @@ Verified in this session:
 - PyInstaller 6.22.3 produces the one-folder app; Inno Setup compiles the
   installer. Launching the windowed exe/installer is still manual because the
   harness blocks GUI process startup.
+- The packaged **console debug build** actually transcribes the Chinese sample
+  with bundled qwen-asr: `甚至出现交易几乎停滞的情况。`, ~1.4 s CPU. This
+  required bundling transformers submodules and stubbing optional Japanese
+  tokenizer imports.
 - Real Qwen3-ASR-0.6B CPU smoke test on the public Chinese sample:
   transcription `甚至出现交易几乎停滞的情况。`, ~1.9 s (CPU, cached model).
   The adapter and full pipeline both work end to end.

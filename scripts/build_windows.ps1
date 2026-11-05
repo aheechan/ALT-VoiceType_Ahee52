@@ -11,7 +11,7 @@ try {
     }
     $python = Join-Path $root ".venv-build\Scripts\python.exe"
     & $python -m pip install --upgrade pip
-    & $python -m pip install -e ".[ui,audio]" "pyinstaller>=6.6"
+    & $python -m pip install -e ".[ui,audio,asr-qwen,download]" "pyinstaller>=6.6"
 
     & $python -m PyInstaller --clean --noconfirm packaging\altvoice.spec
 

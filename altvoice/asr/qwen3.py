@@ -50,7 +50,8 @@ class Qwen3ASREngine(ASREngine):
             from qwen_asr import Qwen3ASRModel
         except ImportError as exc:
             raise EngineUnavailable(
-                "Qwen3-ASR is not installed. Install with: pip install 'altvoice[asr-qwen]'"
+                "Qwen3-ASR is not importable. Install with: pip install 'altvoice[asr-qwen]'. "
+                f"Details: {exc}"
             ) from exc
 
         if self.device.startswith("cuda") and not torch.cuda.is_available():
@@ -72,15 +73,27 @@ class Qwen3ASREngine(ASREngine):
         self.load()
         assert self._model is not None
         lang_name = _QWEN_LANGUAGE_NAMES.get(language)
+        from ..audio import ensure_wav16k, read_wav
+
+        wav_path, temporary = ensure_wav16k(audio_path)
         start = time.perf_counter()
         try:
+            samples, rate = read_wav(wav_path)
+            # Pass a waveform tuple instead of a path: this avoids librosa's
+            # numba-cached loaders inside a frozen PyInstaller app.
             results = self._model.transcribe(
-                audio=str(audio_path),
+                audio=(samples, rate),
                 language=lang_name,
                 return_time_stamps=False,
             )
         except Exception as exc:
             raise EngineUnavailable(f"Qwen3-ASR transcription failed: {exc}") from exc
+        finally:
+            if temporary:
+                try:
+                    wav_path.unlink()
+                except OSError:
+                    pass
         elapsed = (time.perf_counter() - start) * 1000.0
         item = results[0] if results else None
         text = getattr(item, "text", "") if item is not None else ""
