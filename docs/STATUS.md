@@ -68,6 +68,14 @@ Verified in this session:
 - Real Qwen3-ASR-0.6B CPU smoke test on the public Chinese sample:
   transcription `甚至出现交易几乎停滞的情况。`, ~1.9 s (CPU, cached model).
   The adapter and full pipeline both work end to end.
+- Real Index-Translate-2B and 9B GGUF servers tested with llama.cpp. 9B output is
+  natural (`We’ve got a meeting at three this afternoon—don’t be late!`), latency
+  ~0.2–0.5 s per short sentence on the 3090.
+- Full real pipeline: Qwen3-ASR-0.6B → Qwen3-1.7B correction → Index-Translate-9B
+  produced `There were even times when trading pretty much came to a standstill.`
+- GPU observation: 9B + 1.7B servers plus the desktop are heavy on 12 GB. Default
+  `12gb-balanced` now uses Qwen3-ASR-0.6B (~8.5 GB weights); `12gb-max` keeps the
+  1.7B ASR (~10.6 GB) for users who close background GPU apps.
 - Local OpenAI-compatible correction/translation HTTP path tested against an
   in-process mock server (prompt, JSON parsing, diff guard, target-zh skip).
 - `llama-server` installed via winget; `resolve_binary()` finds the winget

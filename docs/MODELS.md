@@ -21,18 +21,23 @@ Sizes are approximate and vary by quantizer/revision. Always verify the SHA256 o
 
 ## Recommended 12 GB setup (RTX 3070, Windows)
 
-1. **ASR:** Qwen3-ASR-1.7B (BF16, `qwen-asr`).
+**Balanced (default):**
+
+1. **ASR:** Qwen3-ASR-0.6B (BF16, `qwen-asr`).
 2. **Corrector:** Qwen3-1.7B-Instruct, Q4_K_M, served by llama.cpp on `127.0.0.1:8091`.
 3. **Translator:** Index-Translate-9B, Q4_K_M, served by llama.cpp on `127.0.0.1:8092`.
+
+This is ~8.5 GB of weights and leaves room for the desktop. `12gb-max` swaps in
+Qwen3-ASR-1.7B (~10.6 GB) but is tight; close background GPU apps.
 
 Qwen3-ASR is the Windows default. FireRedASR2-AED can replace it if you have a tested
 Linux/WSL setup; its upstream code is only tested on Ubuntu 22.04.
 
 If the translator OOMs while all three are resident, either:
 
-- enable lazy loading (`lazy_load: true`), or
 - switch to `12gb-safe` (Qwen3-ASR-0.6B + 2B translator), or
-- unload the translator after 5 idle minutes.
+- unload the translator after 5 idle minutes, or
+- use `12gb-balanced` instead of `12gb-max`.
 
 ## Download notes
 

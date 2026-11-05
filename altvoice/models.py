@@ -178,7 +178,13 @@ for _key, (_repo, _filename, _kind) in _MODEL_SOURCES.items():
 
 PROFILES: dict[str, dict[str, str]] = {
     "12gb-balanced": {
-        "description": "RTX 3070 12 GB baseline: Qwen3-ASR + 9B translation",
+        "description": "RTX 3070 12 GB baseline: 0.6B ASR + 9B translation",
+        "asr": "qwen3_asr_0_6b",
+        "corrector": "qwen3_1_7b_instruct_q4",
+        "translator": "index_translate_9b_q4",
+    },
+    "12gb-max": {
+        "description": "12 GB, minimal background apps: 1.7B ASR + 9B translation",
         "asr": "qwen3_asr_1_7b",
         "corrector": "qwen3_1_7b_instruct_q4",
         "translator": "index_translate_9b_q4",

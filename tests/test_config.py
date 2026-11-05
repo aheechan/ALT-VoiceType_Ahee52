@@ -72,10 +72,11 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(select_profile(12.0, "12gb-safe"), "12gb-safe")
 
     def test_12gb_profile_fits(self):
-        self.assertLess(estimate_vram("12gb-balanced"), 12.0)
+        self.assertLess(estimate_vram("12gb-balanced"), 10.0)
         models = profile_models("12gb-balanced")
-        self.assertEqual(models["asr"].key, "qwen3_asr_1_7b")
+        self.assertEqual(models["asr"].key, "qwen3_asr_0_6b")
         self.assertEqual(models["translator"].key, "index_translate_9b_q4")
+        self.assertLess(estimate_vram("12gb-max"), 12.0)
 
     def test_all_profiles_have_three_roles(self):
         for name in PROFILES:

@@ -19,14 +19,14 @@ class ModelStoreTests(unittest.TestCase):
             self.assertFalse(all_present(cfg, "12gb-balanced"))
             commands = download_commands(cfg, "12gb-balanced")
             joined = "\n".join(commands)
-            self.assertIn("Qwen/Qwen3-ASR-1.7B", joined)
+            self.assertIn("Qwen/Qwen3-ASR-0.6B", joined)
             self.assertIn("IndexTeam/Index-Translate-9B-GGUF", joined)
 
     def test_exists_for_dir_and_file(self):
         with workspace_tempdir() as tmp:
             cfg = AppConfig()
             cfg.models_dir = tmp
-            asr = MODEL_CATALOG["qwen3_asr_1_7b"]
+            asr = MODEL_CATALOG["qwen3_asr_0_6b"]
             asr_path = model_path(cfg, asr)
             asr_path.mkdir(parents=True)
             (asr_path / "config.json").write_text("{}", encoding="utf-8")
@@ -35,7 +35,7 @@ class ModelStoreTests(unittest.TestCase):
             corrector_path.parent.mkdir(parents=True, exist_ok=True)
             corrector_path.write_bytes(b"gguf")
             items = {item.key: item for item in locations(cfg, "12gb-balanced")}
-            self.assertTrue(items["qwen3_asr_1_7b"].exists)
+            self.assertTrue(items["qwen3_asr_0_6b"].exists)
             self.assertTrue(items["qwen3_1_7b_instruct_q4"].exists)
             self.assertFalse(items["index_translate_9b_q4"].exists)
 

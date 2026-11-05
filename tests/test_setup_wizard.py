@@ -13,7 +13,7 @@ class SetupTests(unittest.TestCase):
             cfg = build_config("12gb-balanced", tmp, "ja")
             self.assertEqual(cfg.profile, "12gb-balanced")
             self.assertEqual(cfg.asr.engine, "qwen3")
-            self.assertIn("qwen3_asr_1_7b", cfg.asr.model_path or "")
+            self.assertIn("qwen3_asr_0_6b", cfg.asr.model_path or "")
             self.assertTrue(cfg.corrector.enabled)
             self.assertTrue(cfg.corrector.autostart)
             self.assertTrue(cfg.corrector.model_path.endswith("Qwen3-1.7B-Q4_K_M.gguf"))

@@ -17,14 +17,15 @@ larger delivery risk than the ~0.7-point CER gap.
 
 ## Decision
 
-- **Default ASR on Windows:** Qwen3-ASR-1.7B via `qwen-asr` (Transformers backend).
+- **Default ASR engine on Windows:** Qwen3-ASR via `qwen-asr` (Transformers backend).
   - 52 languages/dialects, 22 Chinese dialects, streaming support, Apache-2.0.
   - Windows-friendly PyTorch/Transformers stack.
-  - `12gb-balanced`: Qwen3-ASR-1.7B + Qwen3-1.7B corrector + Index-Translate-9B Q4
-    (~10.6 GB of weights).
+  - `12gb-balanced`: Qwen3-ASR-0.6B + Qwen3-1.7B corrector + Index-Translate-9B Q4
+    (~8.5 GB of weights, leaves room for the desktop).
+  - `12gb-max`: Qwen3-ASR-1.7B in the same stack (~10.6 GB, tight on 12 GB).
 - **Quality option:** FireRedASR2-AED remains a selectable engine for users with a tested
   Linux/WSL environment or a verified Windows setup.
-- **Low-memory fallback:** Qwen3-ASR-0.6B in `12gb-safe`.
+- **Low-memory fallback:** Qwen3-ASR-0.6B + Index-Translate-2B in `12gb-safe`.
 - **CPU fallback:** SenseVoice-Small via sherpa-onnx.
 
 ## Consequences
