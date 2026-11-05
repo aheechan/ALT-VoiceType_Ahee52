@@ -17,6 +17,7 @@ from .audio import AudioRecorder, trim_silence, write_wav
 from .config import AppConfig, normalize_language
 from .context import ContextStore
 from .correct import LLMCorrector, NullCorrector
+from .history import HistoryStore, default_history_path
 from .inject import InjectionError, get_injector
 from .models import detect_vram_gb, select_profile
 from .pipeline import PipelineResult, VoicePipeline
@@ -55,6 +56,14 @@ class VoiceAppController:
         self._stop_event: threading.Event | None = None
         self._thread: threading.Thread | None = None
         self._last_result: PipelineResult | None = None
+        self.history: HistoryStore | None = None
+        if self.config.history.enabled:
+            try:
+                self.history = HistoryStore(
+                    self.config.history.path or default_history_path()
+                )
+            except Exception as exc:
+                self.on_error(f"历史记录不可用：{exc}")
 
     @property
     def recording(self) -> bool:
@@ -104,12 +113,15 @@ class VoiceAppController:
                 cfg.injection.method,
                 restore_clipboard=cfg.injection.restore_clipboard,
             )
+            context = ContextStore(scene="daily")
+            if self.history is not None:
+                context.set_glossary(self.history.get_glossary())
             self._pipeline = VoicePipeline(
                 asr=engine,
                 corrector=corrector,
                 translator=translator,
                 injector=injector,
-                context=ContextStore(scene="daily"),
+                context=context,
                 style=cfg.translator.style,
             )
             self.on_status("就绪：长按 Alt 说话")
@@ -229,6 +241,17 @@ class VoiceAppController:
             if self._cancelled:
                 return
             self._last_result = result
+            if self.history is not None:
+                try:
+                    self.history.add_utterance(
+                        source=result.raw_text,
+                        corrected=result.corrected_text,
+                        translation=result.translation if result.target_lang != "zh" else "",
+                        target_lang=result.target_lang,
+                        source_lang=result.source_lang,
+                    )
+                except Exception as exc:
+                    self.on_error(f"写入历史失败：{exc}")
             if result.error:
                 self.on_error(result.error)
             self.on_result(result)
@@ -286,3 +309,5 @@ class VoiceAppController:
             self._pipeline.close()
         if self._servers is not None:
             self._servers.stop_all()
+        if self.history is not None:
+            self.history.close()

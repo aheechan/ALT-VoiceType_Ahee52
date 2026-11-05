@@ -8,6 +8,7 @@ from altvoice.app import VoiceAppController
 from altvoice.asr import FakeASR
 from altvoice.config import AppConfig
 from altvoice.correct import NullCorrector
+from altvoice.history import HistoryStore
 from altvoice.inject import NullInjector
 from altvoice.pipeline import VoicePipeline
 from altvoice.translate.base import Translator
@@ -31,10 +32,13 @@ class FakeRecorder:
 
 
 class ControllerTests(unittest.TestCase):
-    def _controller(self, preview=True):
+    def _controller(self, preview=True, history_path=None):
         config = AppConfig()
         config.ui.preview = preview
         config.asr.engine = "fake"
+        config.history.enabled = bool(history_path)
+        if history_path:
+            config.history.path = str(history_path)
         injector = NullInjector()
         pipeline = VoicePipeline(
             asr=FakeASR("你好，世界。"),
@@ -98,6 +102,23 @@ class ControllerTests(unittest.TestCase):
         controller, _recorder, _results, _event, _injector = self._controller()
         controller.set_mode("transcribe")
         self.assertEqual(controller._effective_target(), "zh")
+
+    def test_history_persists_result(self):
+        with workspace_tempdir() as tmp:
+            history_path = Path(tmp) / "history.db"
+            controller, recorder, _results, event, _injector = self._controller(
+                history_path=history_path
+            )
+            controller._temp_dir = tmp
+            controller.start_recording()
+            self.assertTrue(recorder.started.wait(1.0))
+            controller.stop_recording()
+            self.assertTrue(event.wait(3.0))
+            controller.close()
+            with HistoryStore(history_path) as store:
+                recent = store.recent(1)
+            self.assertEqual(recent[0]["corrected"], "你好，世界。")
+            self.assertEqual(recent[0]["translation"], "en:你好，世界。")
 
 
 if __name__ == "__main__":

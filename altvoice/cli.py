@@ -179,6 +179,34 @@ def cmd_translate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_history(args: argparse.Namespace) -> int:
+    cfg = _config(args)
+    if not cfg.history.enabled:
+        print("History is disabled in config.json.")
+        return 0
+    from .history import HistoryStore, default_history_path
+
+    path = cfg.history.path or default_history_path()
+    try:
+        store = HistoryStore(path)
+    except OSError as exc:
+        print(f"History unavailable: {exc}", file=sys.stderr)
+        return 2
+    try:
+        if args.clear:
+            store.clear()
+            print(f"Cleared history: {path}")
+            return 0
+        items = store.recent(args.limit)
+        print(f"History: {path} ({len(items)} shown)")
+        for item in items:
+            translation = f" -> {item['translation']}" if item["translation"] else ""
+            print(f"  {item['corrected']}{translation}")
+        return 0
+    finally:
+        store.close()
+
+
 def cmd_health(args: argparse.Namespace) -> int:
     cfg = _config(args)
     from .health import check_health, format_report
@@ -263,6 +291,11 @@ def build_parser() -> argparse.ArgumentParser:
     health.add_argument("--servers", action="store_true", help="also probe configured model servers")
     health.add_argument("--no-commands", action="store_true")
     health.set_defaults(func=cmd_health)
+
+    history = sub.add_parser("history", help="show or clear local dictation history")
+    history.add_argument("--limit", type=int, default=10)
+    history.add_argument("--clear", action="store_true")
+    history.set_defaults(func=cmd_history)
 
     profiles = sub.add_parser("profiles", help="list VRAM/model profiles")
     profiles.set_defaults(func=cmd_profiles)

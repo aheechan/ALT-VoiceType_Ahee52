@@ -42,10 +42,12 @@
   ASR engine, microphone and PySide6.
 - Tray first-run/environment dialog: missing paths, copy download commands,
   open model folder, recheck.
+- History/glossary persistence in SQLite (`history.py`), seeded into the
+  controller's context; `python -m altvoice history [--clear]`.
 - `python -m altvoice servers --command`.
 - Packaging: PyInstaller spec, Inno Setup script, `scripts/build_windows.ps1`.
 - GitHub Actions: Windows CI tests and a manual Windows build workflow.
-- 74 unit tests passing without GPU, microphone or model weights.
+- 77 unit tests passing without GPU, microphone or model weights.
 
 Verified in this session:
 
