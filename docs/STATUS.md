@@ -36,8 +36,12 @@
   checks, reuse of already-running servers, shutdown on exit, log files.
 - `model_store.py` + `python -m altvoice models`: expected paths, missing-file
   checks and download commands.
+- `setup_wizard.py` + `python -m altvoice setup`: first-run config with profile,
+  model paths and download instructions.
 - `python -m altvoice servers --command`.
-- 66 unit tests passing without GPU, microphone or model weights.
+- Packaging: PyInstaller spec, Inno Setup script, `scripts/build_windows.ps1`.
+- GitHub Actions: Windows CI tests and a manual Windows build workflow.
+- 71 unit tests passing without GPU, microphone or model weights.
 
 Verified in this session:
 

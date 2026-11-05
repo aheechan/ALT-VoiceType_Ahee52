@@ -35,6 +35,7 @@ pip install -e ".[dev]"
 
 python -m altvoice doctor
 python -m altvoice profiles
+python -m altvoice setup --profile 12gb-balanced
 python -m altvoice models --profile 12gb-balanced --commands
 
 # ASR bake-off: compare engines on your own recordings
@@ -102,6 +103,7 @@ altvoice/
 - [Interaction design](docs/UX.md)
 - [M0 ASR bake-off](docs/M0-BAKEOFF.md)
 - [Running the M1 tray preview](docs/RUN.md)
+- [Packaging and Windows installer](packaging/README.md)
 
 ## Licenses
 

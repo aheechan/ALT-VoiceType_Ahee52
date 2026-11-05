@@ -174,6 +174,20 @@ def cmd_translate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_setup(args: argparse.Namespace) -> int:
+    from .setup_wizard import run_setup
+
+    return run_setup(
+        profile=args.profile,
+        models_dir=args.models_dir,
+        target_language=args.target,
+        config_path=args.config,
+        force=args.force,
+        print_only=args.print_only,
+        show_commands=not args.no_commands,
+    )
+
+
 def cmd_models(args: argparse.Namespace) -> int:
     cfg = _config(args)
     profile = args.profile or select_profile(detect_vram_gb(), cfg.profile)
@@ -239,6 +253,15 @@ def build_parser() -> argparse.ArgumentParser:
     models.add_argument("--check", action="store_true", help="exit 1 when a model is missing")
     models.add_argument("--commands", action="store_true")
     models.set_defaults(func=cmd_models)
+
+    setup = sub.add_parser("setup", help="write a first-run config with model paths")
+    setup.add_argument("--profile", default="12gb-balanced")
+    setup.add_argument("--models-dir", default=None)
+    setup.add_argument("--target", "-t", default="en")
+    setup.add_argument("--force", action="store_true")
+    setup.add_argument("--print-only", action="store_true")
+    setup.add_argument("--no-commands", action="store_true")
+    setup.set_defaults(func=cmd_setup)
 
     run = sub.add_parser("run", help="start the system-tray voice input app")
     run.set_defaults(func=cmd_run)

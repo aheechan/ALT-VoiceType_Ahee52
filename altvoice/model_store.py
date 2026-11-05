@@ -60,7 +60,7 @@ def locations(config: AppConfig, profile: str) -> list[ModelLocation]:
 
 def download_commands(config: AppConfig, profile: str) -> list[str]:
     commands: list[str] = []
-    for role, spec in profile_models(profile).items():
+    for _role, spec in profile_models(profile).items():
         if not spec.repo or spec.kind == "none":
             continue
         path = model_path(config, spec)
