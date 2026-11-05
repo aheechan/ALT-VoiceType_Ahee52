@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 
 @dataclass(frozen=True)
@@ -24,6 +24,9 @@ class ModelSpec:
     license: str
     source: str
     notes: str = ""
+    repo: str = ""
+    filename: str = ""
+    kind: str = "file"  # file | dir | none
 
 
 MODEL_CATALOG: dict[str, ModelSpec] = {
@@ -136,6 +139,41 @@ MODEL_CATALOG: dict[str, ModelSpec] = {
         notes="Fallback for OOM/CPU profiles.",
     ),
 }
+
+# Upstream repositories and expected artifact names. GGUF names are examples;
+# always check the repository file list before downloading.
+_MODEL_SOURCES: dict[str, tuple[str, str, str]] = {
+    "firered_asr_aed": ("FireRedTeam/FireRedASR2-AED", "", "dir"),
+    "qwen3_asr_1_7b": ("Qwen/Qwen3-ASR-1.7B", "", "dir"),
+    "qwen3_asr_0_6b": ("Qwen/Qwen3-ASR-0.6B", "", "dir"),
+    "sensevoice_small": ("iic/SenseVoiceSmall", "", "dir"),
+    "qwen3_1_7b_instruct_q4": (
+        "Qwen/Qwen3-1.7B-GGUF",
+        "Qwen3-1.7B-Q4_K_M.gguf",
+        "file",
+    ),
+    "qwen3_4b_instruct_q4": (
+        "Qwen/Qwen3-4B-GGUF",
+        "Qwen3-4B-Q4_K_M.gguf",
+        "file",
+    ),
+    "rules_only": ("", "", "none"),
+    "index_translate_9b_q4": (
+        "IndexTeam/Index-Translate-9B-GGUF",
+        "Index-Translate-9B.Q4_K_M.gguf",
+        "file",
+    ),
+    "index_translate_2b_q4": (
+        "IndexTeam/Index-Translate-2B-GGUF",
+        "Index-Translate-2B.Q4_K_M.gguf",
+        "file",
+    ),
+}
+for _key, (_repo, _filename, _kind) in _MODEL_SOURCES.items():
+    if _key in MODEL_CATALOG:
+        MODEL_CATALOG[_key] = replace(
+            MODEL_CATALOG[_key], repo=_repo, filename=_filename, kind=_kind
+        )
 
 
 PROFILES: dict[str, dict[str, str]] = {

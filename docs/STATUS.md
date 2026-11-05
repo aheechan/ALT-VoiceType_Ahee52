@@ -34,8 +34,10 @@
 - `python -m altvoice run`.
 - `llama-server` supervision (`servers.py`): auto-start with model paths, health
   checks, reuse of already-running servers, shutdown on exit, log files.
+- `model_store.py` + `python -m altvoice models`: expected paths, missing-file
+  checks and download commands.
 - `python -m altvoice servers --command`.
-- 63 unit tests passing without GPU, microphone or model weights.
+- 66 unit tests passing without GPU, microphone or model weights.
 
 Verified in this session:
 

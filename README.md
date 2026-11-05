@@ -35,6 +35,7 @@ pip install -e ".[dev]"
 
 python -m altvoice doctor
 python -m altvoice profiles
+python -m altvoice models --profile 12gb-balanced --commands
 
 # ASR bake-off: compare engines on your own recordings
 python -m altvoice bakeoff --manifest benchmarks/asr_manifest.example.jsonl --dry-run

@@ -174,6 +174,25 @@ def cmd_translate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_models(args: argparse.Namespace) -> int:
+    cfg = _config(args)
+    profile = args.profile or select_profile(detect_vram_gb(), cfg.profile)
+    from .model_store import all_present, download_commands, locations
+
+    items = locations(cfg, profile)
+    print(f"Profile: {profile}")
+    for item in items:
+        mark = "OK" if item.exists else "MISSING"
+        print(f"  [{mark:7}] {item.role:10} {item.display_name:28} {item.path}")
+    if args.commands:
+        print("\nDownload commands (verify file names on the repository):")
+        for command in download_commands(cfg, profile):
+            print(command)
+    if args.check and not all_present(cfg, profile):
+        return 1
+    return 0
+
+
 def cmd_servers(args: argparse.Namespace) -> int:
     cfg = _config(args)
     profile = select_profile(detect_vram_gb(), cfg.profile)
@@ -214,6 +233,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     profiles = sub.add_parser("profiles", help="list VRAM/model profiles")
     profiles.set_defaults(func=cmd_profiles)
+
+    models = sub.add_parser("models", help="check model files and print download commands")
+    models.add_argument("--profile", default=None)
+    models.add_argument("--check", action="store_true", help="exit 1 when a model is missing")
+    models.add_argument("--commands", action="store_true")
+    models.set_defaults(func=cmd_models)
 
     run = sub.add_parser("run", help="start the system-tray voice input app")
     run.set_defaults(func=cmd_run)

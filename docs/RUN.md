@@ -17,7 +17,12 @@ pip install -e ".[ui,audio]"
 ```powershell
 pip install -e ".[asr-qwen]"     # easiest
 # or follow docs/MODELS.md for FireRedASR2S
+
+python -m altvoice models --profile 12gb-balanced --commands
 ```
+
+`models` prints the expected local paths and download commands. It does not download
+anything by itself; verify file names on the upstream repository.
 
 ## 2. Start the local correction/translation servers
 
