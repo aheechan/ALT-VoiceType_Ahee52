@@ -11,8 +11,10 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
 HAS_PYSIDE6 = importlib.util.find_spec("PySide6") is not None
 if HAS_PYSIDE6:
@@ -50,6 +52,42 @@ class UiSmokeTests(unittest.TestCase):
             self.assertTrue(dialog.isVisible())
             self.assertIn("环境检查", dialog.windowTitle())
             dialog._copy_commands()
+            dialog.close()
+
+    def test_setup_dialog_download_flow(self):
+        from PySide6.QtWidgets import QMessageBox
+
+        from altvoice.ui.setup_dialog import SetupDialog
+
+        with workspace_tempdir() as tmp:
+            cfg = AppConfig()
+            cfg.models_dir = tmp
+            cfg.history.enabled = False
+            report = check_health(cfg, "12gb-balanced")
+            dialog = SetupDialog(report, cfg)
+            dialog.show()
+            self._events()
+
+            def fake_download(_config, _profile, progress=None):
+                if progress:
+                    progress("fake download")
+                return []
+
+            with mock.patch(
+                "altvoice.ui.setup_dialog.download_profile", side_effect=fake_download
+            ) as download, mock.patch(
+                "altvoice.ui.setup_dialog.QMessageBox.question",
+                return_value=QMessageBox.StandardButton.Yes,
+            ):
+                dialog._start_download()
+                for _ in range(100):
+                    self._events()
+                    if dialog.download_button.isEnabled():
+                        break
+                    time.sleep(0.01)
+                self.assertTrue(download.called)
+                self.assertTrue(dialog.download_button.isEnabled())
+                self.assertIn("下载完成", dialog.status_label.text())
             dialog.close()
 
     def test_history_dialog_and_preview(self):

@@ -54,7 +54,7 @@
   PyInstaller 6.22.3 one-folder build succeeds (~147 MB) with PySide6 bundled.
   Inno Setup 6.7.3 compiles `dist/installer/AltVoice-Setup-0.1.0.exe` (~41 MB).
 - GitHub Actions: Windows CI tests and a manual Windows build workflow.
-- 88 unit tests total; 85 run without PySide6, 3 UI smoke tests run when
+- 89 unit tests total; 85 run without PySide6, 4 UI smoke tests run when
   PySide6 is available (`QT_QPA_PLATFORM=offscreen`).
 
 Verified in this session:
