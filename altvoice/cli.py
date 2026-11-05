@@ -35,6 +35,11 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     print(f"Profile:       {profile}")
     for spec in profile_models(profile).values():
         print(f"  {spec.role:10} {spec.display_name:28} ~{spec.vram_gb:.1f} GB  {spec.license}")
+    from .model_store import locations
+
+    print("Model files:")
+    for item in locations(cfg, profile):
+        print(f"  [{'OK' if item.exists else 'MISSING':7}] {item.path}")
     print("Optional packages:")
     for module in ("numpy", "sounddevice", "PySide6", "torch", "qwen_asr", "sherpa_onnx", "fireredasr"):
         print(f"  {module:14} {'yes' if importlib.util.find_spec(module) else 'no'}")
