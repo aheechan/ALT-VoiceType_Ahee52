@@ -9,7 +9,8 @@ text (or its translation) is inserted into the focused application. Everything r
 > ASR adapters, correction/translation prompt layer, Windows text-injection primitives,
 > the global Alt hook, controller, tray/preview UI and the ASR bake-off harness.
 > PySide6, a microphone and model weights are required to run the interactive app;
-> see [docs/RUN.md](docs/RUN.md).
+> see [docs/RUN.md](docs/RUN.md). Release notes are in [CHANGELOG.md](CHANGELOG.md)
+> and the build/validation checklist is in [docs/RELEASE.md](docs/RELEASE.md).
 
 ## Target hardware
 
