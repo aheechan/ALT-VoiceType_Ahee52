@@ -65,6 +65,10 @@ Verified in this session:
 - PyInstaller 6.22.3 produces the one-folder app; Inno Setup compiles the
   installer. Launching the windowed exe/installer is still manual because the
   harness blocks GUI process startup.
+- Real Qwen3-ASR-0.6B CPU smoke test on the public Chinese sample:
+  transcription `甚至出现交易几乎停滞的情况。`, ~1.9 s (CPU, cached model).
+  The adapter and full pipeline both work end to end.
+- `scripts/asr_smoke.py` reproduces the ASR check without committing weights.
 - `python -m altvoice run` fails gracefully with a clear PySide6 message when the UI
   extra is missing.
 
