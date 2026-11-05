@@ -51,7 +51,7 @@
   PyInstaller 6.22.3 one-folder build succeeds (~147 MB) with PySide6 bundled.
   Inno Setup 6.7.3 compiles `dist/installer/AltVoice-Setup-0.1.0.exe` (~41 MB).
 - GitHub Actions: Windows CI tests and a manual Windows build workflow.
-- 81 unit tests total; 78 run without PySide6, 3 UI smoke tests run when
+- 84 unit tests total; 81 run without PySide6, 3 UI smoke tests run when
   PySide6 is available (`QT_QPA_PLATFORM=offscreen`).
 
 Verified in this session:
@@ -68,6 +68,8 @@ Verified in this session:
 - Real Qwen3-ASR-0.6B CPU smoke test on the public Chinese sample:
   transcription `甚至出现交易几乎停滞的情况。`, ~1.9 s (CPU, cached model).
   The adapter and full pipeline both work end to end.
+- Local OpenAI-compatible correction/translation HTTP path tested against an
+  in-process mock server (prompt, JSON parsing, diff guard, target-zh skip).
 - `scripts/asr_smoke.py` reproduces the ASR check without committing weights.
 - `python -m altvoice run` fails gracefully with a clear PySide6 message when the UI
   extra is missing.
