@@ -43,8 +43,8 @@
   download for a profile (Qwen3-ASR/Qwen3/Index-Translate).
 - `health.py` + `python -m altvoice health`: one-shot readiness check for models,
   ASR engine, microphone and PySide6.
-- Tray first-run/environment dialog: missing paths, copy download commands,
-  open model folder, recheck.
+- Tray first-run/environment dialog: missing paths, download-missing-models
+  button (background thread), copy commands, open model folder, recheck.
 - History/glossary persistence in SQLite (`history.py`), seeded into the
   controller's context; `python -m altvoice history [--clear]`.
 - Tray "历史与术语…" dialog: recent utterances, glossary edit/delete,

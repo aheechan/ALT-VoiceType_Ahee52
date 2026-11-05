@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from pathlib import Path
 
 from PySide6.QtCore import QUrl, Signal
@@ -10,18 +11,22 @@ from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QPushButton,
     QTextEdit,
     QVBoxLayout,
 )
 
 from ..config import AppConfig
+from ..downloader import download_profile
 from ..health import HealthReport, format_report
 from ..model_store import download_commands
 
 
 class SetupDialog(QDialog):
     recheck_requested = Signal()
+    download_progress = Signal(str)
+    download_finished = Signal(list)
 
     def __init__(self, report: HealthReport, config: AppConfig, parent=None) -> None:
         super().__init__(parent)
@@ -54,12 +59,20 @@ class SetupDialog(QDialog):
         subtitle.setWordWrap(True)
         layout.addWidget(subtitle)
 
+        self.status_label = QLabel("")
+        self.status_label.setWordWrap(True)
+        self.status_label.setStyleSheet("color: #8b93a1; font-size: 12px;")
+        layout.addWidget(self.status_label)
+
         self.text = QTextEdit()
         self.text.setReadOnly(True)
         self.text.setPlainText(format_report(report, config=config))
         layout.addWidget(self.text, 1)
 
         buttons = QHBoxLayout()
+        self.download_button = QPushButton("下载缺失模型")
+        self.download_button.setEnabled(bool(report.missing_models))
+        self.download_button.clicked.connect(self._start_download)
         copy_button = QPushButton("复制下载命令")
         copy_button.setObjectName("secondary")
         copy_button.clicked.connect(self._copy_commands)
@@ -71,12 +84,55 @@ class SetupDialog(QDialog):
         recheck_button.clicked.connect(self.recheck_requested.emit)
         close_button = QPushButton("关闭")
         close_button.clicked.connect(self.accept)
+        buttons.addWidget(self.download_button)
         buttons.addWidget(copy_button)
         buttons.addWidget(folder_button)
         buttons.addWidget(recheck_button)
         buttons.addStretch(1)
         buttons.addWidget(close_button)
         layout.addLayout(buttons)
+
+        self.download_progress.connect(self._on_download_progress)
+        self.download_finished.connect(self._on_download_finished)
+
+    def _start_download(self) -> None:
+        missing = self.report.missing_models
+        if not missing:
+            return
+        answer = QMessageBox.question(
+            self,
+            "AltVoice",
+            f"将下载 {len(missing)} 个缺失模型（可能数 GB）。继续？",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        self.download_button.setEnabled(False)
+        self.download_button.setText("下载中…")
+        self.status_label.setText("开始下载，请保持网络连接…")
+
+        def worker() -> None:
+            errors = download_profile(
+                self.config,
+                self.report.profile,
+                progress=self.download_progress.emit,
+            )
+            self.download_finished.emit(errors)
+
+        threading.Thread(target=worker, name="altvoice-download", daemon=True).start()
+
+    def _on_download_progress(self, message: str) -> None:
+        self.status_label.setText(message)
+
+    def _on_download_finished(self, errors: list[str]) -> None:
+        self.download_button.setEnabled(True)
+        self.download_button.setText("下载缺失模型")
+        if errors:
+            self.status_label.setText("部分模型下载失败。")
+            QMessageBox.warning(self, "AltVoice", "\n".join(errors[:5]))
+            return
+        self.status_label.setText("下载完成，正在重新检查…")
+        self.recheck_requested.emit()
 
     def _copy_commands(self) -> None:
         commands = download_commands(self.config, self.report.profile)
