@@ -75,6 +75,8 @@ shows more environment detail.
 
 ```powershell
 python -m altvoice run
+# start the tray, wait 3 seconds, then exit (startup smoke test)
+python -m altvoice run --smoke 3
 ```
 
 Behavior:

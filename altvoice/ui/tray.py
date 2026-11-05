@@ -161,6 +161,7 @@ class TrayApp(QObject):
         self.tray.setToolTip("AltVoice · 长按 Alt 说话")
         self._setup_dialog: SetupDialog | None = None
         self._history_dialog: HistoryDialog | None = None
+        self._stopped = False
         self.menu = QMenu()
         self._build_menu()
         self.tray.setContextMenu(self.menu)
@@ -231,6 +232,9 @@ class TrayApp(QObject):
             self.tray.setToolTip("AltVoice · 热键不可用")
 
     def stop(self) -> None:
+        if self._stopped:
+            return
+        self._stopped = True
         try:
             self.hotkey.stop()
         finally:
@@ -339,7 +343,7 @@ class TrayApp(QObject):
             pass
 
 
-def run_tray(config_path: str | None = None) -> int:
+def run_tray(config_path: str | None = None, smoke_seconds: float = 0.0) -> int:
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
     if not QSystemTrayIcon.isSystemTrayAvailable():
@@ -347,4 +351,8 @@ def run_tray(config_path: str | None = None) -> int:
         return 3
     tray = TrayApp(config_path)
     tray.start()
-    return int(app.exec())
+    if smoke_seconds > 0:
+        QTimer.singleShot(int(smoke_seconds * 1000), app.quit)
+    code = int(app.exec())
+    tray.stop()
+    return code

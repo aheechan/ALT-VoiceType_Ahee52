@@ -68,6 +68,8 @@ Verified in this session:
   dialog, tray menu and generated icon all construct successfully.
 - Real desktop tray smoke: `TrayApp` starts, tray icon visible, global Alt hook
   running, and clean shutdown after 1.5 s (fake ASR/model stubs).
+- `python -m altvoice run --smoke 2` starts the tray and exits 0 after two
+  seconds in the real desktop session.
 - Focus guard: the controller records the foreground window at recording start;
   if focus changed before insertion, it copies to the clipboard instead of
   injecting into the wrong application (`ui.focus_guard`). The preview dialog

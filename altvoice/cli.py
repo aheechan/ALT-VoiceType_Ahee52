@@ -331,7 +331,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     except SystemExit as exc:
         print(f"Tray UI unavailable: {exc}", file=sys.stderr)
         return 2
-    return run_tray(args.config)
+    return run_tray(args.config, smoke_seconds=args.smoke)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -382,6 +382,12 @@ def build_parser() -> argparse.ArgumentParser:
     setup.set_defaults(func=cmd_setup)
 
     run = sub.add_parser("run", help="start the system-tray voice input app")
+    run.add_argument(
+        "--smoke",
+        type=float,
+        default=0.0,
+        help="start the tray, wait N seconds, then exit (for desktop/package checks)",
+    )
     run.set_defaults(func=cmd_run)
 
     servers = sub.add_parser("servers", help="show configured llama.cpp servers")
