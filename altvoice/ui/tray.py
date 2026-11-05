@@ -9,8 +9,8 @@ from ..app import VoiceAppController
 from ..config import LANGUAGES, TARGET_LANGUAGES
 
 try:
-    from PySide6.QtCore import QObject, Qt, QTimer, Signal
-    from PySide6.QtGui import QAction, QActionGroup, QColor, QFont, QIcon, QPainter, QPen, QPixmap
+    from PySide6.QtCore import QObject, Qt, Signal
+    from PySide6.QtGui import QAction, QActionGroup, QColor, QIcon, QPainter, QPen, QPixmap
     from PySide6.QtWidgets import (
         QApplication,
         QDialog,
@@ -34,14 +34,22 @@ from ..pipeline import PipelineResult
 
 def _make_icon(color: str = "#2d7ff9") -> QIcon:
     pixmap = QPixmap(64, 64)
-    pixmap.fill(Qt.transparent)
+    pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.Antialiasing)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
     painter.setBrush(QColor(color))
-    painter.setPen(Qt.NoPen)
+    painter.setPen(Qt.PenStyle.NoPen)
     painter.drawEllipse(4, 4, 56, 56)
-    painter.setPen(QPen(Qt.white, 4, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-    painter.setBrush(Qt.NoBrush)
+    painter.setPen(
+        QPen(
+            Qt.GlobalColor.white,
+            4,
+            Qt.PenStyle.SolidLine,
+            Qt.PenCapStyle.RoundCap,
+            Qt.PenJoinStyle.RoundJoin,
+        )
+    )
+    painter.setBrush(Qt.BrushStyle.NoBrush)
     # Simple microphone glyph: capsule, arc, stand.
     painter.drawRoundedRect(25, 15, 14, 24, 7, 7)
     painter.drawArc(19, 26, 26, 24, 200 * 16, 140 * 16)
@@ -53,8 +61,8 @@ def _make_icon(color: str = "#2d7ff9") -> QIcon:
 
 class _Editor(QTextEdit):
     def keyPressEvent(self, event):  # noqa: N802 - Qt API
-        if event.key() in (Qt.Key_Return, Qt.Key_Enter) and not (
-            event.modifiers() & Qt.ShiftModifier
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and not (
+            event.modifiers() & Qt.KeyboardModifier.ShiftModifier
         ):
             window = self.window()
             if hasattr(window, "accept"):
@@ -68,7 +76,9 @@ class PreviewDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("AltVoice · 确认插入")
         self.setWindowFlags(
-            Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
+            Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.WindowStaysOnTopHint
+            | Qt.WindowType.Tool
         )
         self.setMinimumWidth(560)
         self.setStyleSheet(
@@ -216,7 +226,7 @@ class TrayApp(QObject):
             QApplication.instance().quit()
 
     def _on_activated(self, reason) -> None:
-        if reason == QSystemTrayIcon.Trigger:
+        if reason == QSystemTrayIcon.ActivationReason.Trigger:
             self.controller.toggle_recording()
 
     def _on_result(self, result: PipelineResult) -> None:
@@ -224,7 +234,7 @@ class TrayApp(QObject):
             self._set_status("已插入")
             return
         dialog = PreviewDialog(result)
-        if dialog.exec() == QDialog.Accepted:
+        if dialog.exec() == QDialog.DialogCode.Accepted:
             self.controller.commit(result, dialog.text())
         else:
             self._set_status("已取消")
@@ -233,7 +243,7 @@ class TrayApp(QObject):
         self.tray.setToolTip(f"AltVoice · {message}")
 
     def _show_error(self, message: str) -> None:
-        self.tray.showMessage("AltVoice", message, QSystemTrayIcon.Warning, 6000)
+        self.tray.showMessage("AltVoice", message, QSystemTrayIcon.MessageIcon.Warning, 6000)
         self.tray.setToolTip(f"AltVoice · 错误：{message}")
 
     def _set_preview(self, enabled: bool) -> None:
@@ -247,7 +257,7 @@ class TrayApp(QObject):
         self.tray.showMessage(
             "AltVoice",
             f"配置文件：{path}",
-            QSystemTrayIcon.Information,
+            QSystemTrayIcon.MessageIcon.Information,
             5000,
         )
         try:
