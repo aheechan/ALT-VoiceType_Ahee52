@@ -426,7 +426,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
-    args = parser.parse_args(argv)
+    args_list = sys.argv[1:] if argv is None else list(argv)
+    # Double-clicking the windowed exe starts it with no arguments. Start the
+    # tray instead of printing an argparse usage error.
+    if not args_list:
+        args_list = ["run"]
+    args = parser.parse_args(args_list)
     return int(args.func(args))
 
 
