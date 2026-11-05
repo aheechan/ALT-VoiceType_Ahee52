@@ -34,6 +34,8 @@ remains an optional quality engine if you can run it.
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
+# full local app: tray + microphone + Qwen3-ASR + model downloader
+pip install -e ".[ui,audio,asr-qwen,download]"
 
 python -m altvoice doctor
 python -m altvoice profiles

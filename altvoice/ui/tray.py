@@ -31,6 +31,7 @@ except ImportError as exc:  # pragma: no cover - depends on optional extra
 from ..hotkey.windows import HotkeyError, WindowsAltHook
 from ..health import HealthReport, check_health
 from ..pipeline import PipelineResult
+from ..single_instance import SingleInstance
 from .history_dialog import HistoryDialog
 from .setup_dialog import SetupDialog
 
@@ -344,15 +345,22 @@ class TrayApp(QObject):
 
 
 def run_tray(config_path: str | None = None, smoke_seconds: float = 0.0) -> int:
-    app = QApplication(sys.argv)
-    app.setQuitOnLastWindowClosed(False)
-    if not QSystemTrayIcon.isSystemTrayAvailable():
-        print("System tray is not available in this session.", file=sys.stderr)
-        return 3
-    tray = TrayApp(config_path)
-    tray.start()
-    if smoke_seconds > 0:
-        QTimer.singleShot(int(smoke_seconds * 1000), app.quit)
-    code = int(app.exec())
-    tray.stop()
-    return code
+    guard = SingleInstance()
+    if not guard.acquired:
+        print("AltVoice is already running.", file=sys.stderr)
+        return 4
+    try:
+        app = QApplication.instance() or QApplication(sys.argv)
+        app.setQuitOnLastWindowClosed(False)
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            print("System tray is not available in this session.", file=sys.stderr)
+            return 3
+        tray = TrayApp(config_path)
+        tray.start()
+        if smoke_seconds > 0:
+            QTimer.singleShot(int(smoke_seconds * 1000), app.quit)
+        code = int(app.exec())
+        tray.stop()
+        return code
+    finally:
+        guard.close()

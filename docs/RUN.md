@@ -15,7 +15,7 @@ pip install -e ".[ui,audio]"
 `ui` installs PySide6; `audio` installs sounddevice. A GPU ASR backend is separate:
 
 ```powershell
-pip install -e ".[asr-qwen]"     # easiest
+pip install -e ".[asr-qwen,download]"     # ASR + model downloader
 # or follow docs/MODELS.md for FireRedASR2S
 
 python -m altvoice models --profile 12gb-balanced --commands
@@ -85,6 +85,7 @@ Behavior:
 - Release: ASR → correction → translation → preview dialog.
 - Enter inserts, Shift+Enter adds a newline, Esc cancels.
 - Short Alt taps are replayed to the active application.
+- Only one AltVoice instance runs per session; a second launch exits with code 4.
 - Focus guard: if the active window changes while recording, AltVoice copies the
   result to the clipboard instead of inserting into the wrong app.
 - Left-click the tray icon toggles recording; right-click selects target language,
