@@ -249,11 +249,15 @@ class TrayPanel(QWidget):
         setup = QPushButton("环境")
         setup.setObjectName("secondary")
         setup.clicked.connect(tray._show_setup)
+        log_button = QPushButton("日志")
+        log_button.setObjectName("secondary")
+        log_button.clicked.connect(lambda: tray._show_log())
         quit_button = QPushButton("退出")
         quit_button.setObjectName("secondary")
         quit_button.clicked.connect(lambda: tray.stop())
         buttons.addWidget(history)
         buttons.addWidget(setup)
+        buttons.addWidget(log_button)
         buttons.addStretch(1)
         buttons.addWidget(quit_button)
         layout.addLayout(buttons)
@@ -370,6 +374,8 @@ class TrayApp(QObject):
         history_action.triggered.connect(self._show_history)
         health_action = self.menu.addAction("环境检查…")
         health_action.triggered.connect(self._show_setup)
+        log_action = self.menu.addAction("查看日志…")
+        log_action.triggered.connect(lambda: self._show_log())
         settings = self.menu.addAction("配置文件位置…")
         settings.triggered.connect(self._show_config)
         quit_action = self.menu.addAction("退出")
@@ -512,6 +518,23 @@ class TrayApp(QObject):
         self.controller.config.save()
         if self._panel is not None:
             self._panel.refresh()
+
+    def _show_log(self) -> None:
+        path = default_config_dir() / "logs" / "app.log"
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.touch(exist_ok=True)
+            if os.name == "nt":
+                os.startfile(str(path))  # type: ignore[attr-defined]
+            else:
+                self.tray.showMessage(
+                    "AltVoice",
+                    f"日志文件：{path}",
+                    QSystemTrayIcon.MessageIcon.Information,
+                    5000,
+                )
+        except OSError as exc:
+            self._show_error(f"无法打开日志：{exc}")
 
     def _show_config(self) -> None:
         from ..config import default_config_path
