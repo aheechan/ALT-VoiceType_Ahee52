@@ -47,7 +47,7 @@
 - `python -m altvoice servers --command`.
 - Packaging: PyInstaller spec, Inno Setup script, `scripts/build_windows.ps1`.
 - GitHub Actions: Windows CI tests and a manual Windows build workflow.
-- 77 unit tests passing without GPU, microphone or model weights.
+- 78 unit tests passing without GPU, microphone or model weights.
 
 Verified in this session:
 
