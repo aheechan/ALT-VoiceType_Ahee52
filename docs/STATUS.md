@@ -49,12 +49,15 @@
 - `python -m altvoice servers --command`.
 - Packaging: PyInstaller spec, Inno Setup script, `scripts/build_windows.ps1`.
 - GitHub Actions: Windows CI tests and a manual Windows build workflow.
-- 78 unit tests passing without GPU, microphone or model weights.
+- 81 unit tests total; 78 run without PySide6, 3 UI smoke tests run when
+  PySide6 is available (`QT_QPA_PLATFORM=offscreen`).
 
 Verified in this session:
 
 - `python -m altvoice doctor` / `profiles`.
 - Hook install + uninstall in the interactive Windows session.
+- PySide6 6.12 offscreen smoke test: setup dialog, history dialog, preview
+  dialog, tray menu and generated icon all construct successfully.
 - `python -m altvoice run` fails gracefully with a clear PySide6 message when the UI
   extra is missing.
 
