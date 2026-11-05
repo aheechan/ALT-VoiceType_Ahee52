@@ -81,15 +81,16 @@ python -m altvoice run --smoke 3
 
 Behavior:
 
-- Long-press left Alt for ~280 ms; the tray tooltip changes to “录音中”.
-- Release: ASR → correction → translation → preview dialog.
-- Enter inserts, Shift+Enter adds a newline, Esc cancels.
-- Short Alt taps are replayed to the active application.
+- Press Alt once to start; a small text-free audio level monitor appears.
+- Press Alt again to stop: ASR → correction → translation → direct paste at the caret.
+- The panel's “显示确认弹窗（关闭则直接粘贴）” toggle enables an optional preview dialog.
+- Chinese is the default output and means transcription; no separate mode.
+- Short Alt taps are no longer replayed in toggle mode.
 - Only one AltVoice instance runs per session; a second launch exits with code 4.
 - Focus guard: if the active window changes while recording, AltVoice copies the
   result to the clipboard instead of inserting into the wrong app.
-- Left-click the tray icon toggles recording; right-click selects target language,
-  mode (translate / Chinese transcribe), and preview.
+- Left-click opens the compact panel; use the Settings button there or right-click
+  the tray icon for language/preview settings.
 
 ## Current limitations
 

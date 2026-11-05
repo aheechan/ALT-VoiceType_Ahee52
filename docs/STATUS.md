@@ -23,15 +23,15 @@
 ### M1 preview
 
 - Windows low-level Alt hook (`hotkey/windows.py`) with:
-  - long-press start / release stop;
-  - short-tap replay to preserve Alt menus;
+  - toggle mode: press once to start, press again to stop;
+  - legacy long-press mode available in config;
   - Alt+key combination cancel and modifier replay;
   - injected-event pass-through to avoid self-triggering.
 - Testable hook logic (`hotkey/logic.py`).
 - `VoiceAppController`: lazy ASR load, microphone recording, VAD trim, pipeline,
-  preview-or-direct insert, cancel, target language/mode.
-- PySide6 tray: language menu, translate/Chinese-transcribe modes, preview toggle,
-  preview dialog, clipboard insertion.
+  direct paste by default, optional preview, cancel, audio level callbacks.
+- PySide6 tray: compact panel, language picker, settings button, text-free live
+  audio monitor, optional preview dialog, clipboard insertion.
 - `python -m altvoice run`.
 - `llama-server` supervision (`servers.py`): auto-start with model paths, health
   checks, reuse of already-running servers, shutdown on exit, log files.
@@ -48,8 +48,9 @@
 - Tray first-run/environment dialog: missing paths, download-missing-models
   button (background thread), copy commands, open model folder, recheck.
 - Compact tray panel (left-click): fixed Chinese input, output-language picker,
-  automatic transcription when output is Chinese, preview toggle, history/
-  setup/quit.
+  automatic transcription when output is Chinese, preview toggle, settings/
+  history/setup/log/quit.
+- Text-free live audio-level monitor while recording.
 - Default output language is Chinese; `zh` skips translation and acts as
   transcription without a separate mode selection.
 - History/glossary persistence in SQLite (`history.py`), seeded into the
@@ -64,7 +65,7 @@
   Inno Setup 6.7.3 compiles `dist/installer/AltVoice-Setup-0.1.0.exe` (~341 MB).
 - GitHub Actions: Windows core tests, offscreen UI smoke tests, and a manual
   build workflow that produces the PyInstaller app + Inno installer artifact.
-- 92 unit tests total; 87 run without PySide6, 5 UI smoke tests run when
+- 94 unit tests total; 89 run without PySide6, 5 UI smoke tests run when
   PySide6 is available (`QT_QPA_PLATFORM=offscreen`).
 
 Verified in this session:

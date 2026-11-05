@@ -4,11 +4,14 @@
 
 ### Dictation
 
-- Global **Alt long-press** push-to-talk (left/right Alt), short taps replayed.
+- Global **Alt toggle** push-to-talk: press once to start, press again to stop.
 - System-tray UI with a compact left-click panel (output language, preview,
-  history/setup) plus a preview/commit dialog. Chinese is the default output and
-  acts as transcription without a separate mode.
+  settings, history/setup). Chinese is the default output and acts as
+  transcription without a separate mode.
+- Text-free live audio-level monitor while recording.
 - Clipboard-paste injection with Unicode `SendInput` fallback.
+- Prompt optimized for short, label-free translation output: no “原文/译文”
+  headers, lower token budget, temperature 0, stop sequences.
 - **Focus guard**: remembers the foreground window at record start; copies to the
   clipboard instead of inserting into a different app.
 - Preview dialog attempts to restore the original window before commit.
