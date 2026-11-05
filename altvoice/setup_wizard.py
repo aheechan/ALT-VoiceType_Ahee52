@@ -26,7 +26,7 @@ _ASR_ENGINE = {
 def build_config(
     profile: str = "12gb-balanced",
     models_dir: str | Path | None = None,
-    target_language: str = "en",
+    target_language: str = "zh",
 ) -> AppConfig:
     cfg = AppConfig()
     cfg.profile = profile
@@ -52,7 +52,7 @@ def build_config(
     translator_spec = models["translator"]
     cfg.translator.model_path = str(model_path(cfg, translator_spec))
     cfg.translator.autostart = True
-    cfg.translator.target_language = normalize_language(target_language) or "en"
+    cfg.translator.target_language = normalize_language(target_language) or "zh"
     cfg.validate()
     return cfg
 

@@ -38,8 +38,9 @@ class VoiceAppController:
         temp_dir: str | None = None,
     ) -> None:
         self.config = config or AppConfig.load(config_path)
+        self._config_path = str(config_path) if config_path else None
         self.profile = select_profile(detect_vram_gb(), self.config.profile)
-        self.target_lang = normalize_language(self.config.translator.target_language) or "en"
+        self.target_lang = normalize_language(self.config.translator.target_language) or "zh"
         self.mode = "translate"
         self.on_status = on_status or (lambda _msg: None)
         self.on_result = on_result or (lambda _result: None)
@@ -354,7 +355,13 @@ class VoiceAppController:
         if code:
             self.target_lang = code
             self.mode = "translate"
-            self.on_status(f"目标语言：{code}")
+            self.config.translator.target_language = code
+            if self._config_path:
+                try:
+                    self.config.save(self._config_path)
+                except OSError:
+                    pass
+            self.on_status(f"输出语言：{code}")
 
     def set_mode(self, mode: str) -> None:
         if mode not in {"translate", "transcribe"}:

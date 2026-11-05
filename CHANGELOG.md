@@ -5,7 +5,9 @@
 ### Dictation
 
 - Global **Alt long-press** push-to-talk (left/right Alt), short taps replayed.
-- System-tray UI with target-language menu and preview/commit dialog.
+- System-tray UI with a compact left-click panel (output language, preview,
+  history/setup) plus a preview/commit dialog. Chinese is the default output and
+  acts as transcription without a separate mode.
 - Clipboard-paste injection with Unicode `SendInput` fallback.
 - **Focus guard**: remembers the foreground window at record start; copies to the
   clipboard instead of inserting into a different app.

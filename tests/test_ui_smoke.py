@@ -135,6 +135,31 @@ class UiSmokeTests(unittest.TestCase):
                 tray.controller.close()
                 tray.tray.hide()
 
+    def test_tray_panel_switches_to_transcription(self):
+        from altvoice.ui.tray import TrayApp, TrayPanel
+
+        with workspace_tempdir() as tmp:
+            path = Path(tmp) / "config.json"
+            cfg = AppConfig()
+            cfg.asr.engine = "fake"
+            cfg.history.enabled = False
+            cfg.save(path)
+            tray = TrayApp(config_path=str(path))
+            panel = TrayPanel(tray)
+            try:
+                panel.show()
+                self._events()
+                index = panel.language.findData("zh")
+                self.assertGreaterEqual(index, 0)
+                panel.language.setCurrentIndex(index)
+                self._events()
+                self.assertEqual(tray.controller.target_lang, "zh")
+                self.assertIn("直接转写", panel.mode_label.text())
+            finally:
+                panel.close()
+                tray.controller.close()
+                tray.tray.hide()
+
 
 if __name__ == "__main__":
     unittest.main()

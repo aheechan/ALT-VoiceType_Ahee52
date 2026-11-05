@@ -40,7 +40,7 @@
     "model": "Index-Translate-9B",
     "api_key": "EMPTY",
     "timeout_s": 45.0,
-    "target_language": "en",
+    "target_language": "zh",
     "style": "daily",
     "max_tokens": 1024,
     "model_path": "C:/Users/you/AppData/Local/AltVoice/models/index_translate_9b_q4/Index-Translate-9B.Q4_K_M.gguf",

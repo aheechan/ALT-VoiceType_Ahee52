@@ -171,7 +171,7 @@ class TranslatorConfig:
     model: str = "Index-Translate-9B"
     api_key: str = "EMPTY"
     timeout_s: float = 45.0
-    target_language: str = "en"
+    target_language: str = "zh"
     style: str = "daily"
     max_tokens: int = 1024
     model_path: str | None = None
@@ -250,7 +250,7 @@ class AppConfig:
         self.profile = self.profile or "auto"
         self.asr.language = normalize_language(self.asr.language) or "zh"
         self.translator.target_language = (
-            normalize_language(self.translator.target_language) or "en"
+            normalize_language(self.translator.target_language) or "zh"
         )
         if self.translator.target_language not in LANGUAGES:
             raise ValueError(

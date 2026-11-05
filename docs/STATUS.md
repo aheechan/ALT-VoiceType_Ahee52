@@ -47,6 +47,11 @@
   diagnostics and test recording.
 - Tray first-run/environment dialog: missing paths, download-missing-models
   button (background thread), copy commands, open model folder, recheck.
+- Compact tray panel (left-click): fixed Chinese input, output-language picker,
+  automatic transcription when output is Chinese, preview toggle, history/
+  setup/quit.
+- Default output language is Chinese; `zh` skips translation and acts as
+  transcription without a separate mode selection.
 - History/glossary persistence in SQLite (`history.py`), seeded into the
   controller's context; `python -m altvoice history [--clear]`.
 - Tray "历史与术语…" dialog: recent utterances, glossary edit/delete,
@@ -59,7 +64,7 @@
   Inno Setup 6.7.3 compiles `dist/installer/AltVoice-Setup-0.1.0.exe` (~341 MB).
 - GitHub Actions: Windows core tests, offscreen UI smoke tests, and a manual
   build workflow that produces the PyInstaller app + Inno installer artifact.
-- 90 unit tests total; 86 run without PySide6, 4 UI smoke tests run when
+- 92 unit tests total; 87 run without PySide6, 5 UI smoke tests run when
   PySide6 is available (`QT_QPA_PLATFORM=offscreen`).
 
 Verified in this session:

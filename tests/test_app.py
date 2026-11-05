@@ -37,6 +37,7 @@ class ControllerTests(unittest.TestCase):
         config.ui.preview = preview
         config.ui.focus_guard = False
         config.asr.engine = "fake"
+        config.translator.target_language = "en"
         config.history.enabled = bool(history_path)
         if history_path:
             config.history.path = str(history_path)
