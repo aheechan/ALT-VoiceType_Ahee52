@@ -1,0 +1,101 @@
+# AltVoice
+
+**Offline Windows voice input with context-aware Chinese ASR and natural multilingual translation.**
+
+AltVoice is a system-tray voice input assistant: hold `Alt`, speak, release, and the corrected
+text (or its translation) is inserted into the focused application. Everything runs locally.
+
+> **Status: M0 scaffold.** The repository currently contains the architecture, model profiles,
+> ASR adapters, correction/translation prompt layer, Windows text-injection primitives and the
+> ASR bake-off harness. The tray UI and global `Alt` hook land in M1.
+
+## Target hardware
+
+| Profile | VRAM | ASR | Corrector | Translator |
+|---|---:|---|---|---|
+| `12gb-balanced` **(default baseline)** | 12 GB | FireRedASR2-AED FP16 | Qwen3-1.7B-Instruct Q4 | Index-Translate-9B Q4 |
+| `12gb-safe` | 12 GB | Qwen3-ASR-0.6B | Qwen3-1.7B Q4 | Index-Translate-2B Q4 |
+| `16gb-quality` | 16 GB | FireRedASR2-AED FP16 | Qwen3-4B-Instruct Q4 | Index-Translate-9B Q4 |
+| `24gb-quality` | 24 GB | FireRedASR2-AED FP16 | Qwen3-4B-Instruct Q4 | Index-Translate-9B Q4 |
+| `cpu-safe` | CPU | SenseVoice-Small (sherpa-onnx) | rules only | Index-Translate-2B Q4 (~2.1 GB total) |
+
+`12gb-balanced` is tuned for an RTX 3070 12 GB and scales upward by changing the profile.
+Models are lazy-loaded and can be unloaded when idle; the 9B translator may be swapped for the 2B
+model automatically after an OOM.
+
+## Quick start (development)
+
+```powershell
+# Python 3.11 or 3.12
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+
+python -m altvoice doctor
+python -m altvoice profiles
+
+# ASR bake-off: compare engines on your own recordings
+python -m altvoice bakeoff --manifest benchmarks/asr_manifest.example.jsonl --dry-run
+
+# Unit tests do not need a GPU or model weights
+python -m unittest discover -s tests -v
+```
+
+Optional runtime dependencies are intentionally split so the core can be tested on a clean machine:
+
+```powershell
+pip install -e ".[audio]"       # microphone capture
+pip install -e ".[asr-qwen]"    # Qwen3-ASR via qwen-asr
+pip install -e ".[asr-sherpa]"  # CPU fallback via sherpa-onnx
+pip install -e ".[llm]"         # local OpenAI-compatible clients
+pip install -e ".[ui]"          # PySide6 tray (M1)
+```
+
+## Design principles
+
+1. **Local first.** No cloud calls at runtime; audio is deleted after transcription.
+2. **ASR alone is not enough.** A context-aware corrector fixes homophones, names, punctuation
+   and disfluencies without rewriting the speaker's meaning.
+3. **Natural translation is a product problem.** Whole-utterance translation, rolling context,
+   style presets and human evaluation, not just a bigger model.
+4. **12 GB is the baseline.** Every model choice has a measured VRAM budget and a fallback.
+5. **The MVP is a voice input assistant, not a TSF IME.** True IME integration (composition,
+   candidate window, language bar) is a later phase.
+
+## Repository layout
+
+```text
+altvoice/
+├─ altvoice/                 # Python package
+│  ├─ asr/                   # FireRedASR / Qwen3-ASR / sherpa-onnx adapters
+│  ├─ correct/               # context correction prompt + diff guard
+│  ├─ translate/             # Index-Translate prompt + client
+│  ├─ inject/                # Windows clipboard / SendInput
+│  ├─ hotkey/                # Alt gesture state machine (M1 hook)
+│  ├─ llm/                   # OpenAI-compatible local client
+│  ├─ audio.py               # WAV I/O, silence trimming, capture
+│  ├─ config.py              # JSON config + languages
+│  ├─ models.py              # model catalog + VRAM profiles
+│  ├─ pipeline.py            # ASR -> correct -> translate -> inject
+│  ├─ bakeoff.py             # M0 CER/latency harness
+│  └─ cli.py                 # `python -m altvoice`
+├─ benchmarks/               # manifest example + local audio (gitignored)
+├─ docs/                     # PLAN / ARCHITECTURE / ADR / MODELS / UX
+├─ tests/                    # stdlib unittest, no GPU required
+├─ scripts/                  # helper scripts
+└─ pyproject.toml
+```
+
+## Documentation
+
+- [Development plan](docs/PLAN.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [ADR-0001: stack and 12 GB baseline](docs/ADR/0001-stack-and-12gb-baseline.md)
+- [Models and licenses](docs/MODELS.md)
+- [Interaction design](docs/UX.md)
+- [M0 ASR bake-off](docs/M0-BAKEOFF.md)
+
+## Licenses
+
+AltVoice code is Apache-2.0. Model weights are **not** included; each model keeps its own license.
+See [docs/MODELS.md](docs/MODELS.md) before redistribution or commercial use.
