@@ -38,6 +38,7 @@ from ..health import HealthReport, check_health
 from ..pipeline import PipelineResult
 from ..single_instance import SingleInstance
 from .history_dialog import HistoryDialog
+from .settings_dialog import SettingsDialog
 from .setup_dialog import SetupDialog
 
 
@@ -249,6 +250,9 @@ class TrayPanel(QWidget):
         setup = QPushButton("环境")
         setup.setObjectName("secondary")
         setup.clicked.connect(tray._show_setup)
+        settings_button = QPushButton("设置")
+        settings_button.setObjectName("secondary")
+        settings_button.clicked.connect(lambda: tray._show_settings())
         log_button = QPushButton("日志")
         log_button.setObjectName("secondary")
         log_button.clicked.connect(lambda: tray._show_log())
@@ -257,6 +261,7 @@ class TrayPanel(QWidget):
         quit_button.clicked.connect(lambda: tray.stop())
         buttons.addWidget(history)
         buttons.addWidget(setup)
+        buttons.addWidget(settings_button)
         buttons.addWidget(log_button)
         buttons.addStretch(1)
         buttons.addWidget(quit_button)
@@ -330,6 +335,7 @@ class TrayApp(QObject):
         self.tray.setToolTip("AltVoice · 长按 Alt 说话")
         self._setup_dialog: SetupDialog | None = None
         self._history_dialog: HistoryDialog | None = None
+        self._settings_dialog: SettingsDialog | None = None
         self._panel: TrayPanel | None = None
         self._stopped = False
         self.menu = QMenu()
@@ -376,6 +382,8 @@ class TrayApp(QObject):
         health_action.triggered.connect(self._show_setup)
         log_action = self.menu.addAction("查看日志…")
         log_action.triggered.connect(lambda: self._show_log())
+        settings_action = self.menu.addAction("设置…")
+        settings_action.triggered.connect(lambda: self._show_settings())
         settings = self.menu.addAction("配置文件位置…")
         settings.triggered.connect(self._show_config)
         quit_action = self.menu.addAction("退出")
@@ -409,12 +417,35 @@ class TrayApp(QObject):
             if self._history_dialog is not None:
                 self._history_dialog.close()
                 self._history_dialog = None
+            if self._settings_dialog is not None:
+                self._settings_dialog.close()
+                self._settings_dialog = None
             if self._panel is not None:
                 self._panel.close()
                 self._panel = None
             self.controller.close()
             self.tray.hide()
             QApplication.instance().quit()
+
+    def _show_settings(self) -> None:
+        if self._settings_dialog is not None:
+            self._settings_dialog.raise_()
+            self._settings_dialog.activateWindow()
+            return
+        dialog = SettingsDialog(self.controller.config)
+        dialog.finished.connect(lambda _code=0: self._clear_settings())
+        self._settings_dialog = dialog
+        dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
+
+    def _clear_settings(self) -> None:
+        dialog = self._settings_dialog
+        self._settings_dialog = None
+        if dialog is not None:
+            dialog.deleteLater()
+        if self._panel is not None:
+            self._panel.refresh()
 
     def _show_history(self, *_args) -> None:
         if self.controller.history is None:
