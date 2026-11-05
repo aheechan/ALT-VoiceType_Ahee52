@@ -85,6 +85,10 @@ Verified in this session:
   1.7B ASR (~10.6 GB) for users who close background GPU apps.
 - Local OpenAI-compatible correction/translation HTTP path tested against an
   in-process mock server (prompt, JSON parsing, diff guard, target-zh skip).
+- Clipboard set/get/restore verified with real Unicode text. No microphone input
+  device exists in this session (`sounddevice.query_devices()` has no input), so
+  the mic → ASR path still needs a real user machine. SendInput works at the OS
+  level but safely directing it to a controlled window is still a desktop test.
 - `llama-server` installed via winget; `resolve_binary()` finds the winget
   package directory when the alias is not on PATH.
 - `scripts/asr_smoke.py` reproduces the ASR check without committing weights.
