@@ -52,6 +52,6 @@ and prints missing-file checks. Download the models, then launch `AltVoice.exe`.
 - The PyInstaller spec does **not** include model weights; the installer stays small.
 - Code signing is not configured. A signed build reduces SmartScreen/antivirus friction
   caused by the global keyboard hook.
-- The build is not tested in this sandbox because PySide6 and PyInstaller are not
-  installed here; CI has a manual build workflow.
+- The PyInstaller one-folder build was verified with PyInstaller 6.22.3 + PySide6 6.12
+  (~147 MB). The Inno Setup installer has not been compiled yet.
 - Do not run the local llama.cpp servers on `0.0.0.0`; they have no authentication.

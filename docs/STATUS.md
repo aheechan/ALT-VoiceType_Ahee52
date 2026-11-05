@@ -48,6 +48,7 @@
   clear-all with confirmation.
 - `python -m altvoice servers --command`.
 - Packaging: PyInstaller spec, Inno Setup script, `scripts/build_windows.ps1`.
+  PyInstaller 6.22.3 one-folder build succeeds (~147 MB) with PySide6 bundled.
 - GitHub Actions: Windows CI tests and a manual Windows build workflow.
 - 81 unit tests total; 78 run without PySide6, 3 UI smoke tests run when
   PySide6 is available (`QT_QPA_PLATFORM=offscreen`).
@@ -58,6 +59,8 @@ Verified in this session:
 - Hook install + uninstall in the interactive Windows session.
 - PySide6 6.12 offscreen smoke test: setup dialog, history dialog, preview
   dialog, tray menu and generated icon all construct successfully.
+- PyInstaller 6.22.3 produces `dist/AltVoice/AltVoice.exe`; interactive launch
+  from the packaged app still needs a real desktop test.
 - `python -m altvoice run` fails gracefully with a clear PySide6 message when the UI
   extra is missing.
 

@@ -11,7 +11,7 @@ or the path configured in config.json.
 
 from pathlib import Path
 
-project_root = Path(SPECPATH).resolve().parent.parent  # noqa: F821 - PyInstaller injects SPECPATH
+project_root = Path(SPECPATH).resolve().parent  # noqa: F821 - PyInstaller injects SPECPATH
 
 a = Analysis(  # noqa: F821
     [str(project_root / "altvoice" / "__main__.py")],
