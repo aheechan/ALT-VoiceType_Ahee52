@@ -160,6 +160,8 @@ class CorrectorConfig:
     timeout_s: float = 20.0
     max_edit_ratio: float = 0.25
     max_tokens: int = 512
+    model_path: str | None = None
+    autostart: bool = True
 
 
 @dataclass
@@ -172,6 +174,20 @@ class TranslatorConfig:
     target_language: str = "en"
     style: str = "daily"
     max_tokens: int = 1024
+    model_path: str | None = None
+    autostart: bool = True
+
+
+@dataclass
+class ServerConfig:
+    enabled: bool = True
+    binary: str = "llama-server"
+    host: str = "127.0.0.1"
+    startup_timeout_s: float = 90.0
+    log_dir: str | None = None
+    extra_args: list[str] = field(default_factory=list)
+    context_size: int = 4096
+    gpu_layers: int = 99
 
 
 @dataclass
@@ -217,6 +233,7 @@ class AppConfig:
     asr: ASRConfig = field(default_factory=ASRConfig)
     corrector: CorrectorConfig = field(default_factory=CorrectorConfig)
     translator: TranslatorConfig = field(default_factory=TranslatorConfig)
+    servers: ServerConfig = field(default_factory=ServerConfig)
     injection: InjectionConfig = field(default_factory=InjectionConfig)
     ui: UIConfig = field(default_factory=UIConfig)
     history: HistoryConfig = field(default_factory=HistoryConfig)

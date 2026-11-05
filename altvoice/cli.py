@@ -174,6 +174,27 @@ def cmd_translate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_servers(args: argparse.Namespace) -> int:
+    cfg = _config(args)
+    profile = select_profile(detect_vram_gb(), cfg.profile)
+    from .servers import ServerManager
+
+    manager = ServerManager.from_config(cfg, profile)
+    if not manager.servers:
+        print("No autostart model servers configured.")
+        print("Set corrector.model_path / translator.model_path in config.json.")
+        return 0
+    for server in manager.servers:
+        spec = server.spec
+        print(
+            f"{spec.name:10} {spec.model_path}\n"
+            f"           {spec.health_url()}  ready={server.is_ready()}"
+        )
+        if args.command:
+            print("           " + " ".join(spec.command()))
+    return 0
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     try:
         from .ui.tray import run_tray
@@ -196,6 +217,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     run = sub.add_parser("run", help="start the system-tray voice input app")
     run.set_defaults(func=cmd_run)
+
+    servers = sub.add_parser("servers", help="show configured llama.cpp servers")
+    servers.add_argument("--command", action="store_true", help="print the launch command")
+    servers.set_defaults(func=cmd_servers)
 
     bakeoff = sub.add_parser("bakeoff", help="compare ASR engines on a JSONL manifest")
     bakeoff.add_argument("--manifest", required=True)

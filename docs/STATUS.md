@@ -31,7 +31,10 @@
 - PySide6 tray: language menu, translate/Chinese-transcribe modes, preview toggle,
   preview dialog, clipboard insertion.
 - `python -m altvoice run`.
-- 51 unit tests passing without GPU, microphone or model weights.
+- `llama-server` supervision (`servers.py`): auto-start with model paths, health
+  checks, reuse of already-running servers, shutdown on exit, log files.
+- `python -m altvoice servers --command`.
+- 63 unit tests passing without GPU, microphone or model weights.
 
 Verified in this session:
 
@@ -47,7 +50,7 @@ Verified in this session:
 2. Install at least one ASR backend (Qwen3-ASR is easiest) and download a model.
 3. Record 50–100 short Chinese utterances and create `benchmarks/asr_manifest.jsonl`.
 4. Run the bake-off and pick the primary/fallback engine for the actual 3070.
-5. Add installer/model downloader and model-server supervision.
+5. Add installer, model downloader and first-run setup wizard.
 
 ## Open questions
 

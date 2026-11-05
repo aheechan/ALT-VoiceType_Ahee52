@@ -21,7 +21,19 @@ pip install -e ".[asr-qwen]"     # easiest
 
 ## 2. Start the local correction/translation servers
 
-AltVoice expects OpenAI-compatible endpoints. Example with llama.cpp:
+AltVoice can start `llama-server` itself. In `config.json`, set:
+
+```json
+"corrector": {"model_path": "C:/.../Qwen3-1.7B-Instruct-Q4_K_M.gguf", "autostart": true},
+"translator": {"model_path": "C:/.../Index-Translate-9B-Q4_K_M.gguf", "autostart": true},
+"servers": {"binary": "llama-server", "context_size": 4096, "gpu_layers": 99}
+```
+
+The tray starts both servers in the background, waits for `/v1/models`, and stops them
+on exit. If a server is already running on the port, it is reused and not killed.
+`python -m altvoice servers --command` prints the exact commands.
+
+Manual fallback:
 
 ```powershell
 # Correction model, port 8091
@@ -66,8 +78,9 @@ Behavior:
   has not been launched here. The hook was installed/uninstalled successfully, and the
   controller/gesture logic is covered by unit tests.
 - Microphone capture and text injection need a real interactive Windows session.
-- No installer/model downloader yet; models are started manually.
-- The first recording can take several seconds while the ASR model loads.
+- No installer/model downloader yet; models are started manually or by `servers.autostart`.
+- The first recording can take several seconds while the ASR model loads; the tray
+  warms up the ASR pipeline in the background at startup.
 - Do not expose the local LLM servers on `0.0.0.0`; they have no authentication.
 
 ## Troubleshooting

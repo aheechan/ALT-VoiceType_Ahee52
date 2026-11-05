@@ -20,6 +20,7 @@ from .correct import LLMCorrector, NullCorrector
 from .inject import InjectionError, get_injector
 from .models import detect_vram_gb, select_profile
 from .pipeline import PipelineResult, VoicePipeline
+from .servers import ServerManager
 from .translate import IndexTranslateTranslator, NullTranslator
 
 
@@ -46,6 +47,7 @@ class VoiceAppController:
         self._pipeline = pipeline
         self._pipeline_lock = threading.RLock()
         self._warming = False
+        self._servers: ServerManager | None = None
         self._temp_dir = temp_dir
         self._lock = threading.RLock()
         self._recording = False
@@ -75,6 +77,10 @@ class VoiceAppController:
                 language=cfg.asr.language,
                 beam_size=cfg.asr.beam_size,
             )
+            if cfg.servers.enabled:
+                self._servers = ServerManager.from_config(cfg, self.profile)
+                for error in self._servers.start_all(on_status=self.on_status):
+                    self.on_error(error)
             corrector = NullCorrector()
             if cfg.corrector.enabled and self.profile != "cpu-safe":
                 corrector = LLMCorrector(
@@ -276,3 +282,5 @@ class VoiceAppController:
         self.cancel_recording()
         if self._pipeline is not None:
             self._pipeline.close()
+        if self._servers is not None:
+            self._servers.stop_all()
