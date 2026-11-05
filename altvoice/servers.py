@@ -26,6 +26,27 @@ class ServerError(RuntimeError):
     """Raised when a local model server cannot be started or becomes healthy."""
 
 
+def resolve_binary(binary: str) -> str:
+    """Resolve llama-server from PATH or a winget package directory."""
+    if not binary:
+        return ""
+    candidate = Path(binary)
+    if candidate.is_file():
+        return str(candidate)
+    found = shutil.which(binary)
+    if found:
+        return found
+    if os.name == "nt" and candidate.name.lower() in ("llama-server", "llama-server.exe"):
+        local = os.environ.get("LOCALAPPDATA")
+        if local:
+            packages = Path(local) / "Microsoft" / "WinGet" / "Packages"
+            if packages.is_dir():
+                for path in packages.glob("ggml.llamacpp_*/llama-server.exe"):
+                    if path.is_file():
+                        return str(path)
+    return ""
+
+
 @dataclass
 class ServerSpec:
     name: str
@@ -98,10 +119,11 @@ class LlamaServer:
             raise ServerError(
                 f"{self.spec.name}: model path does not exist: {self.spec.model_path}"
             )
-        binary = self.spec.binary
-        if not Path(binary).exists() and shutil.which(binary) is None:
+        binary = resolve_binary(self.spec.binary)
+        if not binary:
             raise ServerError(
-                f"{self.spec.name}: cannot find '{binary}'. Add it to PATH or set servers.binary."
+                f"{self.spec.name}: cannot find '{self.spec.binary}'. Install llama.cpp "
+                "(`winget install ggml.llamacpp`) or set servers.binary to the full path."
             )
         log_path = self.spec.log_path()
         self._log_handle = log_path.open("a", encoding="utf-8", errors="replace")
@@ -110,9 +132,11 @@ class LlamaServer:
         flags = 0
         if os.name == "nt":
             flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        command = self.spec.command()
+        command[0] = binary
         try:
             self._process = subprocess.Popen(
-                self.spec.command(),
+                command,
                 stdout=self._log_handle,
                 stderr=subprocess.STDOUT,
                 stdin=subprocess.DEVNULL,

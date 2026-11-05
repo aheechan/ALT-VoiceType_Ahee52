@@ -1,10 +1,17 @@
 import json
+import sys
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from altvoice.config import AppConfig
-from altvoice.servers import LlamaServer, ServerError, ServerManager, ServerSpec
+from altvoice.servers import (
+    LlamaServer,
+    ServerError,
+    ServerManager,
+    ServerSpec,
+    resolve_binary,
+)
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -25,6 +32,12 @@ class _Handler(BaseHTTPRequestHandler):
 
 
 class ServerSpecTests(unittest.TestCase):
+    def test_resolve_python(self):
+        self.assertEqual(resolve_binary(sys.executable), sys.executable)
+
+    def test_resolve_missing(self):
+        self.assertEqual(resolve_binary("definitely-not-a-real-binary-xyz"), "")
+
     def test_command(self):
         spec = ServerSpec(
             name="corrector",
