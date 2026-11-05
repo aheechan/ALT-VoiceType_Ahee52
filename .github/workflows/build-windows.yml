@@ -17,9 +17,19 @@ jobs:
           pip install -e ".[ui,audio]" "pyinstaller>=6.6"
       - name: Build one-folder app
         run: python -m PyInstaller --clean --noconfirm packaging/altvoice.spec
-      - name: Upload artifact
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe not found at $iscc" }
+          & $iscc packaging\installer.iss
+      - name: Upload app and installer
         uses: actions/upload-artifact@v4
         with:
           name: AltVoice-windows
-          path: dist/AltVoice
+          path: |
+            dist/AltVoice
+            dist/installer/*.exe
           if-no-files-found: error
