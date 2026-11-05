@@ -31,6 +31,7 @@ except ImportError as exc:  # pragma: no cover - depends on optional extra
 from ..hotkey.windows import HotkeyError, WindowsAltHook
 from ..health import HealthReport, check_health
 from ..pipeline import PipelineResult
+from .history_dialog import HistoryDialog
 from .setup_dialog import SetupDialog
 
 
@@ -159,6 +160,7 @@ class TrayApp(QObject):
         self.tray = QSystemTrayIcon(_make_icon())
         self.tray.setToolTip("AltVoice · 长按 Alt 说话")
         self._setup_dialog: SetupDialog | None = None
+        self._history_dialog: HistoryDialog | None = None
         self.menu = QMenu()
         self._build_menu()
         self.tray.setContextMenu(self.menu)
@@ -206,6 +208,8 @@ class TrayApp(QObject):
         self.menu.addAction(self.preview_action)
 
         self.menu.addSeparator()
+        history_action = self.menu.addAction("历史与术语…")
+        history_action.triggered.connect(self._show_history)
         health_action = self.menu.addAction("环境检查…")
         health_action.triggered.connect(self._show_setup)
         settings = self.menu.addAction("配置文件位置…")
@@ -233,9 +237,33 @@ class TrayApp(QObject):
             if self._setup_dialog is not None:
                 self._setup_dialog.close()
                 self._setup_dialog = None
+            if self._history_dialog is not None:
+                self._history_dialog.close()
+                self._history_dialog = None
             self.controller.close()
             self.tray.hide()
             QApplication.instance().quit()
+
+    def _show_history(self, *_args) -> None:
+        if self.controller.history is None:
+            self._show_error("历史记录未启用，检查 config.json 的 history.enabled")
+            return
+        if self._history_dialog is not None:
+            self._history_dialog.raise_()
+            self._history_dialog.activateWindow()
+            return
+        dialog = HistoryDialog(self.controller.history)
+        dialog.finished.connect(lambda _code=0: self._clear_history_dialog())
+        self._history_dialog = dialog
+        dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
+
+    def _clear_history_dialog(self) -> None:
+        dialog = self._history_dialog
+        self._history_dialog = None
+        if dialog is not None:
+            dialog.deleteLater()
 
     def _show_setup(self, report: HealthReport | None = None, *_args) -> None:
         if self._setup_dialog is not None:

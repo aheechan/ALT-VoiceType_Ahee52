@@ -44,6 +44,8 @@
   open model folder, recheck.
 - History/glossary persistence in SQLite (`history.py`), seeded into the
   controller's context; `python -m altvoice history [--clear]`.
+- Tray "历史与术语…" dialog: recent utterances, glossary edit/delete,
+  clear-all with confirmation.
 - `python -m altvoice servers --command`.
 - Packaging: PyInstaller spec, Inno Setup script, `scripts/build_windows.ps1`.
 - GitHub Actions: Windows CI tests and a manual Windows build workflow.
