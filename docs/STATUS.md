@@ -73,6 +73,13 @@ Verified in this session:
   ~0.2–0.5 s per short sentence on the 3090.
 - Full real pipeline: Qwen3-ASR-0.6B → Qwen3-1.7B correction → Index-Translate-9B
   produced `There were even times when trading pretty much came to a standstill.`
+- `ServerManager.start_all()` auto-started real Qwen3-1.7B and
+  Index-Translate-2B llama.cpp servers, waited for `/v1/models`, and stopped them
+  cleanly.
+- `VoiceAppController` end-to-end with a file recorder (real ASR → real correction
+  → real 9B translation → commit) produced
+  `Transactions even almost came to a standstill.` and injected it through the
+  test injector.
 - GPU observation: 9B + 1.7B servers plus the desktop are heavy on 12 GB. Default
   `12gb-balanced` now uses Qwen3-ASR-0.6B (~8.5 GB weights); `12gb-max` keeps the
   1.7B ASR (~10.6 GB) for users who close background GPU apps.
