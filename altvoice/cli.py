@@ -179,6 +179,15 @@ def cmd_translate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_health(args: argparse.Namespace) -> int:
+    cfg = _config(args)
+    from .health import check_health, format_report
+
+    report = check_health(cfg, check_servers=args.servers)
+    print(format_report(report, config=cfg, show_commands=not args.no_commands))
+    return 0 if report.ready else 1
+
+
 def cmd_setup(args: argparse.Namespace) -> int:
     from .setup_wizard import run_setup
 
@@ -249,6 +258,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     doctor = sub.add_parser("doctor", help="show environment and model status")
     doctor.set_defaults(func=cmd_doctor)
+
+    health = sub.add_parser("health", help="check whether the app is ready to run")
+    health.add_argument("--servers", action="store_true", help="also probe configured model servers")
+    health.add_argument("--no-commands", action="store_true")
+    health.set_defaults(func=cmd_health)
 
     profiles = sub.add_parser("profiles", help="list VRAM/model profiles")
     profiles.set_defaults(func=cmd_profiles)

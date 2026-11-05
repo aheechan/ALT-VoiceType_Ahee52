@@ -66,7 +66,8 @@ Then edit `%APPDATA%\AltVoice\config.json` if needed:
   set a path for FireRedASR2-AED or a downloaded Qwen3-ASR directory.
 - `asr.device`: `cuda`
 
-Run `python -m altvoice doctor` and `python -m altvoice models --check` to see what is detected.
+Run `python -m altvoice health` for a one-shot readiness check. `python -m altvoice doctor`
+shows more environment detail.
 
 ## 4. Start the tray
 

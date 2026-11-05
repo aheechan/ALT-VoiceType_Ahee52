@@ -38,10 +38,14 @@
   checks and download commands.
 - `setup_wizard.py` + `python -m altvoice setup`: first-run config with profile,
   model paths and download instructions.
+- `health.py` + `python -m altvoice health`: one-shot readiness check for models,
+  ASR engine, microphone and PySide6.
+- Tray first-run/environment dialog: missing paths, copy download commands,
+  open model folder, recheck.
 - `python -m altvoice servers --command`.
 - Packaging: PyInstaller spec, Inno Setup script, `scripts/build_windows.ps1`.
 - GitHub Actions: Windows CI tests and a manual Windows build workflow.
-- 71 unit tests passing without GPU, microphone or model weights.
+- 74 unit tests passing without GPU, microphone or model weights.
 
 Verified in this session:
 

@@ -37,6 +37,7 @@ python -m altvoice doctor
 python -m altvoice profiles
 python -m altvoice setup --profile 12gb-balanced
 python -m altvoice models --profile 12gb-balanced --commands
+python -m altvoice health
 
 # ASR bake-off: compare engines on your own recordings
 python -m altvoice bakeoff --manifest benchmarks/asr_manifest.example.jsonl --dry-run

@@ -9,7 +9,7 @@ from ..app import VoiceAppController
 from ..config import LANGUAGES, TARGET_LANGUAGES
 
 try:
-    from PySide6.QtCore import QObject, Qt, Signal
+    from PySide6.QtCore import QObject, Qt, QTimer, Signal
     from PySide6.QtGui import QAction, QActionGroup, QColor, QIcon, QPainter, QPen, QPixmap
     from PySide6.QtWidgets import (
         QApplication,
@@ -29,7 +29,9 @@ except ImportError as exc:  # pragma: no cover - depends on optional extra
     ) from exc
 
 from ..hotkey.windows import HotkeyError, WindowsAltHook
+from ..health import HealthReport, check_health
 from ..pipeline import PipelineResult
+from .setup_dialog import SetupDialog
 
 
 def _make_icon(color: str = "#2d7ff9") -> QIcon:
@@ -156,6 +158,7 @@ class TrayApp(QObject):
         )
         self.tray = QSystemTrayIcon(_make_icon())
         self.tray.setToolTip("AltVoice · 长按 Alt 说话")
+        self._setup_dialog: SetupDialog | None = None
         self.menu = QMenu()
         self._build_menu()
         self.tray.setContextMenu(self.menu)
@@ -203,6 +206,8 @@ class TrayApp(QObject):
         self.menu.addAction(self.preview_action)
 
         self.menu.addSeparator()
+        health_action = self.menu.addAction("环境检查…")
+        health_action.triggered.connect(self._show_setup)
         settings = self.menu.addAction("配置文件位置…")
         settings.triggered.connect(self._show_config)
         quit_action = self.menu.addAction("退出")
@@ -210,7 +215,11 @@ class TrayApp(QObject):
 
     def start(self) -> None:
         self.tray.show()
-        self.controller.warm_up()
+        report = check_health(self.controller.config, self.controller.profile)
+        if report.config_ready:
+            self.controller.warm_up()
+        if not report.ready:
+            QTimer.singleShot(350, lambda: self._show_setup(report))
         try:
             self.hotkey.start()
         except HotkeyError as exc:
@@ -221,9 +230,43 @@ class TrayApp(QObject):
         try:
             self.hotkey.stop()
         finally:
+            if self._setup_dialog is not None:
+                self._setup_dialog.close()
+                self._setup_dialog = None
             self.controller.close()
             self.tray.hide()
             QApplication.instance().quit()
+
+    def _show_setup(self, report: HealthReport | None = None, *_args) -> None:
+        if self._setup_dialog is not None:
+            self._setup_dialog.raise_()
+            self._setup_dialog.activateWindow()
+            return
+        if not isinstance(report, HealthReport):
+            report = check_health(self.controller.config, self.controller.profile)
+        dialog = SetupDialog(report, self.controller.config)
+        dialog.recheck_requested.connect(self._recheck_setup)
+        dialog.finished.connect(lambda _code=0: self._clear_setup())
+        self._setup_dialog = dialog
+        dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
+
+    def _clear_setup(self) -> None:
+        dialog = self._setup_dialog
+        self._setup_dialog = None
+        if dialog is not None:
+            dialog.deleteLater()
+
+    def _recheck_setup(self) -> None:
+        dialog = self._setup_dialog
+        if dialog is not None:
+            dialog.close()
+        self._clear_setup()
+        report = check_health(self.controller.config, self.controller.profile)
+        if report.config_ready:
+            self.controller.warm_up()
+        self._show_setup(report)
 
     def _on_activated(self, reason) -> None:
         if reason == QSystemTrayIcon.ActivationReason.Trigger:

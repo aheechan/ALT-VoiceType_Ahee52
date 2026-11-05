@@ -156,8 +156,10 @@ class VoiceAppController:
             if self._recording:
                 return
             if self._pipeline is None:
-                self.on_error("模型加载中，请稍候再按 Alt")
-                self.warm_up()
+                if self._warming:
+                    self.on_error("模型加载中，请稍候再按 Alt")
+                else:
+                    self.on_error("模型未就绪，请运行 altvoice health 检查环境")
                 return
             try:
                 self._ensure_recorder()
