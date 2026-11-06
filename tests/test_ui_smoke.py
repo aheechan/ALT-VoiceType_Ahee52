@@ -158,6 +158,8 @@ class UiSmokeTests(unittest.TestCase):
                 )
                 window.show_result(result)
                 self.assertTrue(window.result_frame.isVisible())
+                window._copy_source()
+                self.assertIn("已复制", window.source_copy.text())
                 window.cancel_result()
                 self.assertEqual(window.source_text.full_text(), "")
             finally:

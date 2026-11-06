@@ -559,26 +559,22 @@ class MainWindow(QWidget):
         self.source_text = TypingEdit(72)
         result_layout.addWidget(self.source_text)
         source_buttons = QHBoxLayout()
-        source_copy = QPushButton("复制识别文字")
-        source_copy.setObjectName("secondary")
-        source_copy.clicked.connect(
-            lambda: QApplication.clipboard().setText(self.source_text.full_text())
-        )
+        self.source_copy = QPushButton("复制识别文字")
+        self.source_copy.setObjectName("secondary")
+        self.source_copy.clicked.connect(self._copy_source)
         source_buttons.addStretch(1)
-        source_buttons.addWidget(source_copy)
+        source_buttons.addWidget(self.source_copy)
         result_layout.addLayout(source_buttons)
 
         result_layout.addWidget(QLabel("转译文字"))
         self.result_text = TypingEdit(72)
         result_layout.addWidget(self.result_text)
         result_buttons = QHBoxLayout()
-        result_copy = QPushButton("复制转译文字")
-        result_copy.setObjectName("secondary")
-        result_copy.clicked.connect(
-            lambda: QApplication.clipboard().setText(self.result_text.full_text())
-        )
+        self.result_copy = QPushButton("复制转译文字")
+        self.result_copy.setObjectName("secondary")
+        self.result_copy.clicked.connect(self._copy_result)
         result_buttons.addStretch(1)
-        result_buttons.addWidget(result_copy)
+        result_buttons.addWidget(self.result_copy)
         result_layout.addLayout(result_buttons)
         layout.addWidget(self.result_frame)
 
@@ -606,6 +602,24 @@ class MainWindow(QWidget):
     def _language_changed(self, _index: int) -> None:
         self._tray._set_target_lang(self.language.currentData())
         self.refresh()
+
+    def _copy_source(self) -> None:
+        self._copy_button(self.source_copy, "复制识别文字", self.source_text.full_text())
+
+    def _copy_result(self) -> None:
+        self._copy_button(self.result_copy, "复制转译文字", self.result_text.full_text())
+
+    def _copy_button(self, button: QPushButton, label: str, text: str) -> None:
+        if not text.strip():
+            button.setText("无内容")
+        else:
+            QApplication.clipboard().setText(text)
+            button.setText("已复制 ✓")
+        button.setEnabled(False)
+        QTimer.singleShot(
+            1200,
+            lambda: (button.setText(label), button.setEnabled(True)),
+        )
 
     def refresh(self) -> None:
         code = self._tray.controller.target_lang

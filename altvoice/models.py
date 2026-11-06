@@ -245,7 +245,7 @@ PROFILES: dict[str, dict[str, str]] = {
         "translator": "index_translate_9b_q4",
     },
     "12gb-max": {
-        "description": "1.7B ASR + 1.7B abliterated correction + 2B translation",
+        "description": "1.7B uncensored ASR + 1.7B abliterated correction + 2B translation",
         "asr": "qwen3_asr_1_7b_uncensored",
         "corrector": "qwen3_1_7b_abliterated_q4",
         "translator": "index_translate_2b_q4",
