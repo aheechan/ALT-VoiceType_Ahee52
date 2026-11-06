@@ -720,15 +720,9 @@ class TrayApp(QObject):
             on_error=self.error_raised.emit,
             on_audio_level=self.audio_level.emit,
         )
-        self.hotkey = WindowsAltHook(
-            threshold_ms=self.controller.config.hotkey.threshold_ms,
-            mode=self.controller.config.hotkey.mode,
-            on_start=self.controller.start_recording,
-            on_stop=self._request_stop,
-            on_cancel=self.controller.cancel_recording,
-        )
+        self.hotkey = self._make_hotkey()
         self.tray = QSystemTrayIcon(_make_icon())
-        self.tray.setToolTip("ALT-VoiceType · 按 Alt 开始 / 再按停止")
+        self.tray.setToolTip(f"ALT-VoiceType · {self.controller.config.hotkey.combo} 开始/停止")
         self._setup_dialog: SetupDialog | None = None
         self._history_dialog: HistoryDialog | None = None
         self._settings_dialog: SettingsDialog | None = None
@@ -745,6 +739,17 @@ class TrayApp(QObject):
         self.error_raised.connect(self._show_error)
         self.result_ready.connect(self._on_result)
         self.audio_level.connect(self._on_audio_level)
+
+    def _make_hotkey(self) -> WindowsAltHook:
+        return WindowsAltHook(
+            threshold_ms=self.controller.config.hotkey.threshold_ms,
+            mode=self.controller.config.hotkey.mode,
+            combo=self.controller.config.hotkey.combo,
+            on_start=self.controller.start_recording,
+            on_stop=self._request_stop,
+            on_cancel=self.controller.cancel_recording,
+            on_toggle=self._toggle_recording,
+        )
 
     def _build_menu(self) -> None:
         header = self.menu.addAction("ALT-VoiceType")
@@ -836,6 +841,7 @@ class TrayApp(QObject):
             return
         dialog = SettingsDialog(self.controller.config)
         dialog.profile_changed.connect(self._reload_profile)
+        dialog.hotkey_changed.connect(self._apply_hotkey)
         dialog.finished.connect(lambda _code=0: self._clear_settings())
         self._settings_dialog = dialog
         dialog.show()
@@ -859,6 +865,19 @@ class TrayApp(QObject):
         self.controller.reload_profile(profile)
         if self._main is not None:
             self._main.refresh()
+
+    def _apply_hotkey(self, combo: str) -> None:
+        try:
+            self.hotkey.stop()
+        except Exception:
+            pass
+        try:
+            self.hotkey = self._make_hotkey()
+            self.hotkey.start()
+            self.tray.setToolTip(f"ALT-VoiceType · {combo} 开始/停止")
+            self._set_status(f"快捷键已生效：{combo}")
+        except HotkeyError as exc:
+            self._show_error(f"快捷键设置失败：{exc}")
 
     def _show_history(self, *_args) -> None:
         if self.controller.history is None:
@@ -916,6 +935,12 @@ class TrayApp(QObject):
         if self._main is None:
             self._main = MainWindow(self)
         self._main.show_panel(activate=not auto)
+
+    def _toggle_recording(self) -> None:
+        if self.controller.recording:
+            self._request_stop()
+        else:
+            self.controller.start_recording()
 
     def _request_stop(self) -> None:
         if self._main is None:

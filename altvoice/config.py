@@ -126,6 +126,7 @@ def default_config_path() -> Path:
 @dataclass
 class HotkeyConfig:
     mode: str = "toggle_alt"  # toggle_alt | long_press_alt
+    combo: str = "alt"  # e.g. alt, alt+q, alt+ctrl+space
     threshold_ms: int = 280
     key: str = "alt"
     replay_short_tap: bool = True
@@ -261,6 +262,12 @@ class AppConfig:
             raise ValueError("injection.method must be clipboard, sendinput, or copy")
         if self.hotkey.threshold_ms < 80:
             raise ValueError("hotkey.threshold_ms is too small (minimum 80 ms)")
+        from .hotkey.combo import parse_combo
+
+        try:
+            self.hotkey.combo = parse_combo(self.hotkey.combo).text
+        except ValueError as exc:
+            raise ValueError(f"invalid hotkey.combo: {exc}") from exc
 
     def save(self, path: str | Path | None = None) -> Path:
         target = Path(path) if path else default_config_path()

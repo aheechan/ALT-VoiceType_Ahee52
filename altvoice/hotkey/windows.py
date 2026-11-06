@@ -72,27 +72,38 @@ class WindowsAltHook:
         self,
         threshold_ms: int = 280,
         mode: str = "toggle_alt",
+        combo: str = "alt",
         on_start=None,
         on_stop=None,
         on_cancel=None,
+        on_toggle=None,
     ) -> None:
         if not IS_WINDOWS:
             raise HotkeyError("the global Alt hook is only available on Windows")
         self.threshold_ms = max(80, int(threshold_ms))
         self.mode = mode
+        self.combo = combo
         self._on_start = on_start or (lambda: None)
         self._on_stop = on_stop or (lambda: None)
         self._on_cancel = on_cancel or (lambda: None)
+        self._on_toggle = on_toggle or (lambda: None)
         self._lock = threading.RLock()
-        self._logic = AltHookLogic(
-            threshold_ms=self.threshold_ms,
-            mode="toggle" if mode == "toggle_alt" else "long_press",
-            on_start=self._start_recording,
-            on_stop=self._stop_recording,
-            on_cancel=self._cancel_recording,
-            replay_alt_tap=self._replay_alt_tap,
-            replay_alt_down=self._replay_alt_down,
-        )
+        self._combo_logic = None
+        if mode == "toggle_alt":
+            from .combo import ComboHookLogic, parse_combo
+
+            self._combo_logic = ComboHookLogic(parse_combo(combo), self._toggle_recording)
+            self._logic = None
+        else:
+            self._logic = AltHookLogic(
+                threshold_ms=self.threshold_ms,
+                mode="long_press",
+                on_start=self._start_recording,
+                on_stop=self._stop_recording,
+                on_cancel=self._cancel_recording,
+                replay_alt_tap=self._replay_alt_tap,
+                replay_alt_down=self._replay_alt_down,
+            )
         self._thread: threading.Thread | None = None
         self._thread_id = 0
         self._hook = None
@@ -162,18 +173,27 @@ class WindowsAltHook:
                 down = w_param in (WM_KEYDOWN, WM_SYSKEYDOWN)
                 injected = bool(kb.flags & LLKHF_INJECTED)
                 with self._lock:
-                    decision = self._logic.handle_key(
-                        int(kb.vkCode),
-                        down,
-                        injected,
-                        time.monotonic() * 1000.0,
-                    )
-                if decision.start_timer:
-                    self._schedule_timer()
-                elif decision.cancel_timer:
-                    self._cancel_timer()
-                if decision.suppress:
-                    return 1
+                    if self._combo_logic is not None:
+                        decision = self._combo_logic.handle_key(
+                            int(kb.vkCode), down, injected
+                        )
+                    else:
+                        decision = self._logic.handle_key(
+                            int(kb.vkCode),
+                            down,
+                            injected,
+                            time.monotonic() * 1000.0,
+                        )
+                if self._combo_logic is not None:
+                    if decision.suppress:
+                        return 1
+                else:
+                    if decision.start_timer:
+                        self._schedule_timer()
+                    elif decision.cancel_timer:
+                        self._cancel_timer()
+                    if decision.suppress:
+                        return 1
         except Exception:
             # Never let a Python exception break the user's keyboard.
             pass
@@ -193,13 +213,17 @@ class WindowsAltHook:
 
     def _on_timer(self) -> None:
         with self._lock:
-            self._logic.tick(time.monotonic() * 1000.0)
+            if self._logic is not None:
+                self._logic.tick(time.monotonic() * 1000.0)
 
     def _dispatch(self, callback) -> None:
         try:
             callback()
         except Exception:
             pass
+
+    def _toggle_recording(self) -> None:
+        self._dispatch(self._on_toggle)
 
     def _start_recording(self) -> None:
         self._dispatch(self._on_start)

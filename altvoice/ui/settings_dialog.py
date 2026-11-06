@@ -9,15 +9,19 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFormLayout,
     QLabel,
+    QLineEdit,
+    QMessageBox,
     QVBoxLayout,
 )
 
 from ..config import AppConfig
+from ..hotkey.combo import parse_combo
 from ..models import PROFILE_LABELS, PROFILE_ORDER, PROFILES
 
 
 class SettingsDialog(QDialog):
     profile_changed = Signal(str)
+    hotkey_changed = Signal(str)
 
     def __init__(self, config: AppConfig, config_path: str | None = None, parent=None) -> None:
         super().__init__(parent)
@@ -29,6 +33,8 @@ class SettingsDialog(QDialog):
             "QDialog { background: #0A0A0A; color: #F2F2F2; }"
             "QLabel { color: #D8D8D8; }"
             "QComboBox { background: #181818; color: #F2F2F2; border: 1px solid #444444;"
+            " border-radius: 6px; padding: 6px; min-height: 22px; }"
+            "QLineEdit { background: #181818; color: #F2F2F2; border: 1px solid #444444;"
             " border-radius: 6px; padding: 6px; min-height: 22px; }"
             "QPushButton { background: #F2F2F2; color: #0A0A0A; border: 0; padding: 6px 12px;"
             " border-radius: 6px; }"
@@ -45,8 +51,14 @@ class SettingsDialog(QDialog):
         if index >= 0:
             self.profile.setCurrentIndex(index)
         form.addRow("模型档位", self.profile)
+        self.hotkey = QLineEdit(config.hotkey.combo)
+        self.hotkey.setPlaceholderText("alt 或 alt+q、alt+shift")
+        form.addRow("录音快捷键", self.hotkey)
         layout.addLayout(form)
-        note = QLabel("切换模型档位会立即停止旧模型并重新预热新模型。")
+        note = QLabel(
+            "快捷键支持单独 Alt，或 Alt+任意按键组合；点击保存后立即生效。\n"
+            "切换模型档位会立即停止旧模型并重新预热新模型。"
+        )
         note.setStyleSheet("color: #8b93a1; font-size: 12px;")
         note.setWordWrap(True)
         layout.addWidget(note)
@@ -60,9 +72,19 @@ class SettingsDialog(QDialog):
 
     def _apply(self) -> None:
         old_profile = self.config.profile
+        old_combo = self.config.hotkey.combo
         profile = self.profile.currentData()
+        try:
+            combo = parse_combo(self.hotkey.text()).text
+        except ValueError as exc:
+            QMessageBox.warning(self, "快捷键无效", str(exc))
+            return
         self.config.profile = profile
+        self.config.hotkey.combo = combo
+        self.hotkey.setText(combo)
         self.config.save(self.config_path)
+        if combo != old_combo:
+            self.hotkey_changed.emit(combo)
         if profile != old_profile:
             self.profile_changed.emit(profile)
         self.accept()
