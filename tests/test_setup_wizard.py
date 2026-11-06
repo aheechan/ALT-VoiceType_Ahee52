@@ -16,8 +16,8 @@ class SetupTests(unittest.TestCase):
             self.assertIn("qwen3_asr_0_6b", cfg.asr.model_path or "")
             self.assertTrue(cfg.corrector.enabled)
             self.assertTrue(cfg.corrector.autostart)
-            self.assertTrue(cfg.corrector.model_path.endswith("Qwen3-1.7B-Q8_0.gguf"))
-            self.assertTrue(cfg.translator.model_path.endswith("Index-Translate-9B.Q4_K_M.gguf"))
+            self.assertTrue(cfg.corrector.model_path.endswith("Qwen3-1.7B-abliterated-v2.i1-Q4_K_M.gguf"))
+            self.assertTrue(cfg.translator.model_path.endswith("Huihui-Qwen3-4B-Instruct-2507-abliterated.Q4_K_M.gguf"))
             self.assertEqual(cfg.translator.target_language, "ja")
 
     def test_cpu_safe_disables_corrector(self):

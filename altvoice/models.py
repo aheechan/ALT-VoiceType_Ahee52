@@ -239,10 +239,10 @@ PROFILE_LABELS: dict[str, str] = {
 
 PROFILES: dict[str, dict[str, str]] = {
     "12gb-balanced": {
-        "description": "0.6B ASR + 1.7B correction + 9B translation",
+        "description": "0.6B ASR + 1.7B abliterated correction + 4B abliterated translation",
         "asr": "qwen3_asr_0_6b",
-        "corrector": "qwen3_1_7b_instruct_q4",
-        "translator": "index_translate_9b_q4",
+        "corrector": "qwen3_1_7b_abliterated_q4",
+        "translator": "qwen3_4b_abliterated_q4",
     },
     "12gb-max": {
         "description": "1.7B uncensored ASR + 1.7B abliterated correction + 2B translation",
@@ -251,9 +251,9 @@ PROFILES: dict[str, dict[str, str]] = {
         "translator": "index_translate_2b_q4",
     },
     "12gb-safe": {
-        "description": "0.6B ASR + 1.7B correction + 2B translation",
+        "description": "0.6B ASR + 1.7B abliterated correction + 2B translation",
         "asr": "qwen3_asr_0_6b",
-        "corrector": "qwen3_1_7b_instruct_q4",
+        "corrector": "qwen3_1_7b_abliterated_q4",
         "translator": "index_translate_2b_q4",
     },
     "16gb-quality": {
@@ -263,10 +263,10 @@ PROFILES: dict[str, dict[str, str]] = {
         "translator": "qwen3_4b_abliterated_q4",
     },
     "24gb-quality": {
-        "description": "1.7B uncensored ASR + 1.7B uncensored correction + 9B translation, more context",
+        "description": "1.7B uncensored ASR + 1.7B uncensored correction + 4B abliterated translation, more context",
         "asr": "qwen3_asr_1_7b_uncensored",
         "corrector": "qwen3_1_7b_abliterated_q4",
-        "translator": "index_translate_9b_q4",
+        "translator": "qwen3_4b_abliterated_q4",
     },
     "cpu-safe": {
         "description": "No CUDA: SenseVoice/Sherpa + 2B translation, slower",
