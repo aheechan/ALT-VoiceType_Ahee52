@@ -54,6 +54,18 @@ MODEL_CATALOG: dict[str, ModelSpec] = {
         source="https://github.com/QwenLM/Qwen3-ASR",
         notes="52 languages/dialects, streaming via vLLM.",
     ),
+    "qwen3_asr_1_7b_uncensored": ModelSpec(
+        key="qwen3_asr_1_7b_uncensored",
+        role="asr",
+        display_name="Qwen3-ASR-1.7B-Uncensored",
+        params_b=1.7,
+        quant="BF16",
+        disk_gb=4.5,
+        vram_gb=3.6,
+        license="Apache-2.0",
+        source="https://huggingface.co/freeuser17/Qwen3-ASR-1.7B-Uncensored",
+        notes="Uncensored 1.7B ASR; loaded through qwen-asr.",
+    ),
     "qwen3_asr_0_6b": ModelSpec(
         key="qwen3_asr_0_6b",
         role="asr",
@@ -157,6 +169,7 @@ MODEL_CATALOG: dict[str, ModelSpec] = {
 _MODEL_SOURCES: dict[str, tuple[str, str, str]] = {
     "firered_asr_aed": ("FireRedTeam/FireRedASR2-AED", "", "dir"),
     "qwen3_asr_1_7b": ("Qwen/Qwen3-ASR-1.7B", "", "dir"),
+    "qwen3_asr_1_7b_uncensored": ("freeuser17/Qwen3-ASR-1.7B-Uncensored", "", "dir"),
     "qwen3_asr_0_6b": ("Qwen/Qwen3-ASR-0.6B", "", "dir"),
     "sensevoice_small": ("iic/SenseVoiceSmall", "", "dir"),
     "qwen3_1_7b_instruct_q4": (
@@ -217,7 +230,7 @@ PROFILES: dict[str, dict[str, str]] = {
     },
     "12gb-max": {
         "description": "1.7B ASR + 1.7B abliterated correction + 2B translation",
-        "asr": "qwen3_asr_1_7b",
+        "asr": "qwen3_asr_1_7b_uncensored",
         "corrector": "qwen3_1_7b_abliterated_q4",
         "translator": "index_translate_2b_q4",
     },
@@ -229,13 +242,13 @@ PROFILES: dict[str, dict[str, str]] = {
     },
     "16gb-quality": {
         "description": "1.7B ASR + 4B correction + 9B translation",
-        "asr": "qwen3_asr_1_7b",
+        "asr": "qwen3_asr_1_7b_uncensored",
         "corrector": "qwen3_4b_instruct_q4",
         "translator": "index_translate_9b_q4",
     },
     "24gb-quality": {
         "description": "1.7B ASR + 4B correction + 9B translation, more context headroom",
-        "asr": "qwen3_asr_1_7b",
+        "asr": "qwen3_asr_1_7b_uncensored",
         "corrector": "qwen3_4b_instruct_q4",
         "translator": "index_translate_9b_q4",
     },
