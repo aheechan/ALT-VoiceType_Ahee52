@@ -241,15 +241,15 @@ PROFILES: dict[str, dict[str, str]] = {
         "translator": "index_translate_2b_q4",
     },
     "16gb-quality": {
-        "description": "1.7B ASR + 4B correction + 9B translation",
+        "description": "1.7B uncensored ASR + 1.7B uncensored correction + 9B translation (4B fallback)",
         "asr": "qwen3_asr_1_7b_uncensored",
-        "corrector": "qwen3_4b_instruct_q4",
+        "corrector": "qwen3_1_7b_abliterated_q4",
         "translator": "index_translate_9b_q4",
     },
     "24gb-quality": {
-        "description": "1.7B ASR + 4B correction + 9B translation, more context headroom",
+        "description": "1.7B uncensored ASR + 1.7B uncensored correction + 9B translation, more context",
         "asr": "qwen3_asr_1_7b_uncensored",
-        "corrector": "qwen3_4b_instruct_q4",
+        "corrector": "qwen3_1_7b_abliterated_q4",
         "translator": "index_translate_9b_q4",
     },
     "cpu-safe": {
