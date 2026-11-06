@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -17,6 +18,8 @@ from ..models import PROFILE_LABELS, PROFILE_ORDER, PROFILES
 
 
 class SettingsDialog(QDialog):
+    profile_changed = Signal(str)
+
     def __init__(self, config: AppConfig, config_path: str | None = None, parent=None) -> None:
         super().__init__(parent)
         self.config = config
@@ -61,8 +64,12 @@ class SettingsDialog(QDialog):
         layout.addWidget(buttons)
 
     def _apply(self) -> None:
-        self.config.profile = self.profile.currentData()
+        old_profile = self.config.profile
+        profile = self.profile.currentData()
+        self.config.profile = profile
         self.config.ui.preview = self.preview.isChecked()
         self.config.save(self.config_path)
+        if profile != old_profile:
+            self.profile_changed.emit(profile)
         self.accept()
 

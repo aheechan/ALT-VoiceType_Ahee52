@@ -90,6 +90,18 @@ MODEL_CATALOG: dict[str, ModelSpec] = {
         source="https://huggingface.co/Qwen",
         notes="Default 12 GB corrector; official repo only ships Q8_0.",
     ),
+    "qwen3_1_7b_abliterated_q4": ModelSpec(
+        key="qwen3_1_7b_abliterated_q4",
+        role="corrector",
+        display_name="Qwen3-1.7B-Abliterated Q4",
+        params_b=1.7,
+        quant="Q4_K_M",
+        disk_gb=1.1,
+        vram_gb=1.2,
+        license="Apache-2.0",
+        source="https://huggingface.co/mradermacher/Qwen3-1.7B-abliterated-v2-i1-GGUF",
+        notes="Uncensored alternate for the higher profiles.",
+    ),
     "qwen3_4b_instruct_q4": ModelSpec(
         key="qwen3_4b_instruct_q4",
         role="corrector",
@@ -152,6 +164,11 @@ _MODEL_SOURCES: dict[str, tuple[str, str, str]] = {
         "Qwen3-1.7B-Q8_0.gguf",
         "file",
     ),
+    "qwen3_1_7b_abliterated_q4": (
+        "mradermacher/Qwen3-1.7B-abliterated-v2-i1-GGUF",
+        "Qwen3-1.7B-abliterated-v2.i1-Q4_K_M.gguf",
+        "file",
+    ),
     "qwen3_4b_instruct_q4": (
         "Qwen/Qwen3-4B-GGUF",
         "Qwen3-4B-Q4_K_M.gguf",
@@ -199,9 +216,9 @@ PROFILES: dict[str, dict[str, str]] = {
         "translator": "index_translate_9b_q4",
     },
     "12gb-max": {
-        "description": "1.7B ASR + 1.7B correction + 2B translation",
+        "description": "1.7B ASR + 1.7B abliterated correction + 2B translation",
         "asr": "qwen3_asr_1_7b",
-        "corrector": "qwen3_1_7b_instruct_q4",
+        "corrector": "qwen3_1_7b_abliterated_q4",
         "translator": "index_translate_2b_q4",
     },
     "12gb-safe": {

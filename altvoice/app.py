@@ -162,6 +162,50 @@ class VoiceAppController:
 
         threading.Thread(target=worker, name="altvoice-warmup", daemon=True).start()
 
+    def reload_profile(self, profile: str) -> None:
+        """Stop the old models, rebuild model paths, and warm the new profile."""
+        from .setup_wizard import build_config
+
+        with self._pipeline_lock:
+            self.cancel_recording()
+            if self._thread is not None:
+                self._thread.join(timeout=2.0)
+            if self._pipeline is not None:
+                try:
+                    self._pipeline.close()
+                except Exception:
+                    pass
+                self._pipeline = None
+            if self._servers is not None:
+                try:
+                    self._servers.stop_all()
+                except Exception:
+                    pass
+                self._servers = None
+            old = self.config
+            try:
+                new = build_config(profile, old.models_dir, old.translator.target_language)
+            except Exception as exc:
+                self.on_error(f"切换模型档位失败：{exc}")
+                return
+            new.hotkey = old.hotkey
+            new.audio = old.audio
+            new.ui = old.ui
+            new.injection = old.injection
+            new.history = old.history
+            new.servers = old.servers
+            new.asr.device = old.asr.device
+            self.config = new
+            self.profile = profile
+            self.target_lang = normalize_language(new.translator.target_language) or "zh"
+            if self._config_path:
+                try:
+                    new.save(self._config_path)
+                except OSError:
+                    pass
+            self.on_status(f"已切换 {profile}，正在清理并加载模型…")
+        self.warm_up()
+
     def _ensure_recorder(self) -> AudioRecorder:
         if self._recorder is None:
             self._recorder = AudioRecorder(
@@ -298,11 +342,11 @@ class VoiceAppController:
                     self.on_error(f"写入历史失败：{exc}")
             if result.error:
                 self.on_error(result.error)
-            if not self.config.ui.preview:
-                # Put the caret back where the user started speaking, then paste.
-                if self.config.ui.focus_guard:
-                    self.restore_target_focus()
-                self._deliver(result, result.output_text)
+            # Always paste at the caret; the preview setting only controls whether
+            # the main window is brought forward with the two result panels.
+            if self.config.ui.focus_guard:
+                self.restore_target_focus()
+            self._deliver(result, result.output_text)
             self.on_result(result)
         except Exception as exc:
             if not self._cancelled:

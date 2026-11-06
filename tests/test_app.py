@@ -65,7 +65,7 @@ class ControllerTests(unittest.TestCase):
         )
         return controller, recorder, results, event, injector
 
-    def test_record_preview_then_commit(self):
+    def test_recording_always_pastes(self):
         with workspace_tempdir() as tmp:
             controller, recorder, results, event, injector = self._controller(preview=True)
             controller._temp_dir = tmp
@@ -75,8 +75,7 @@ class ControllerTests(unittest.TestCase):
             self.assertTrue(event.wait(3.0))
             self.assertEqual(len(results), 1)
             self.assertEqual(results[0].output_text, "en:你好，世界。")
-            self.assertFalse(results[0].injected)
-            controller.commit(results[0])
+            self.assertTrue(results[0].injected)
             self.assertEqual(injector.last_text, "en:你好，世界。")
 
     def test_direct_insert_when_preview_off(self):

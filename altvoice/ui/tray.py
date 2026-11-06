@@ -526,6 +526,12 @@ class MainWindow(QWidget):
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
 
+        self.warm_button = QPushButton("预热模型")
+        self.warm_button.setObjectName("warm")
+        self.warm_button.setMinimumHeight(32)
+        self.warm_button.clicked.connect(self._tray._warm_up)
+        layout.addWidget(self.warm_button)
+
         input_row = QHBoxLayout()
         input_row.addWidget(QLabel("输入语言"))
         input_value = QLabel("中文（固定）")
@@ -570,15 +576,8 @@ class MainWindow(QWidget):
         result_copy.clicked.connect(
             lambda: QApplication.clipboard().setText(self.result_text.full_text())
         )
-        self.cancel_button = QPushButton("取消")
-        self.cancel_button.setObjectName("secondary")
-        self.cancel_button.clicked.connect(self.cancel_result)
-        self.insert_button = QPushButton("插入")
-        self.insert_button.clicked.connect(self.accept_result)
-        result_buttons.addWidget(result_copy)
         result_buttons.addStretch(1)
-        result_buttons.addWidget(self.cancel_button)
-        result_buttons.addWidget(self.insert_button)
+        result_buttons.addWidget(result_copy)
         result_layout.addLayout(result_buttons)
         layout.addWidget(self.result_frame)
 
@@ -610,14 +609,11 @@ class MainWindow(QWidget):
     def refresh(self) -> None:
         code = self._tray.controller.target_lang
         self._select_language(code)
-        waiting = bool(self._tray.controller.config.ui.preview)
-        self.insert_button.setVisible(waiting)
-        self.cancel_button.setVisible(waiting)
         if code == "zh":
             self.mode_label.setText("中文 → 中文 · 直接转写")
         else:
             self.mode_label.setText(f"中文 → {LANGUAGES.get(code, code)} · 翻译")
-        self.status.setText(self._tray.controller_status)
+        self.set_status(self._tray.controller_status)
 
     def show_panel(self) -> None:
         self.refresh()
@@ -632,6 +628,17 @@ class MainWindow(QWidget):
 
     def set_status(self, text: str) -> None:
         self.status.setText(text)
+        if "加载完毕" in text or "就绪" in text:
+            self.warm_button.setEnabled(True)
+            self.warm_button.setText("已预热 · 重新预热")
+        elif any(word in text for word in ("加载", "预热", "切换")):
+            self.warm_button.setEnabled(False)
+            self.warm_button.setText("预热中…")
+        elif "已粘贴" in text:
+            self.warm_button.setEnabled(True)
+            self.warm_button.setText("已预热 · 重新预热")
+        else:
+            self.warm_button.setEnabled(True)
 
     def set_level(self, level: float) -> None:
         self.meter.set_active()
@@ -641,19 +648,18 @@ class MainWindow(QWidget):
         self.meter.set_tail()
         self.status.setText("收尾 2 秒…")
 
-    def show_result(self, result) -> None:
+    def show_result(self, result, reveal: bool = True) -> None:
         self._result = result
         self.source_text.set_typed(result.raw_text or result.corrected_text)
         self.result_text.set_typed(result.output_text)
         self.refresh()
-        self.show_panel()
+        if reveal:
+            self.show_panel()
 
     def clear_result(self) -> None:
         self._result = None
         self.source_text.set_typed("")
         self.result_text.set_typed("")
-        self.insert_button.hide()
-        self.cancel_button.hide()
 
     def cancel_result(self) -> None:
         self.clear_result()
@@ -813,6 +819,7 @@ class TrayApp(QObject):
             self._settings_dialog.activateWindow()
             return
         dialog = SettingsDialog(self.controller.config)
+        dialog.profile_changed.connect(self._reload_profile)
         dialog.finished.connect(lambda _code=0: self._clear_settings())
         self._settings_dialog = dialog
         dialog.show()
@@ -826,6 +833,16 @@ class TrayApp(QObject):
             dialog.deleteLater()
         if self._panel is not None:
             self._panel.refresh()
+        if self._main is not None:
+            self._main.refresh()
+
+    def _reload_profile(self, profile: str) -> None:
+        self.controller_status = f"切换 {profile}：清理旧模型…"
+        if self._main is not None:
+            self._main.set_status(self.controller_status)
+        self.controller.reload_profile(profile)
+        if self._main is not None:
+            self._main.refresh()
 
     def _show_history(self, *_args) -> None:
         if self.controller.history is None:
@@ -891,6 +908,16 @@ class TrayApp(QObject):
         self._main.set_tail()
         self.controller.stop_recording(delay_s=2.0)
 
+    def _warm_up(self) -> None:
+        if self._main is not None:
+            self._main.set_status("预热中…")
+        if self.controller._pipeline is not None:
+            self._set_status("加载完毕，可以开始输入")
+            return
+        self.controller.warm_up()
+        if self._main is not None:
+            self._main.show_panel()
+
     def _accept_result(self, result: PipelineResult, text: str) -> None:
         self.controller.restore_target_focus()
         self.controller.commit(result, text)
@@ -917,7 +944,7 @@ class TrayApp(QObject):
         )
         if self._main is None:
             self._main = MainWindow(self)
-        self._main.show_result(result)
+        self._main.show_result(result, reveal=bool(self.controller.config.ui.preview))
         if not self.controller.config.ui.preview and not result.needs_preview:
             self._set_status("已粘贴" if result.injected else "结果已复制到剪贴板")
 
