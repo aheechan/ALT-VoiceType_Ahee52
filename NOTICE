@@ -1,0 +1,27 @@
+﻿ALT-VoiceType
+Copyright 2026 ALT-VoiceType contributors
+
+This product includes software and model weights developed by third parties.
+ALT-VoiceType does not redistribute model weights; users download them from the
+upstream repositories and remain responsible for complying with each license.
+
+Runtime / library components:
+- PySide6 (LGPL-3.0) — dynamically linked Qt bindings, if the UI extra is installed.
+- PyTorch (BSD-3-Clause) — bundled ASR runtime.
+- Transformers, tokenizers, huggingface_hub, safetensors, accelerate (Apache-2.0).
+- NumPy (BSD-3-Clause).
+- librosa (ISC), numba/llvmlite (BSD-2-Clause/BSD-3-Clause) — audio loading.
+- hf_xet (Apache-2.0) — resumable model downloads.
+- sounddevice (MIT) — optional microphone capture.
+- llama.cpp (MIT) — optional local LLM runtime.
+- sherpa-onnx (Apache-2.0) — optional CPU ASR runtime.
+- qwen-asr (Apache-2.0), Qwen team — Qwen3-ASR inference.
+
+Models (downloaded separately):
+- FireRedASR2S / FireRedASR2-AED (Apache-2.0), FireRedTeam.
+- Qwen3-ASR and Qwen3-Instruct (Apache-2.0), Qwen team; verify the exact checkpoint.
+- SenseVoice (Apache-2.0), FunAudioLLM.
+- Index-Translate (repository code Apache-2.0; model weights may have separate
+  terms — check the Hugging Face model card before redistribution or commercial use).
+
+This NOTICE is informational and does not replace the upstream license texts.

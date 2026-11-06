@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build*/
+dist*/
+install-test/
+.venv/
+.venv-build/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.piptmp/
+.pylibs/
+
+# Local config and secrets
+config.local.json
+.env
+*.token
+
+# Models and audio (never commit weights or user recordings)
+models/
+benchmarks/audio/
+benchmarks/results/
+tests/_tmp/
+*.wav
+*.mp3
+*.m4a
+*.flac
+!tests/fixtures/*.wav
+!benchmarks/*.example.wav
+
+# Logs / history
+logs/
+*.log
+history.db
+history.sqlite3
+
+# OS / editors
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+.DS_Store
+
+# Release binaries live in GitHub Releases
+release/*.exe
+release/*.bin
