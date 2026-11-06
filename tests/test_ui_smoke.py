@@ -159,7 +159,7 @@ class UiSmokeTests(unittest.TestCase):
                 window.show_result(result)
                 self.assertTrue(window.result_frame.isVisible())
                 window.cancel_result()
-                self.assertFalse(window.result_frame.isVisible())
+                self.assertEqual(window.source_text.full_text(), "")
             finally:
                 window.close()
                 tray.controller.close()

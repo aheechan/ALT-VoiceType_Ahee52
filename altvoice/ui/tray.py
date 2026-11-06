@@ -428,6 +428,43 @@ class LevelMeter(QWidget):
         painter.end()
 
 
+class TypingEdit(QTextEdit):
+    """Read-only display that reveals text with a short typing animation."""
+
+    def __init__(self, height: int = 76) -> None:
+        super().__init__()
+        self.setReadOnly(True)
+        self.setFixedHeight(height)
+        self._full = ""
+        self._pos = 0
+        self._timer = QTimer(self)
+        self._timer.setInterval(12)
+        self._timer.timeout.connect(self._type_more)
+
+    def full_text(self) -> str:
+        return self._full
+
+    def set_typed(self, text: str) -> None:
+        self._timer.stop()
+        self._full = text or ""
+        self._pos = 0
+        self.clear()
+        if not self._full:
+            return
+        self._timer.start()
+
+    def _type_more(self) -> None:
+        if self._pos >= len(self._full):
+            self._timer.stop()
+            return
+        chunk = self._full[self._pos : self._pos + 2]
+        self._pos += len(chunk)
+        cursor = self.textCursor()
+        cursor.movePosition(cursor.MoveOperation.End)
+        self.setTextCursor(cursor)
+        self.insertPlainText(chunk)
+
+
 class MainWindow(QWidget):
     """Draggable main window: controls, inline result confirmation, meter."""
 
@@ -508,29 +545,42 @@ class MainWindow(QWidget):
         self.mode_label.setObjectName("mode")
         layout.addWidget(self.mode_label)
 
-        self.preview = QCheckBox("显示确认弹窗（关闭则直接粘贴）")
-        self.preview.toggled.connect(self._preview_changed)
-        layout.addWidget(self.preview)
-
         self.result_frame = QWidget()
         result_layout = QVBoxLayout(self.result_frame)
         result_layout.setContentsMargins(0, 4, 0, 2)
-        result_layout.addWidget(QLabel("识别结果"))
-        self.editor = QTextEdit()
-        self.editor.setFixedHeight(86)
-        result_layout.addWidget(self.editor)
+        result_layout.addWidget(QLabel("识别文字"))
+        self.source_text = TypingEdit(72)
+        result_layout.addWidget(self.source_text)
+        source_buttons = QHBoxLayout()
+        source_copy = QPushButton("复制识别文字")
+        source_copy.setObjectName("secondary")
+        source_copy.clicked.connect(
+            lambda: QApplication.clipboard().setText(self.source_text.full_text())
+        )
+        source_buttons.addStretch(1)
+        source_buttons.addWidget(source_copy)
+        result_layout.addLayout(source_buttons)
+
+        result_layout.addWidget(QLabel("转译文字"))
+        self.result_text = TypingEdit(72)
+        result_layout.addWidget(self.result_text)
         result_buttons = QHBoxLayout()
-        cancel = QPushButton("取消")
-        cancel.setObjectName("secondary")
-        cancel.clicked.connect(self.cancel_result)
-        insert = QPushButton("插入")
-        insert.clicked.connect(self.accept_result)
+        result_copy = QPushButton("复制转译文字")
+        result_copy.setObjectName("secondary")
+        result_copy.clicked.connect(
+            lambda: QApplication.clipboard().setText(self.result_text.full_text())
+        )
+        self.cancel_button = QPushButton("取消")
+        self.cancel_button.setObjectName("secondary")
+        self.cancel_button.clicked.connect(self.cancel_result)
+        self.insert_button = QPushButton("插入")
+        self.insert_button.clicked.connect(self.accept_result)
+        result_buttons.addWidget(result_copy)
         result_buttons.addStretch(1)
-        result_buttons.addWidget(cancel)
-        result_buttons.addWidget(insert)
+        result_buttons.addWidget(self.cancel_button)
+        result_buttons.addWidget(self.insert_button)
         result_layout.addLayout(result_buttons)
         layout.addWidget(self.result_frame)
-        self.result_frame.hide()
 
         self.meter = LevelMeter()
         layout.addWidget(self.meter)
@@ -557,15 +607,12 @@ class MainWindow(QWidget):
         self._tray._set_target_lang(self.language.currentData())
         self.refresh()
 
-    def _preview_changed(self, checked: bool) -> None:
-        self._tray._set_preview(checked)
-
     def refresh(self) -> None:
         code = self._tray.controller.target_lang
         self._select_language(code)
-        self.preview.blockSignals(True)
-        self.preview.setChecked(self._tray.controller.config.ui.preview)
-        self.preview.blockSignals(False)
+        waiting = bool(self._tray.controller.config.ui.preview)
+        self.insert_button.setVisible(waiting)
+        self.cancel_button.setVisible(waiting)
         if code == "zh":
             self.mode_label.setText("中文 → 中文 · 直接转写")
         else:
@@ -596,13 +643,17 @@ class MainWindow(QWidget):
 
     def show_result(self, result) -> None:
         self._result = result
-        self.editor.setPlainText(result.output_text)
-        self.result_frame.show()
+        self.source_text.set_typed(result.raw_text or result.corrected_text)
+        self.result_text.set_typed(result.output_text)
+        self.refresh()
         self.show_panel()
 
     def clear_result(self) -> None:
         self._result = None
-        self.result_frame.hide()
+        self.source_text.set_typed("")
+        self.result_text.set_typed("")
+        self.insert_button.hide()
+        self.cancel_button.hide()
 
     def cancel_result(self) -> None:
         self.clear_result()
@@ -612,7 +663,7 @@ class MainWindow(QWidget):
         if self._result is None:
             return
         result = self._result
-        text = self.editor.toPlainText().strip()
+        text = self.result_text.full_text().strip()
         self.clear_result()
         self._tray._accept_result(result, text)
 
@@ -696,12 +747,6 @@ class TrayApp(QObject):
             )
             self.language_group.addAction(action)
             language_menu.addAction(action)
-
-        self.preview_action = QAction("显示确认弹窗", self)
-        self.preview_action.setCheckable(True)
-        self.preview_action.setChecked(self.controller.config.ui.preview)
-        self.preview_action.toggled.connect(self._set_preview)
-        self.menu.addAction(self.preview_action)
 
         self.menu.addSeparator()
         history_action = self.menu.addAction("历史与术语…")
@@ -870,12 +915,11 @@ class TrayApp(QObject):
             result.error,
             result.injected,
         )
-        if not self.controller.config.ui.preview and not result.needs_preview:
-            self._set_status("已粘贴" if result.injected else "结果已复制到剪贴板")
-            return
         if self._main is None:
             self._main = MainWindow(self)
         self._main.show_result(result)
+        if not self.controller.config.ui.preview and not result.needs_preview:
+            self._set_status("已粘贴" if result.injected else "结果已复制到剪贴板")
 
     def _on_audio_level(self, level: float) -> None:
         if self._main is None:

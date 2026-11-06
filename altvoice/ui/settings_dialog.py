@@ -36,6 +36,8 @@ class SettingsDialog(QDialog):
         form = QFormLayout()
         self.profile = QComboBox()
         for name, info in PROFILES.items():
+            if name == "cpu-safe":
+                continue
             self.profile.addItem(f"{name} — {info.get('description', '')}", name)
         index = self.profile.findData(config.profile)
         if index >= 0:
