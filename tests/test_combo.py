@@ -15,6 +15,21 @@ class ComboTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_combo("ctrl+shift")
 
+    def test_parse_left_and_right_alt(self):
+        left = parse_combo("lalt+q")
+        right = parse_combo("ralt+q")
+        self.assertIn(0xA4, left.vks)
+        self.assertNotIn(0xA5, left.vks)
+        self.assertIn(0xA5, right.vks)
+        self.assertNotIn(0xA4, right.vks)
+
+    def test_left_alt_does_not_fire_on_right_alt(self):
+        calls = []
+        logic = ComboHookLogic(parse_combo("lalt+q"), lambda: calls.append(1))
+        logic.handle_key(0xA5, True, False)
+        logic.handle_key(0x51, True, False)
+        self.assertEqual(calls, [])
+
     def test_chord_triggers_once(self):
         calls = []
         logic = ComboHookLogic(parse_combo("alt+q"), lambda: calls.append(1))

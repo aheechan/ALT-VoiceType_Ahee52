@@ -52,11 +52,12 @@ class SettingsDialog(QDialog):
             self.profile.setCurrentIndex(index)
         form.addRow("模型档位", self.profile)
         self.hotkey = QLineEdit(config.hotkey.combo)
-        self.hotkey.setPlaceholderText("alt 或 alt+q、alt+shift")
+        self.hotkey.setPlaceholderText("lalt 或 lalt+q、ralt+space、alt+shift")
         form.addRow("录音快捷键", self.hotkey)
         layout.addLayout(form)
         note = QLabel(
-            "快捷键支持单独 Alt，或 Alt+任意按键组合；点击保存后立即生效。\n"
+            "快捷键支持 lalt（左 Alt）、ralt（右 Alt），或左/右 Alt + 任意按键；\n"
+            "点击保存后立即生效。Alt 组合键不会被独占，Alt+Tab 等系统快捷键仍可用。\n"
             "切换模型档位会立即停止旧模型并重新预热新模型。"
         )
         note.setStyleSheet("color: #8b93a1; font-size: 12px;")

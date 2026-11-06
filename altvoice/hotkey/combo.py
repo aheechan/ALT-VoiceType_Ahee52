@@ -5,11 +5,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 MODIFIER_VKS = {
+    "lalt": {0xA4},
+    "ralt": {0xA5},
     "alt": {0x12, 0xA4, 0xA5},
     "ctrl": {0x11, 0xA2, 0xA3},
     "shift": {0x10, 0xA0, 0xA1},
     "win": {0x5B, 0x5C},
 }
+MODIFIER_ORDER = ["lalt", "ralt", "alt", "ctrl", "shift", "win"]
 NAMED_VKS = {
     "space": 0x20,
     "tab": 0x09,
@@ -61,8 +64,8 @@ def parse_combo(text: str) -> HotkeyCombo:
             key = part
         else:
             raise ValueError(f"不支持的按键：{part}")
-    if "alt" not in modifiers:
-        raise ValueError("快捷键必须包含 Alt")
+    if "alt" not in modifiers and not ({"lalt", "ralt"} & modifiers):
+        raise ValueError("快捷键必须包含左 Alt 或右 Alt")
     vks: set[int] = set()
     groups: list[frozenset[int]] = []
     for modifier in modifiers:
@@ -73,7 +76,7 @@ def parse_combo(text: str) -> HotkeyCombo:
         group = frozenset({NAMED_VKS[key]})
         groups.append(group)
         vks.update(group)
-    canonical = "+".join([*sorted(modifiers, key=lambda m: ["alt", "ctrl", "shift", "win"].index(m)), *([key] if key else [])])
+    canonical = "+".join([*sorted(modifiers, key=lambda m: MODIFIER_ORDER.index(m)), *([key] if key else [])])
     return HotkeyCombo(canonical, frozenset(modifiers), key, frozenset(vks), tuple(groups))
 
 
@@ -84,21 +87,35 @@ class ComboDecision:
 
 
 class ComboHookLogic:
-    """Toggle once when the full chord is pressed; suppress the chord keys."""
+    """Toggle once when the full chord is pressed.
+
+    Alt keys are never swallowed: system shortcuts such as Alt+Tab keep
+    working. Only the non-Alt main key of a chord is suppressed when it
+    actually fires the recorder.
+    """
 
     def __init__(self, combo: HotkeyCombo, on_toggle) -> None:
         self.combo = combo
         self.on_toggle = on_toggle
         self._pressed: set[int] = set()
         self._triggered = False
+        self._main_vks = {NAMED_VKS[combo.key]} if combo.key else set()
+        if "alt" in combo.modifiers:
+            self._alt_keys = set(MODIFIER_VKS["alt"])
+        elif "lalt" in combo.modifiers:
+            self._alt_keys = set(MODIFIER_VKS["lalt"])
+        elif "ralt" in combo.modifiers:
+            self._alt_keys = set(MODIFIER_VKS["ralt"])
+        else:
+            self._alt_keys = set()
 
     def handle_key(self, vk: int, down: bool, injected: bool) -> ComboDecision:
         if injected:
             return ComboDecision()
         if vk not in self.combo.vks:
             return ComboDecision()
-        alt_down = any(v in self._pressed for v in MODIFIER_VKS["alt"])
-        if not alt_down and not self._triggered and vk not in MODIFIER_VKS["alt"]:
+        alt_down = any(v in self._pressed for v in self._alt_keys)
+        if not alt_down and not self._triggered and vk not in self._alt_keys:
             # A main key or secondary modifier pressed on its own should pass
             # through normally; only the Alt chord is ours.
             return ComboDecision()
@@ -110,8 +127,8 @@ class ComboHookLogic:
                 self._triggered = True
                 fired = True
                 self.on_toggle()
-            return ComboDecision(suppress=True, triggered=fired)
+            return ComboDecision(suppress=vk in self._main_vks, triggered=fired)
         self._pressed.discard(vk)
         if not (self.combo.vks & self._pressed):
             self._triggered = False
-        return ComboDecision(suppress=True)
+        return ComboDecision(suppress=vk in self._main_vks and self._triggered)

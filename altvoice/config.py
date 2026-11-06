@@ -126,7 +126,7 @@ def default_config_path() -> Path:
 @dataclass
 class HotkeyConfig:
     mode: str = "toggle_alt"  # toggle_alt | long_press_alt
-    combo: str = "alt"  # e.g. alt, alt+q, alt+ctrl+space
+    combo: str = "lalt"  # e.g. lalt, ralt, lalt+q, alt+ctrl+space
     threshold_ms: int = 280
     key: str = "alt"
     replay_short_tap: bool = True
