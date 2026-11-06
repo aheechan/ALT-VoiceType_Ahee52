@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..config import AppConfig
-from ..models import PROFILES
+from ..models import PROFILE_LABELS, PROFILE_ORDER, PROFILES
 
 
 class SettingsDialog(QDialog):
@@ -35,10 +35,11 @@ class SettingsDialog(QDialog):
         layout = QVBoxLayout(self)
         form = QFormLayout()
         self.profile = QComboBox()
-        for name, info in PROFILES.items():
-            if name == "cpu-safe":
-                continue
-            self.profile.addItem(f"{name} — {info.get('description', '')}", name)
+        for name in PROFILE_ORDER:
+            info = PROFILES[name]
+            self.profile.addItem(
+                f"{PROFILE_LABELS[name]} — {info.get('description', '')}", name
+            )
         index = self.profile.findData(config.profile)
         if index >= 0:
             self.profile.setCurrentIndex(index)

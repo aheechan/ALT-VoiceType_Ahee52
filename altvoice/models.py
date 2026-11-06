@@ -176,33 +176,48 @@ for _key, (_repo, _filename, _kind) in _MODEL_SOURCES.items():
         )
 
 
+PROFILE_ORDER: list[str] = [
+    "12gb-safe",
+    "12gb-balanced",
+    "12gb-max",
+    "16gb-quality",
+    "24gb-quality",
+]
+PROFILE_LABELS: dict[str, str] = {
+    "12gb-safe": "safe",
+    "12gb-balanced": "balanced",
+    "12gb-max": "12gb-max",
+    "16gb-quality": "16gb-quality",
+    "24gb-quality": "24gb-quality",
+}
+
 PROFILES: dict[str, dict[str, str]] = {
     "12gb-balanced": {
-        "description": "RTX 3070 12 GB baseline: 0.6B ASR + 9B translation",
+        "description": "0.6B ASR + 1.7B correction + 9B translation",
         "asr": "qwen3_asr_0_6b",
         "corrector": "qwen3_1_7b_instruct_q4",
         "translator": "index_translate_9b_q4",
     },
     "12gb-max": {
-        "description": "12 GB, minimal background apps: 1.7B ASR + 9B translation",
+        "description": "1.7B ASR + 1.7B correction + 2B translation",
         "asr": "qwen3_asr_1_7b",
         "corrector": "qwen3_1_7b_instruct_q4",
-        "translator": "index_translate_9b_q4",
+        "translator": "index_translate_2b_q4",
     },
     "12gb-safe": {
-        "description": "12 GB with headroom: fast ASR + 2B translation",
+        "description": "0.6B ASR + 1.7B correction + 2B translation",
         "asr": "qwen3_asr_0_6b",
         "corrector": "qwen3_1_7b_instruct_q4",
         "translator": "index_translate_2b_q4",
     },
     "16gb-quality": {
-        "description": "16 GB: ASR + 4B corrector + 9B translation",
+        "description": "1.7B ASR + 4B correction + 9B translation",
         "asr": "qwen3_asr_1_7b",
         "corrector": "qwen3_4b_instruct_q4",
         "translator": "index_translate_9b_q4",
     },
     "24gb-quality": {
-        "description": "24 GB: ASR + 4B corrector + 9B translation, more context headroom",
+        "description": "1.7B ASR + 4B correction + 9B translation, more context headroom",
         "asr": "qwen3_asr_1_7b",
         "corrector": "qwen3_4b_instruct_q4",
         "translator": "index_translate_9b_q4",
