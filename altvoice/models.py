@@ -126,6 +126,18 @@ MODEL_CATALOG: dict[str, ModelSpec] = {
         source="https://huggingface.co/Qwen",
         notes="16 GB+ corrector; better names and punctuation.",
     ),
+    "qwen3_4b_abliterated_q4": ModelSpec(
+        key="qwen3_4b_abliterated_q4",
+        role="translator",
+        display_name="Qwen3-4B-Abliterated Q4",
+        params_b=4.0,
+        quant="Q4_K_M",
+        disk_gb=2.4,
+        vram_gb=2.5,
+        license="Apache-2.0",
+        source="https://huggingface.co/mradermacher/Huihui-Qwen3-4B-Instruct-2507-abliterated-GGUF",
+        notes="Uncensored 4B translation for the 16 GB tier.",
+    ),
     "rules_only": ModelSpec(
         key="rules_only",
         role="corrector",
@@ -187,6 +199,11 @@ _MODEL_SOURCES: dict[str, tuple[str, str, str]] = {
         "Qwen3-4B-Q4_K_M.gguf",
         "file",
     ),
+    "qwen3_4b_abliterated_q4": (
+        "mradermacher/Huihui-Qwen3-4B-Instruct-2507-abliterated-GGUF",
+        "Huihui-Qwen3-4B-Instruct-2507-abliterated.Q4_K_M.gguf",
+        "file",
+    ),
     "rules_only": ("", "", "none"),
     "index_translate_9b_q4": (
         "IndexTeam/Index-Translate-9B-GGUF",
@@ -211,7 +228,6 @@ PROFILE_ORDER: list[str] = [
     "12gb-balanced",
     "12gb-max",
     "16gb-quality",
-    "24gb-quality",
 ]
 PROFILE_LABELS: dict[str, str] = {
     "12gb-safe": "safe",
@@ -241,10 +257,10 @@ PROFILES: dict[str, dict[str, str]] = {
         "translator": "index_translate_2b_q4",
     },
     "16gb-quality": {
-        "description": "1.7B uncensored ASR + 1.7B uncensored correction + 9B translation (4B fallback)",
+        "description": "1.7B uncensored ASR + 1.7B uncensored correction + 4B abliterated translation",
         "asr": "qwen3_asr_1_7b_uncensored",
         "corrector": "qwen3_1_7b_abliterated_q4",
-        "translator": "index_translate_9b_q4",
+        "translator": "qwen3_4b_abliterated_q4",
     },
     "24gb-quality": {
         "description": "1.7B uncensored ASR + 1.7B uncensored correction + 9B translation, more context",

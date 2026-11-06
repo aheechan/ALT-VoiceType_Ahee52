@@ -51,6 +51,8 @@ def build_config(
 
     translator_spec = models["translator"]
     cfg.translator.model_path = str(model_path(cfg, translator_spec))
+    if translator_spec.key == "qwen3_4b_abliterated_q4":
+        cfg.translator.model = "qwen3-4b-abliterated"
     cfg.translator.autostart = True
     cfg.translator.target_language = normalize_language(target_language) or "zh"
     cfg.validate()
