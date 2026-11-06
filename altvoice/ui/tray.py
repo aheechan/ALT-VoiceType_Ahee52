@@ -1,4 +1,4 @@
-"""Qt tray and preview UI for AltVoice."""
+"""Qt tray and preview UI for ALT-VoiceType."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 from ..app import VoiceAppController
 from ..config import LANGUAGES, TARGET_LANGUAGES, default_config_dir, default_config_path
@@ -65,7 +66,10 @@ def _ui_logger() -> logging.Logger:
     return logger
 
 
-def _make_icon(color: str = "#2d7ff9") -> QIcon:
+def _make_icon(color: str = "#0A0A0A") -> QIcon:
+    asset = Path(__file__).resolve().parent.parent / "assets" / "icon.ico"
+    if asset.exists():
+        return QIcon(str(asset))
     pixmap = QPixmap(64, 64)
     pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pixmap)
@@ -107,7 +111,7 @@ class _Editor(QTextEdit):
 class PreviewDialog(QDialog):
     def __init__(self, result: PipelineResult, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("AltVoice · 确认插入")
+        self.setWindowTitle("ALT-VoiceType · 确认插入")
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnTopHint
@@ -180,7 +184,7 @@ class TrayPanel(QWidget):
             | Qt.WindowType.Tool,
         )
         self._tray = tray
-        self.setWindowTitle("AltVoice")
+        self.setWindowTitle("ALT-VoiceType")
         self.setFixedWidth(360)
         self.setStyleSheet(
             "QWidget#panel { background: #1f2329; border: 1px solid #3a404a;"
@@ -209,7 +213,7 @@ class TrayPanel(QWidget):
         layout.setSpacing(9)
 
         title_row = QHBoxLayout()
-        title = QLabel("AltVoice")
+        title = QLabel("ALT-VoiceType")
         title.setObjectName("title")
         title_row.addWidget(title)
         title_row.addStretch(1)
@@ -371,6 +375,266 @@ class AudioMonitor(QWidget):
         painter.end()
 
 
+class LevelMeter(QWidget):
+    """Integrated audio level meter; no recording text."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setFixedHeight(42)
+        self.level = 0.0
+        self.active = True
+        self._timer = QTimer(self)
+        self._timer.setInterval(33)
+        self._timer.timeout.connect(self._decay)
+
+    def set_level(self, level: float) -> None:
+        self.level = min(1.0, max(0.0, float(level) * 24.0))
+        self.update()
+
+    def set_tail(self) -> None:
+        self.active = False
+        self.level = 0.0
+        self.update()
+
+    def set_active(self) -> None:
+        self.active = True
+        self._timer.start()
+
+    def _decay(self) -> None:
+        self.level *= 0.86
+        if self.level < 0.01:
+            self.level = 0.0
+        self.update()
+
+    def paintEvent(self, _event) -> None:  # noqa: N802 - Qt API
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(24, 24, 24))
+        painter.drawRoundedRect(0, 0, self.width(), self.height(), 6, 6)
+        bars = 32
+        gap = 3
+        bar_w = max(2, (self.width() - 16 - gap * (bars - 1)) // bars)
+        base = self.height() - 7
+        center = bars // 2
+        for i in range(bars):
+            distance = abs(i - center) / center
+            factor = 0.35 + 0.65 * (1.0 - distance)
+            h = 3 + int(25 * self.level * factor)
+            x = 8 + i * (bar_w + gap)
+            color = QColor(240, 240, 240) if self.active else QColor(90, 90, 90)
+            painter.setBrush(color)
+            painter.drawRoundedRect(x, base - h, bar_w, h, 2, 2)
+        painter.end()
+
+
+class MainWindow(QWidget):
+    """Draggable main window: controls, inline result confirmation, meter."""
+
+    def __init__(self, tray: "TrayApp") -> None:
+        super().__init__(
+            None,
+            Qt.WindowType.Tool
+            | Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.WindowStaysOnTopHint,
+        )
+        self._tray = tray
+        self._placed = False
+        self._drag = None
+        self._result = None
+        self.setWindowTitle("ALT-VoiceType")
+        self.setFixedWidth(440)
+        self.setStyleSheet(
+            "QWidget#main { background: #0A0A0A; border: 1px solid #3A3A3A;"
+            " border-radius: 12px; }"
+            "QLabel { color: #D8D8D8; }"
+            "QLabel#title { color: #FFFFFF; font-size: 18px; font-weight: 700; }"
+            "QLabel#status { color: #A8A8A8; font-size: 12px; }"
+            "QLabel#mode { color: #FFFFFF; font-size: 12px; }"
+            "QComboBox { background: #181818; color: #F2F2F2; border: 1px solid #444444;"
+            " border-radius: 6px; padding: 6px 8px; min-height: 22px; }"
+            "QComboBox QAbstractItemView { background: #181818; color: #F2F2F2;"
+            " selection-background-color: #F2F2F2; selection-color: #0A0A0A; }"
+            "QCheckBox { color: #D8D8D8; spacing: 7px; }"
+            "QTextEdit { background: #151515; color: #FFFFFF; border: 1px solid #444444;"
+            " border-radius: 6px; padding: 7px; }"
+            "QPushButton { background: #F2F2F2; color: #0A0A0A; border: 0;"
+            " padding: 6px 10px; border-radius: 6px; }"
+            "QPushButton#secondary { background: #2A2A2A; color: #F2F2F2; }"
+        )
+
+        box = QWidget(self)
+        box.setObjectName("main")
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(box)
+        layout = QVBoxLayout(box)
+        layout.setContentsMargins(16, 12, 16, 12)
+        layout.setSpacing(8)
+
+        header = QHBoxLayout()
+        title = QLabel("ALT-VoiceType")
+        title.setObjectName("title")
+        header.addWidget(title)
+        header.addStretch(1)
+        hide_button = QPushButton("—")
+        hide_button.setObjectName("secondary")
+        hide_button.setFixedWidth(32)
+        hide_button.clicked.connect(self.hide)
+        header.addWidget(hide_button)
+        layout.addLayout(header)
+
+        self.status = QLabel("加载中…")
+        self.status.setObjectName("status")
+        self.status.setWordWrap(True)
+        layout.addWidget(self.status)
+
+        input_row = QHBoxLayout()
+        input_row.addWidget(QLabel("输入语言"))
+        input_value = QLabel("中文（固定）")
+        input_value.setStyleSheet("color: #FFFFFF;")
+        input_row.addWidget(input_value)
+        input_row.addStretch(1)
+        layout.addLayout(input_row)
+
+        layout.addWidget(QLabel("输出语言"))
+        self.language = QComboBox()
+        for code in TARGET_LANGUAGES:
+            self.language.addItem(f"{LANGUAGES[code]}  ({code})", code)
+        self.language.currentIndexChanged.connect(self._language_changed)
+        layout.addWidget(self.language)
+
+        self.mode_label = QLabel()
+        self.mode_label.setObjectName("mode")
+        layout.addWidget(self.mode_label)
+
+        self.preview = QCheckBox("显示确认弹窗（关闭则直接粘贴）")
+        self.preview.toggled.connect(self._preview_changed)
+        layout.addWidget(self.preview)
+
+        self.result_frame = QWidget()
+        result_layout = QVBoxLayout(self.result_frame)
+        result_layout.setContentsMargins(0, 4, 0, 2)
+        result_layout.addWidget(QLabel("识别结果"))
+        self.editor = QTextEdit()
+        self.editor.setFixedHeight(86)
+        result_layout.addWidget(self.editor)
+        result_buttons = QHBoxLayout()
+        cancel = QPushButton("取消")
+        cancel.setObjectName("secondary")
+        cancel.clicked.connect(self.cancel_result)
+        insert = QPushButton("插入")
+        insert.clicked.connect(self.accept_result)
+        result_buttons.addStretch(1)
+        result_buttons.addWidget(cancel)
+        result_buttons.addWidget(insert)
+        result_layout.addLayout(result_buttons)
+        layout.addWidget(self.result_frame)
+        self.result_frame.hide()
+
+        self.meter = LevelMeter()
+        layout.addWidget(self.meter)
+
+        footer = QHBoxLayout()
+        settings = QPushButton("设置")
+        settings.setObjectName("secondary")
+        settings.clicked.connect(self._tray._show_settings)
+        history = QPushButton("历史")
+        history.setObjectName("secondary")
+        history.clicked.connect(self._tray._show_history)
+        footer.addWidget(settings)
+        footer.addWidget(history)
+        footer.addStretch(1)
+        layout.addLayout(footer)
+
+        self.refresh()
+
+    def _select_language(self, code: str) -> None:
+        index = self.language.findData(code)
+        if index < 0:
+            index = 0
+        self.language.blockSignals(True)
+        self.language.setCurrentIndex(index)
+        self.language.blockSignals(False)
+
+    def _language_changed(self, _index: int) -> None:
+        self._tray._set_target_lang(self.language.currentData())
+        self.refresh()
+
+    def _preview_changed(self, checked: bool) -> None:
+        self._tray._set_preview(checked)
+
+    def refresh(self) -> None:
+        code = self._tray.controller.target_lang
+        self._select_language(code)
+        self.preview.blockSignals(True)
+        self.preview.setChecked(self._tray.controller.config.ui.preview)
+        self.preview.blockSignals(False)
+        if code == "zh":
+            self.mode_label.setText("中文 → 中文 · 直接转写")
+        else:
+            self.mode_label.setText(f"中文 → {LANGUAGES.get(code, code)} · 翻译")
+        self.status.setText(self._tray.controller_status)
+
+    def show_panel(self) -> None:
+        self.refresh()
+        if not self._placed:
+            screen = QApplication.primaryScreen().availableGeometry()
+            self.adjustSize()
+            self.move(screen.right() - self.width() - 24, screen.top() + 80)
+            self._placed = True
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
+    def set_status(self, text: str) -> None:
+        self.status.setText(text)
+
+    def set_level(self, level: float) -> None:
+        self.meter.set_active()
+        self.meter.set_level(level)
+
+    def set_tail(self) -> None:
+        self.meter.set_tail()
+        self.status.setText("收尾 2 秒…")
+
+    def show_result(self, result) -> None:
+        self._result = result
+        self.editor.setPlainText(result.output_text)
+        self.result_frame.show()
+        self.show_panel()
+
+    def clear_result(self) -> None:
+        self._result = None
+        self.result_frame.hide()
+
+    def cancel_result(self) -> None:
+        self.clear_result()
+        self.set_status("已取消")
+
+    def accept_result(self) -> None:
+        if self._result is None:
+            return
+        result = self._result
+        text = self.editor.toPlainText().strip()
+        self.clear_result()
+        self._tray._accept_result(result, text)
+
+    def mousePressEvent(self, event):  # noqa: N802 - Qt API
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):  # noqa: N802 - Qt API
+        if self._drag is not None and event.buttons() & Qt.MouseButton.LeftButton:
+            self.move(event.globalPosition().toPoint() - self._drag)
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):  # noqa: N802 - Qt API
+        self._drag = None
+        super().mouseReleaseEvent(event)
+
+
 class TrayApp(QObject):
     status_changed = Signal(str)
     result_ready = Signal(object)
@@ -392,16 +656,18 @@ class TrayApp(QObject):
             threshold_ms=self.controller.config.hotkey.threshold_ms,
             mode=self.controller.config.hotkey.mode,
             on_start=self.controller.start_recording,
-            on_stop=self.controller.stop_recording,
+            on_stop=self._request_stop,
             on_cancel=self.controller.cancel_recording,
         )
         self.tray = QSystemTrayIcon(_make_icon())
-        self.tray.setToolTip("AltVoice · 按 Alt 开始 / 再按停止")
+        self.tray.setToolTip("ALT-VoiceType · 按 Alt 开始 / 再按停止")
         self._setup_dialog: SetupDialog | None = None
         self._history_dialog: HistoryDialog | None = None
         self._settings_dialog: SettingsDialog | None = None
         self._panel: TrayPanel | None = None
+        self._main: MainWindow | None = None
         self._monitor: AudioMonitor | None = None
+        self.controller_status = "加载中…"
         self._stopped = False
         self.menu = QMenu()
         self._build_menu()
@@ -413,7 +679,7 @@ class TrayApp(QObject):
         self.audio_level.connect(self._on_audio_level)
 
     def _build_menu(self) -> None:
-        header = self.menu.addAction("AltVoice")
+        header = self.menu.addAction("ALT-VoiceType")
         header.setEnabled(False)
         self.menu.addSeparator()
 
@@ -467,7 +733,7 @@ class TrayApp(QObject):
             self.hotkey.start()
         except HotkeyError as exc:
             self._show_error(str(exc))
-            self.tray.setToolTip("AltVoice · 热键不可用")
+            self.tray.setToolTip("ALT-VoiceType · 热键不可用")
 
     def stop(self) -> None:
         if self._stopped:
@@ -489,6 +755,9 @@ class TrayApp(QObject):
             if self._panel is not None:
                 self._panel.close()
                 self._panel = None
+            if self._main is not None:
+                self._main.close()
+                self._main = None
             if self._monitor is not None:
                 self._monitor.hide_monitor()
                 self._monitor.close()
@@ -570,9 +839,20 @@ class TrayApp(QObject):
         self._show_setup(report)
 
     def _show_panel(self) -> None:
-        if self._panel is None:
-            self._panel = TrayPanel(self)
-        self._panel.popup()
+        if self._main is None:
+            self._main = MainWindow(self)
+        self._main.show_panel()
+
+    def _request_stop(self) -> None:
+        if self._main is None:
+            self._main = MainWindow(self)
+        self._main.show_panel()
+        self._main.set_tail()
+        self.controller.stop_recording(delay_s=2.0)
+
+    def _accept_result(self, result: PipelineResult, text: str) -> None:
+        self.controller.restore_target_focus()
+        self.controller.commit(result, text)
 
     def _set_target_lang(self, code: str) -> None:
         self.controller.set_target_lang(code)
@@ -580,14 +860,12 @@ class TrayApp(QObject):
             if action.data() == self.controller.target_lang:
                 action.setChecked(True)
                 break
-        if self._panel is not None:
-            self._panel.refresh()
+        if self._main is not None:
+            self._main.refresh()
 
     def _on_activated(self, reason) -> None:
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             self._show_panel()
-        elif reason == QSystemTrayIcon.ActivationReason.DoubleClick:
-            self.controller.toggle_recording()
 
     def _on_result(self, result: PipelineResult) -> None:
         self._log.info(
@@ -596,43 +874,46 @@ class TrayApp(QObject):
             result.error,
             result.injected,
         )
-        if not self.controller.config.ui.preview:
+        if not self.controller.config.ui.preview and not result.needs_preview:
             self._set_status("已粘贴" if result.injected else "结果已复制到剪贴板")
             return
-        dialog = PreviewDialog(result)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            self.controller.restore_target_focus()
-            self.controller.commit(result, dialog.text())
-        else:
-            self._set_status("已取消")
+        if self._main is None:
+            self._main = MainWindow(self)
+        self._main.show_result(result)
 
     def _on_audio_level(self, level: float) -> None:
-        if self._monitor is None:
-            self._monitor = AudioMonitor()
-            self._monitor.show_at_corner()
-        self._monitor.set_level(level)
+        if self._main is None:
+            self._main = MainWindow(self)
+            self._main.show_panel()
+        self._main.set_level(level)
 
     def _set_status(self, message: str) -> None:
-        self.tray.setToolTip(f"AltVoice · {message}")
+        self.controller_status = message
+        self.tray.setToolTip(f"ALT-VoiceType · {message}")
         if "录音中" in message:
-            if self._monitor is None:
-                self._monitor = AudioMonitor()
-            self._monitor.show_at_corner()
-        elif self._monitor is not None:
-            self._monitor.hide_monitor()
+            if self._main is None:
+                self._main = MainWindow(self)
+            self._main.set_status(message)
+            self._main.show_panel()
+            self._main.meter.set_active()
+        elif self._main is not None:
+            self._main.set_status(message)
+            if "收尾" in message:
+                self._main.set_tail()
 
     def _show_error(self, message: str) -> None:
         self._log.error("%s", message)
-        if self._monitor is not None:
-            self._monitor.hide_monitor()
-        self.tray.showMessage("AltVoice", message, QSystemTrayIcon.MessageIcon.Warning, 6000)
-        self.tray.setToolTip(f"AltVoice · 错误：{message}")
+        self.controller_status = f"错误：{message}"
+        if self._main is not None:
+            self._main.set_status(self.controller_status)
+        self.tray.showMessage("ALT-VoiceType", message, QSystemTrayIcon.MessageIcon.Warning, 6000)
+        self.tray.setToolTip(f"ALT-VoiceType · 错误：{message}")
 
     def _set_preview(self, enabled: bool) -> None:
         self.controller.config.ui.preview = bool(enabled)
         self.controller.config.save()
-        if self._panel is not None:
-            self._panel.refresh()
+        if self._main is not None:
+            self._main.refresh()
 
     def _show_log(self) -> None:
         path = default_config_dir() / "logs" / "app.log"
@@ -643,7 +924,7 @@ class TrayApp(QObject):
                 os.startfile(str(path))  # type: ignore[attr-defined]
             else:
                 self.tray.showMessage(
-                    "AltVoice",
+                    "ALT-VoiceType",
                     f"日志文件：{path}",
                     QSystemTrayIcon.MessageIcon.Information,
                     5000,
@@ -656,7 +937,7 @@ class TrayApp(QObject):
 
         path = default_config_path()
         self.tray.showMessage(
-            "AltVoice",
+            "ALT-VoiceType",
             f"配置文件：{path}",
             QSystemTrayIcon.MessageIcon.Information,
             5000,
@@ -671,11 +952,12 @@ class TrayApp(QObject):
 def run_tray(config_path: str | None = None, smoke_seconds: float = 0.0) -> int:
     guard = SingleInstance()
     if not guard.acquired:
-        print("AltVoice is already running.", file=sys.stderr)
+        print("ALT-VoiceType is already running.", file=sys.stderr)
         return 4
     try:
         app = QApplication.instance() or QApplication(sys.argv)
         app.setQuitOnLastWindowClosed(False)
+        app.setWindowIcon(_make_icon())
         if not QSystemTrayIcon.isSystemTrayAvailable():
             print("System tray is not available in this session.", file=sys.stderr)
             return 3
@@ -688,3 +970,4 @@ def run_tray(config_path: str | None = None, smoke_seconds: float = 0.0) -> int:
         return code
     finally:
         guard.close()
+

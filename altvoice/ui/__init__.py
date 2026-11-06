@@ -1,4 +1,4 @@
-"""Qt UI package (optional, imported only by the ``run`` command)."""
+﻿"""Qt UI package (optional, imported only by the ``run`` command)."""
 
 
 def run_tray(config_path: str | None = None, smoke_seconds: float = 0.0) -> int:
@@ -8,3 +8,4 @@ def run_tray(config_path: str | None = None, smoke_seconds: float = 0.0) -> int:
 
 
 __all__ = ["run_tray"]
+

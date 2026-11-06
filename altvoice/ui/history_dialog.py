@@ -1,4 +1,4 @@
-"""History and glossary viewer/editor."""
+﻿"""History and glossary viewer/editor."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ class HistoryDialog(QDialog):
     def __init__(self, store: HistoryStore, parent=None) -> None:
         super().__init__(parent)
         self.store = store
-        self.setWindowTitle("AltVoice · 历史与术语")
+        self.setWindowTitle("ALT-VoiceType · 历史与术语")
         self.resize(760, 580)
         self.setStyleSheet(
             "QDialog { background: #1f2329; color: #e8eaed; }"
@@ -144,10 +144,11 @@ class HistoryDialog(QDialog):
     def _clear(self) -> None:
         answer = QMessageBox.question(
             self,
-            "AltVoice",
+            "ALT-VoiceType",
             "清空全部本地历史和术语表？此操作不可撤销。",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if answer == QMessageBox.StandardButton.Yes:
             self.store.clear()
             self.refresh()
+

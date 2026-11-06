@@ -1,4 +1,4 @@
-﻿"""Settings dialog for the rolled-back compact tray UI."""
+"""Settings dialog for the rolled-back compact tray UI."""
 
 from __future__ import annotations
 
@@ -21,15 +21,15 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.config = config
         self.config_path = config_path
-        self.setWindowTitle("AltVoice · 设置")
+        self.setWindowTitle("ALT-VoiceType · 设置")
         self.setMinimumWidth(430)
         self.setStyleSheet(
-            "QDialog { background: #1f2329; color: #e8eaed; }"
-            "QLabel { color: #c6ccd6; }"
-            "QComboBox { background: #2a2f37; color: #eef2f8; border: 1px solid #3a404a;"
+            "QDialog { background: #0A0A0A; color: #F2F2F2; }"
+            "QLabel { color: #D8D8D8; }"
+            "QComboBox { background: #181818; color: #F2F2F2; border: 1px solid #444444;"
             " border-radius: 6px; padding: 6px; min-height: 22px; }"
-            "QCheckBox { color: #c6ccd6; }"
-            "QPushButton { background: #2d7ff9; color: white; border: 0; padding: 6px 12px;"
+            "QCheckBox { color: #D8D8D8; }"
+            "QPushButton { background: #F2F2F2; color: #0A0A0A; border: 0; padding: 6px 12px;"
             " border-radius: 6px; }"
         )
         layout = QVBoxLayout(self)
@@ -62,3 +62,4 @@ class SettingsDialog(QDialog):
         self.config.ui.preview = self.preview.isChecked()
         self.config.save(self.config_path)
         self.accept()
+

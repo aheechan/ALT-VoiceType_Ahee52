@@ -57,6 +57,7 @@ class VoiceAppController:
         self._recording = False
         self._cancelled = False
         self._stop_event: threading.Event | None = None
+        self._pending_stop: threading.Timer | None = None
         self._thread: threading.Thread | None = None
         self._last_result: PipelineResult | None = None
         self._target_hwnd = 0
@@ -92,6 +93,7 @@ class VoiceAppController:
             )
             if cfg.servers.enabled:
                 self._servers = ServerManager.from_config(cfg, self.profile)
+                self.on_status("预热中…")
                 for error in self._servers.start_all(on_status=self.on_status):
                     self.on_error(error)
             corrector = NullCorrector()
@@ -136,7 +138,7 @@ class VoiceAppController:
                 context=context,
                 style=cfg.translator.style,
             )
-            self.on_status("就绪：长按 Alt 说话")
+            self.on_status("加载完毕，可以开始输入")
             return self._pipeline
 
     def warm_up(self) -> None:
@@ -192,6 +194,9 @@ class VoiceAppController:
                 self.on_error(str(exc))
                 return
             self._cancelled = False
+            if self._pending_stop is not None:
+                self._pending_stop.cancel()
+                self._pending_stop = None
             self._target_hwnd = (
                 self._foreground_window() if self.config.ui.focus_guard else 0
             )
@@ -209,14 +214,33 @@ class VoiceAppController:
                 else "录音中…松开 Alt 结束"
             )
 
-    def stop_recording(self) -> None:
+    def stop_recording(self, delay_s: float = 0.0) -> None:
+        """Stop capture now, or after a short tail so final words are kept."""
+        if delay_s > 0:
+            with self._lock:
+                if self._pending_stop is not None or self._stop_event is None:
+                    return
+                self.on_status(f"收尾 {delay_s:.0f} 秒…")
+                timer = threading.Timer(delay_s, self._finish_stop)
+                timer.daemon = True
+                self._pending_stop = timer
+                timer.start()
+            return
+        self._finish_stop()
+
+    def _finish_stop(self) -> None:
         with self._lock:
+            self._pending_stop = None
             if self._stop_event is not None:
                 self._stop_event.set()
+                self.on_status("识别中…")
 
     def cancel_recording(self) -> None:
         with self._lock:
             self._cancelled = True
+            if self._pending_stop is not None:
+                self._pending_stop.cancel()
+                self._pending_stop = None
             if self._stop_event is not None:
                 self._stop_event.set()
             self.on_status("已取消")

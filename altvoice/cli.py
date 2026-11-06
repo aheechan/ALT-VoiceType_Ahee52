@@ -24,7 +24,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     cfg = _config(args)
     vram = detect_vram_gb()
     profile = select_profile(vram, cfg.profile)
-    print(f"AltVoice {__version__}")
+    print(f"ALT-VoiceType {__version__}")
     print(f"Python:        {sys.version.split()[0]}")
     print(f"Platform:      {platform.platform()}")
     print(f"Config:        {args.config or '(default)'}")

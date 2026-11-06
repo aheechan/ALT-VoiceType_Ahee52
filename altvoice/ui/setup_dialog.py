@@ -1,4 +1,4 @@
-"""First-run / environment-check dialog."""
+﻿"""First-run / environment-check dialog."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ class SetupDialog(QDialog):
         super().__init__(parent)
         self.report = report
         self.config = config
-        self.setWindowTitle("AltVoice · 环境检查")
+        self.setWindowTitle("ALT-VoiceType · 环境检查")
         self.resize(760, 560)
         self.setStyleSheet(
             "QDialog { background: #1f2329; color: #e8eaed; }"
@@ -45,7 +45,7 @@ class SetupDialog(QDialog):
         )
 
         layout = QVBoxLayout(self)
-        title = QLabel("AltVoice 尚未就绪" if not report.ready else "AltVoice 已就绪")
+        title = QLabel("ALT-VoiceType 尚未就绪" if not report.ready else "ALT-VoiceType 已就绪")
         title.setStyleSheet("font-size: 18px; font-weight: 600; color: #f2f4f7;")
         layout.addWidget(title)
 
@@ -101,7 +101,7 @@ class SetupDialog(QDialog):
             return
         answer = QMessageBox.question(
             self,
-            "AltVoice",
+            "ALT-VoiceType",
             f"将下载 {len(missing)} 个缺失模型（可能数 GB）。继续？",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
@@ -129,7 +129,7 @@ class SetupDialog(QDialog):
         self.download_button.setText("下载缺失模型")
         if errors:
             self.status_label.setText("部分模型下载失败。")
-            QMessageBox.warning(self, "AltVoice", "\n".join(errors[:5]))
+            QMessageBox.warning(self, "ALT-VoiceType", "\n".join(errors[:5]))
             return
         self.status_label.setText("下载完成，正在重新检查…")
         self.recheck_requested.emit()
@@ -142,3 +142,4 @@ class SetupDialog(QDialog):
         path = Path(self.config.models_dir)
         path.mkdir(parents=True, exist_ok=True)
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
+

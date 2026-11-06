@@ -1,9 +1,9 @@
 ; AltVoice Inno Setup script (per-user install).
 ; Build the app first with packaging/altvoice.spec, then compile this file.
 
-#define MyAppName "AltVoice"
+#define MyAppName "ALT-VoiceType_Ahee52"
 #define MyAppVersion "0.1.0"
-#define MyAppPublisher "AltVoice contributors"
+#define MyAppPublisher "ALT-VoiceType contributors"
 #define MyAppExeName "AltVoice.exe"
 
 #ifndef SourceDir
@@ -15,15 +15,18 @@ AppId={{8E4E3F6A-2B7A-4E1B-9C1A-000000000001}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={localappdata}\Programs\AltVoice
+DefaultDirName={localappdata}\Programs\ALT-VoiceType_Ahee52
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=..\dist\installer
-OutputBaseFilename=AltVoice-Setup-{#MyAppVersion}
+OutputBaseFilename=ALT-VoiceType_Ahee52-Setup-{#MyAppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+WizardImageFile=..\packaging\wizard-large.bmp
+WizardSmallImageFile=..\packaging\wizard-small.bmp
+SetupIconFile=..\altvoice\assets\icon.ico
 ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayIcon={app}\{#MyAppExeName}
 

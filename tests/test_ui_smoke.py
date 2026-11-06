@@ -135,6 +135,36 @@ class UiSmokeTests(unittest.TestCase):
                 tray.controller.close()
                 tray.tray.hide()
 
+    def test_main_window_result_and_meter(self):
+        from altvoice.ui.tray import MainWindow, TrayApp
+
+        with workspace_tempdir() as tmp:
+            path = Path(tmp) / "config.json"
+            cfg = AppConfig()
+            cfg.asr.engine = "fake"
+            cfg.history.enabled = False
+            cfg.save(path)
+            tray = TrayApp(config_path=str(path))
+            window = MainWindow(tray)
+            try:
+                window.show_panel()
+                window.set_level(0.2)
+                self.assertTrue(window.meter.isVisible())
+                result = PipelineResult(
+                    raw_text="你好",
+                    corrected_text="你好",
+                    translation="Hello",
+                    target_lang="en",
+                )
+                window.show_result(result)
+                self.assertTrue(window.result_frame.isVisible())
+                window.cancel_result()
+                self.assertFalse(window.result_frame.isVisible())
+            finally:
+                window.close()
+                tray.controller.close()
+                tray.tray.hide()
+
     def test_tray_panel_switches_to_transcription(self):
         from altvoice.ui.tray import TrayApp, TrayPanel
 
