@@ -1,8 +1,8 @@
-# Packaging
+﻿# Packaging
 
-AltVoice is a Windows desktop app. The installer uses a PyInstaller one-folder build plus
+ALT-VoiceType is a Windows desktop app. The installer uses a PyInstaller one-folder build plus
 Inno Setup. **Model weights are not bundled**; they stay in
-`%LOCALAPPDATA%\AltVoice\models` and are managed by `python -m altvoice setup` /
+`%LOCALAPPDATA%\ALT-VoiceType\models` and are managed by `python -m altvoice setup` /
 `python -m altvoice models`.
 
 ## Prerequisites
@@ -32,8 +32,8 @@ ISCC packaging\installer.iss
 
 Outputs:
 
-- `dist\AltVoice\AltVoice.exe` — one-folder app
-- `dist\installer\AltVoice-Setup-0.1.0.exe` — per-user installer
+- `dist\ALT-VoiceType\ALT-VoiceType.exe` — one-folder app
+- `dist\installer\ALT-VoiceType-Setup-0.1.0.exe` — per-user installer
 
 ## First-run setup
 
@@ -44,8 +44,8 @@ python -m altvoice setup --profile 12gb-balanced
 python -m altvoice models --profile 12gb-balanced --commands
 ```
 
-The setup command writes `%APPDATA%\AltVoice\config.json` with the expected model paths
-and prints missing-file checks. Download the models, then launch `AltVoice.exe`.
+The setup command writes `%APPDATA%\ALT-VoiceType\config.json` with the expected model paths
+and prints missing-file checks. Download the models, then launch `ALT-VoiceType.exe`.
 
 ## Notes
 
@@ -56,7 +56,7 @@ and prints missing-file checks. Download the models, then launch `AltVoice.exe`.
   With `asr-qwen`/torch bundled it is ~1.37 GB unpacked and ~341 MB as an installer;
   without the ASR extra it is much smaller but cannot transcribe offline. A console
   debug build was used to verify packaged Qwen3-ASR inference.
-- Inno Setup 6.7.3 compiled `AltVoice-Setup-0.1.0.exe`; the installer is unsigned and
+- Inno Setup 6.7.3 compiled `ALT-VoiceType-Setup-0.1.0.exe`; the installer is unsigned and
   its silent install still needs a real desktop test.
 - To package a custom build directory, pass `/DSourceDir=...` to ISCC.
 - Do not run the local llama.cpp servers on `0.0.0.0`; they have no authentication.

@@ -1,4 +1,4 @@
-# Architecture
+﻿# Architecture
 
 ## 1. Runtime view
 
@@ -109,7 +109,7 @@ user can copy manually.
 ## 8. Packaging
 
 - PyInstaller one-folder; Qt plugins and model downloader included.
-- Models live under `%LOCALAPPDATA%\AltVoice\models`, not in the installer.
+- Models live under `%LOCALAPPDATA%\ALT-VoiceType\models`, not in the installer.
 - Inno Setup creates Start Menu/desktop shortcuts and optional autostart.
 - Code signing is recommended to reduce SmartScreen/AV false positives from the keyboard hook.
 - The app never downloads code at runtime; model files are verified by SHA256 from a manifest.

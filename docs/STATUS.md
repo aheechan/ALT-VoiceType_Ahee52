@@ -1,4 +1,4 @@
-# Status
+﻿# Status
 
 ## Done
 
@@ -62,10 +62,10 @@
   installing a second keyboard hook.
 - Packaging: PyInstaller spec, Inno Setup script, `scripts/build_windows.ps1`.
   PyInstaller 6.22.3 one-folder build succeeds (~1.37 GB with `asr-qwen`/torch).
-  Inno Setup 6.7.3 compiles `dist/installer/AltVoice-Setup-0.1.0.exe` (~341 MB).
+  Inno Setup 6.7.3 compiles `dist/installer/ALT-VoiceType-Setup-0.1.0.exe` (~341 MB).
 - GitHub Actions: Windows core tests, offscreen UI smoke tests, and a manual
   build workflow that produces the PyInstaller app + Inno installer artifact.
-- 94 unit tests total; 89 run without PySide6, 5 UI smoke tests run when
+- 95 unit tests total; 89 run without PySide6, 6 UI smoke tests run when
   PySide6 is available (`QT_QPA_PLATFORM=offscreen`).
 
 Verified in this session:

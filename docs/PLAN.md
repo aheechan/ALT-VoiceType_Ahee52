@@ -1,10 +1,10 @@
-# AltVoice development plan
+﻿# ALT-VoiceType development plan
 
 Status: M0 (selection and scaffold). Updated 2026-11-05.
 
 ## 1. Product definition
 
-AltVoice is an offline Windows voice input assistant:
+ALT-VoiceType is an offline Windows voice input assistant:
 
 - Global hotkey: hold `Alt` to record, release to transcribe.
 - System tray: target language, mode (transcribe / translate / copy), scene preset, settings.
@@ -52,7 +52,7 @@ lazy-loaded after ASR or swapped to the 2B model.
 
 FireRedASR2-AED has the best Mandarin CER in the FireRedASR2S comparison (3.05% vs 3.76% for
 Qwen3-ASR-1.7B), but the upstream FireRedASR2S repository explicitly says its code has only been
-tested on Ubuntu 22.04. AltVoice targets Windows 10/11, so the default is Qwen3-ASR-1.7B:
+tested on Ubuntu 22.04. ALT-VoiceType targets Windows 10/11, so the default is Qwen3-ASR-1.7B:
 native PyTorch/Transformers, `qwen-asr`, 22 Chinese dialects, streaming support, Apache-2.0.
 FireRedASR2-AED stays selectable as a quality option for users who can run it (WSL/Linux or a
 tested Windows setup).
@@ -65,7 +65,7 @@ engine, not the Chinese default.
 
 ### Why not Index-Translate-Omni for ASR
 
-Its Chinese ASR CER is in the 13–19% range, far behind a dedicated Chinese ASR. AltVoice uses
+Its Chinese ASR CER is in the 13–19% range, far behind a dedicated Chinese ASR. ALT-VoiceType uses
 Index-Translate only for text translation.
 
 ## 4. Pipeline

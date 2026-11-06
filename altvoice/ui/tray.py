@@ -539,11 +539,7 @@ class MainWindow(QWidget):
         settings = QPushButton("设置")
         settings.setObjectName("secondary")
         settings.clicked.connect(self._tray._show_settings)
-        history = QPushButton("历史")
-        history.setObjectName("secondary")
-        history.clicked.connect(self._tray._show_history)
         footer.addWidget(settings)
-        footer.addWidget(history)
         footer.addStretch(1)
         layout.addLayout(footer)
 

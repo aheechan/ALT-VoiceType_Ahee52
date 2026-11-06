@@ -1,7 +1,7 @@
-# Models, sizes and licenses
+﻿# Models, sizes and licenses
 
-AltVoice does not ship model weights. Download them from the official repositories and place them
-under `%LOCALAPPDATA%\AltVoice\models` (or set `models_dir` in `config.json`).
+ALT-VoiceType does not ship model weights. Download them from the official repositories and place them
+under `%LOCALAPPDATA%\ALT-VoiceType\models` (or set `models_dir` in `config.json`).
 
 ## Catalog
 

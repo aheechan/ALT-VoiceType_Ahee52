@@ -1,8 +1,8 @@
-# AltVoice
+﻿# ALT-VoiceType
 
 **Offline Windows voice input with context-aware Chinese ASR and natural multilingual translation.**
 
-AltVoice is a system-tray voice input assistant: hold `Alt`, speak, release, and the corrected
+ALT-VoiceType is a system-tray voice input assistant: press `Alt`, speak, press `Alt` again, and the corrected
 text (or its translation) is inserted into the focused application. Everything runs locally.
 
 > **Status: M1 preview.** The repository contains the architecture, model profiles,
@@ -117,5 +117,5 @@ altvoice/
 
 ## Licenses
 
-AltVoice code is Apache-2.0. Model weights are **not** included; each model keeps its own license.
+ALT-VoiceType code is Apache-2.0. Model weights are **not** included; each model keeps its own license.
 See [docs/MODELS.md](docs/MODELS.md) before redistribution or commercial use.

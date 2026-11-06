@@ -1,4 +1,4 @@
-# ADR-0001: Stack and 12 GB baseline
+﻿# ADR-0001: Stack and 12 GB baseline
 
 > **Update:** the ASR-primary part of this ADR is superseded by
 > [ADR-0002](0002-windows-asr-default.md). Qwen3-ASR-1.7B is the Windows default;
@@ -6,7 +6,7 @@
 
 - Status: Accepted
 - Date: 2026-11-05
-- Deciders: AltVoice project
+- Deciders: ALT-VoiceType project
 
 ## Context
 

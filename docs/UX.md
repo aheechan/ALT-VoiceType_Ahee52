@@ -1,4 +1,4 @@
-# Interaction design (v0.1)
+﻿# Interaction design (v0.1)
 
 ## Alt gesture
 
@@ -16,7 +16,7 @@ This gesture needs dedicated testing for stuck modifiers and menu flicker. It is
 ## Tray menu
 
 ```text
-AltVoice
+ALT-VoiceType
   ● 中文 (Chinese)
   ○ English
   ○ 日本語

@@ -1,4 +1,4 @@
-# Release checklist
+﻿# Release checklist
 
 ## 1. Build the app
 
@@ -10,7 +10,7 @@ pip install -e ".[ui,audio,asr-qwen,download]" "pyinstaller>=6.6"
 python -m PyInstaller --noconfirm --workpath build packaging\altvoice.spec
 ```
 
-The one-folder output is `dist\AltVoice` (about 1.37 GB with torch/qwen-asr).
+The one-folder output is `dist\ALT-VoiceType` (about 1.37 GB with torch/qwen-asr).
 
 ## 2. Build the installer
 
@@ -18,7 +18,7 @@ The one-folder output is `dist\AltVoice` (about 1.37 GB with torch/qwen-asr).
 ISCC packaging\installer.iss
 ```
 
-The installer is written to `dist\installer\AltVoice-Setup-0.1.0.exe` (about
+The installer is written to `dist\installer\ALT-VoiceType-Setup-0.1.0.exe` (about
 341 MB). It is per-user and unsigned.
 
 ## 3. Startup smoke test (from source)
@@ -38,12 +38,12 @@ windowed process:
 
 ```powershell
 $spec = Get-Content packaging\altvoice.spec -Raw
-$spec = $spec -replace 'name="AltVoice"', 'name="AltVoiceDebug"'
+$spec = $spec -replace 'name="ALT-VoiceType"', 'name="ALT-VoiceTypeDebug"'
 $spec = $spec -replace 'console=False', 'console=True'
 Set-Content packaging\altvoice-debug.spec $spec
 python -m PyInstaller --noconfirm --workpath build-debug --distpath dist-debug packaging\altvoice-debug.spec
-.\dist-debug\AltVoiceDebug\AltVoiceDebug.exe doctor
-.\dist-debug\AltVoiceDebug\AltVoiceDebug.exe transcribe benchmarks\audio\asr_zh.wav --engine qwen3 --model-path Qwen/Qwen3-ASR-0.6B --device cpu --json
+.\dist-debug\ALT-VoiceTypeDebug\ALT-VoiceTypeDebug.exe doctor
+.\dist-debug\ALT-VoiceTypeDebug\ALT-VoiceTypeDebug.exe transcribe benchmarks\audio\asr_zh.wav --engine qwen3 --model-path Qwen/Qwen3-ASR-0.6B --device cpu --json
 ```
 
 The last command must return JSON with `"text": "甚至出现交易几乎停滞的情况。"`
@@ -51,9 +51,9 @@ The last command must return JSON with `"text": "甚至出现交易几乎停滞�
 
 ## 5. Install test on a real desktop
 
-1. Double-click `AltVoice-Setup-0.1.0.exe`.
+1. Double-click `ALT-VoiceType-Setup-0.1.0.exe`.
 2. Install for the current user.
-3. Launch AltVoice from the Start menu.
+3. Launch ALT-VoiceType from the Start menu.
 4. Confirm the tray icon, Alt long-press, preview, insert, and quit.
 5. Run the uninstaller and confirm the process, tray icon, and hook are gone.
 6. Reinstall over the old version to confirm the upgrade path.
@@ -63,8 +63,8 @@ The last command must return JSON with `"text": "甚至出现交易几乎停滞�
 On an RTX 3070 12 GB:
 
 ```powershell
-python -m altvoice --config %APPDATA%\AltVoice\config.json profiles
-python -m altvoice --config %APPDATA%\AltVoice\config.json run
+python -m altvoice --config %APPDATA%\ALT-VoiceType\config.json profiles
+python -m altvoice --config %APPDATA%\ALT-VoiceType\config.json run
 ```
 
 Record peak VRAM (`nvidia-smi`) and ASR/correction/translation latency. If

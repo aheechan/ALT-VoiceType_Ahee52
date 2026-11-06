@@ -1,4 +1,4 @@
-# M0: ASR bake-off
+﻿# M0: ASR bake-off
 
 The goal is to choose the primary and fallback ASR engines with **your own recordings**, not with
 leaderboard numbers alone. The harness measures character error rate (CER), latency, and peak

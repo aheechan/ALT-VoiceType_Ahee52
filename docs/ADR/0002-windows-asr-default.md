@@ -1,4 +1,4 @@
-# ADR-0002: Windows default ASR is Qwen3-ASR
+﻿# ADR-0002: Windows default ASR is Qwen3-ASR
 
 - Status: Accepted
 - Date: 2026-11-05
@@ -10,7 +10,7 @@ ADR-0001 selected FireRedASR2-AED as the primary Chinese ASR because it has the 
 Mandarin CER among open models (3.05% average vs 3.76% for Qwen3-ASR-1.7B in the
 FireRedASR2S comparison).
 
-AltVoice is a Windows desktop application. The FireRedASR2S README explicitly states that
+ALT-VoiceType is a Windows desktop application. The FireRedASR2S README explicitly states that
 its code has only been tested on Ubuntu 22.04; Windows behavior is untested. Packaging a
 PyTorch research repository with custom CUDA dependencies, plus a 1.1B checkpoint, is a
 larger delivery risk than the ~0.7-point CER gap.

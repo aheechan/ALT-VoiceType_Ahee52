@@ -1,8 +1,8 @@
-AltVoice
-Copyright 2026 AltVoice contributors
+﻿ALT-VoiceType
+Copyright 2026 ALT-VoiceType contributors
 
 This product includes software and model weights developed by third parties.
-AltVoice does not redistribute model weights; users download them from the
+ALT-VoiceType does not redistribute model weights; users download them from the
 upstream repositories and remain responsible for complying with each license.
 
 Runtime / library components:

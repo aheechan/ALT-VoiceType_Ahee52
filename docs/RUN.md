@@ -1,4 +1,4 @@
-# Running AltVoice (M1 preview)
+﻿# Running ALT-VoiceType (M1 preview)
 
 The M1 code path is now in the repository: global Alt hook, controller, system tray,
 preview dialog and clipboard insertion. It is a **preview**, not a release build.
@@ -26,7 +26,7 @@ anything by itself; verify file names on the upstream repository.
 
 ## 2. Start the local correction/translation servers
 
-AltVoice can start `llama-server` itself. In `config.json`, set:
+ALT-VoiceType can start `llama-server` itself. In `config.json`, set:
 
 ```json
 "corrector": {"model_path": "C:/.../Qwen3-1.7B-Instruct-Q4_K_M.gguf", "autostart": true},
@@ -61,7 +61,7 @@ pip install -e ".[download]"
 python -m altvoice download --profile 12gb-balanced
 ```
 
-Then edit `%APPDATA%\AltVoice\config.json` if needed:
+Then edit `%APPDATA%\ALT-VoiceType\config.json` if needed:
 
 - `asr.engine`: `qwen3` (Windows default) or `firered` (optional quality engine)
 - `asr.model_path`: local model directory. Leave empty for Qwen3-ASR's default checkpoint;
@@ -86,8 +86,8 @@ Behavior:
 - The panel's “显示确认弹窗（关闭则直接粘贴）” toggle enables an optional preview dialog.
 - Chinese is the default output and means transcription; no separate mode.
 - Short Alt taps are no longer replayed in toggle mode.
-- Only one AltVoice instance runs per session; a second launch exits with code 4.
-- Focus guard: if the active window changes while recording, AltVoice copies the
+- Only one ALT-VoiceType instance runs per session; a second launch exits with code 4.
+- Focus guard: if the active window changes while recording, ALT-VoiceType copies the
   result to the clipboard instead of inserting into the wrong app.
 - Left-click opens the compact panel; use the Settings button there or right-click
   the tray icon for language/preview settings.
