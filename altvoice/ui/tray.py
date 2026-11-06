@@ -481,6 +481,7 @@ class MainWindow(QWidget):
         self._result = None
         self.setWindowTitle("ALT-VoiceType")
         self.setFixedWidth(440)
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
         self.setStyleSheet(
             "QWidget#main { background: #0A0A0A; border: 1px solid #3A3A3A;"
             " border-radius: 12px; }"
@@ -615,7 +616,7 @@ class MainWindow(QWidget):
             self.mode_label.setText(f"中文 → {LANGUAGES.get(code, code)} · 翻译")
         self.set_status(self._tray.controller_status)
 
-    def show_panel(self) -> None:
+    def show_panel(self, activate: bool = True) -> None:
         self.refresh()
         if not self._placed:
             screen = QApplication.primaryScreen().availableGeometry()
@@ -623,8 +624,9 @@ class MainWindow(QWidget):
             self.move(screen.right() - self.width() - 24, screen.top() + 80)
             self._placed = True
         self.show()
-        self.raise_()
-        self.activateWindow()
+        if activate:
+            self.raise_()
+            self.activateWindow()
 
     def set_status(self, text: str) -> None:
         self.status.setText(text)
@@ -648,13 +650,12 @@ class MainWindow(QWidget):
         self.meter.set_tail()
         self.status.setText("收尾 2 秒…")
 
-    def show_result(self, result, reveal: bool = True) -> None:
+    def show_result(self, result) -> None:
         self._result = result
         self.source_text.set_typed(result.raw_text or result.corrected_text)
         self.result_text.set_typed(result.output_text)
         self.refresh()
-        if reveal:
-            self.show_panel()
+        self.show_panel(activate=False)
 
     def clear_result(self) -> None:
         self._result = None
@@ -771,6 +772,7 @@ class TrayApp(QObject):
     def start(self) -> None:
         self._log.info("tray starting")
         self.tray.show()
+        QTimer.singleShot(0, lambda: self._show_panel(auto=True))
         report = check_health(self.controller.config, self.controller.profile)
         if report.config_ready:
             self.controller.warm_up()
@@ -896,15 +898,15 @@ class TrayApp(QObject):
             self.controller.warm_up()
         self._show_setup(report)
 
-    def _show_panel(self) -> None:
+    def _show_panel(self, auto: bool = False) -> None:
         if self._main is None:
             self._main = MainWindow(self)
-        self._main.show_panel()
+        self._main.show_panel(activate=not auto)
 
     def _request_stop(self) -> None:
         if self._main is None:
             self._main = MainWindow(self)
-        self._main.show_panel()
+        self._main.show_panel(activate=False)
         self._main.set_tail()
         self.controller.stop_recording(delay_s=2.0)
 
@@ -944,14 +946,13 @@ class TrayApp(QObject):
         )
         if self._main is None:
             self._main = MainWindow(self)
-        self._main.show_result(result, reveal=bool(self.controller.config.ui.preview))
-        if not self.controller.config.ui.preview and not result.needs_preview:
-            self._set_status("已粘贴" if result.injected else "结果已复制到剪贴板")
+        self._main.show_result(result)
+        self._set_status("已粘贴" if result.injected else "结果已复制到剪贴板")
 
     def _on_audio_level(self, level: float) -> None:
         if self._main is None:
             self._main = MainWindow(self)
-            self._main.show_panel()
+            self._main.show_panel(activate=False)
         self._main.set_level(level)
 
     def _set_status(self, message: str) -> None:
@@ -961,7 +962,7 @@ class TrayApp(QObject):
             if self._main is None:
                 self._main = MainWindow(self)
             self._main.set_status(message)
-            self._main.show_panel()
+            self._main.show_panel(activate=False)
             self._main.meter.set_active()
         elif self._main is not None:
             self._main.set_status(message)

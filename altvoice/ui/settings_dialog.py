@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
-    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -31,7 +30,6 @@ class SettingsDialog(QDialog):
             "QLabel { color: #D8D8D8; }"
             "QComboBox { background: #181818; color: #F2F2F2; border: 1px solid #444444;"
             " border-radius: 6px; padding: 6px; min-height: 22px; }"
-            "QCheckBox { color: #D8D8D8; }"
             "QPushButton { background: #F2F2F2; color: #0A0A0A; border: 0; padding: 6px 12px;"
             " border-radius: 6px; }"
         )
@@ -47,11 +45,8 @@ class SettingsDialog(QDialog):
         if index >= 0:
             self.profile.setCurrentIndex(index)
         form.addRow("模型档位", self.profile)
-        self.preview = QCheckBox("识别后显示确认弹窗")
-        self.preview.setChecked(config.ui.preview)
-        form.addRow("插入", self.preview)
         layout.addLayout(form)
-        note = QLabel("模型档位在下次启动时生效；确认弹窗开关立即生效。")
+        note = QLabel("切换模型档位会立即停止旧模型并重新预热新模型。")
         note.setStyleSheet("color: #8b93a1; font-size: 12px;")
         note.setWordWrap(True)
         layout.addWidget(note)
@@ -67,7 +62,6 @@ class SettingsDialog(QDialog):
         old_profile = self.config.profile
         profile = self.profile.currentData()
         self.config.profile = profile
-        self.config.ui.preview = self.preview.isChecked()
         self.config.save(self.config_path)
         if profile != old_profile:
             self.profile_changed.emit(profile)
