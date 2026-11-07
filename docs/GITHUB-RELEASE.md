@@ -4,7 +4,7 @@
 
 - **源码进 Git 仓库**
 - **安装包和模型分卷进 GitHub Release**
-- **不要把 3.93GB 的 bin 提交到 Git 仓库**
+- **不要把 4.42GB 的 bin 提交到 Git 仓库**
 
 ## 1. 仓库结构
 
@@ -127,7 +127,7 @@ README-GitHub.txt
 
 - 单个 Release asset 最大 **2GB**。
 - 当前每个 `.bin` 约 **1.77GB**，不会触发限制。
-- 全部 8 个文件合计约 **3.93GB**。
+- 全部 8 个文件合计约 **4.42GB**。
 - GitHub 网页上传大文件可能较慢；建议使用 GitHub CLI：
 
 ```powershell
@@ -171,7 +171,7 @@ certutil -hashfile ALT-VoiceType-Setup-0.1.0.exe SHA256
 
 ## 8. 精简版
 
-如果不想发布 3.93GB 全量包，可以只发布：
+如果不想发布 4.42GB 全量包，可以只发布：
 
 ```text
 ALT-VoiceType_Ahee52-Setup-0.1.0.exe
@@ -188,7 +188,7 @@ ALT-VoiceType_Ahee52-Setup-0.1.0.exe
 - 模型存放路径和程序实际读取路径一致；
 - `SHA256SUMS.txt` 与当前分卷匹配；
 - 安装包可以找到同目录的 3 个 bin；
-- 完整包安装后约 5.4GB，四个档位都能选择；
+- 完整包安装后约 6.0GB，四个档位都能选择；
 - 没有把 `.gguf`、`.safetensors` 或 `dist/` 提交到 Git。
 
 

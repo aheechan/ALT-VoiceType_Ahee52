@@ -3,6 +3,7 @@ ALT-VoiceType 整合安装包 0.1.0
 
 这个包是离线整合包：包含程序本体和固定的 3 个模型。
 
+内置 CUDA llama.cpp 运行库
 固定模型
 --------
 Qwen3-ASR-0.6B

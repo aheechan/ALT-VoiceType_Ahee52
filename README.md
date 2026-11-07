@@ -10,7 +10,7 @@
 
 > 作者：**Ahee52**  
 > 状态：0.1.0 预览版  
-> 当前发布包：**CPU + Torch**  
+> 当前发布包：**CPU ASR + 内置 CUDA llama.cpp**  
 > 数据目录：`%APPDATA%\ALT-VoiceType`  
 > 模型目录：安装目录下的 `models`
 
@@ -115,7 +115,7 @@ D:\ALT-VoiceType\models
 默认完整安装后约：
 
 ```text
-5.4 GB
+6.0 GB
 ```
 
 ---
@@ -191,9 +191,9 @@ README-GitHub.txt
 作者本地测试的整合包：
 
 ```text
-下载文件合计：约 3.93 GB
-安装后占用：约 5.4 GB
-安装峰值磁盘：约 10 GB
+下载文件合计：约 4.42 GB
+安装后占用：约 6.0 GB
+安装峰值磁盘：约 14 GB
 ```
 
 模型部分：

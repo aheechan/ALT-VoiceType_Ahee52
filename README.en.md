@@ -10,7 +10,7 @@ Press the hotkey, speak, press it again. Recognition, correction, and translatio
 
 > Author: **Ahee52**  
 > Status: 0.1.0 preview  
-> Current package: **CPU + Torch**  
+> Current package: **CPU ASR + bundled CUDA llama.cpp**  
 > Data: `%APPDATA%\ALT-VoiceType`  
 > Models: `<install directory>\models`
 
@@ -104,7 +104,7 @@ Models install to:
 <install directory>\models
 ```
 
-The complete installation is about **5.4 GB**.
+The complete installation is about **6.0 GB**.
 
 ---
 
@@ -171,9 +171,9 @@ Each `.bin` is under 1.8 GB to stay below GitHub’s 2 GB per-release-asset limi
 Author’s local test:
 
 ```text
-Download: about 3.93 GB
-Installed: about 5.4 GB
-Peak disk during install: about 10 GB
+Download: about 4.42 GB
+Installed: about 6.0 GB
+Peak disk during install: about 14 GB
 ```
 
 Models: 4.00 GB. Application: about 1.37 GB.
