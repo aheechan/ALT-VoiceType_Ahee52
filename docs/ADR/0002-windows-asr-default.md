@@ -47,3 +47,4 @@ Negative:
 Run the M0 bake-off with both engines on the same 50–100 Chinese recordings on the target
 3070. If Qwen3-ASR-1.7B is within ~1 CER point of FireRed and starts reliably on Windows,
 keep it as default. If FireRed is dramatically better and runs reliably, revisit this ADR.
+

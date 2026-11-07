@@ -1,4 +1,4 @@
-"""Global Alt hook for Windows.
+﻿"""Global Alt hook for Windows.
 
 A low-level keyboard hook buffers Alt events so a long press can become
 push-to-talk without stealing normal Alt-menu behavior. Short taps are replayed;
@@ -243,3 +243,4 @@ class WindowsAltHook:
         from ..inject.windows import send_alt_down
 
         self._dispatch(send_alt_down)
+

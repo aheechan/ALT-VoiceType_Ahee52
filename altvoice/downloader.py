@@ -1,4 +1,4 @@
-"""Hugging Face model download helper for first-run setup."""
+﻿"""Hugging Face model download helper for first-run setup."""
 
 from __future__ import annotations
 
@@ -60,3 +60,4 @@ def download_profile(
         except Exception as exc:
             errors.append(f"{spec.display_name}: {exc}")
     return errors
+

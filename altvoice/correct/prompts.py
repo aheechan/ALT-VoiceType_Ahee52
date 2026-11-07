@@ -1,4 +1,4 @@
-"""Prompt construction and tolerant parsing for ASR correction."""
+﻿"""Prompt construction and tolerant parsing for ASR correction."""
 
 from __future__ import annotations
 
@@ -103,3 +103,4 @@ def parse_correction_response(response: str, original: str) -> dict[str, Any]:
         "edits": [e for e in edits if isinstance(e, dict)],
         "parse_error": False,
     }
+

@@ -1,4 +1,4 @@
-"""Qwen3-ASR adapter (qwen-asr package, transformers backend)."""
+﻿"""Qwen3-ASR adapter (qwen-asr package, transformers backend)."""
 
 from __future__ import annotations
 
@@ -147,3 +147,4 @@ class Qwen3ASREngine(ASREngine):
                 torch.cuda.empty_cache()
         except Exception:
             pass
+

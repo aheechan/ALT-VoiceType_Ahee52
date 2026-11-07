@@ -1,4 +1,4 @@
-"""LLM-backed Chinese ASR correction."""
+﻿"""LLM-backed Chinese ASR correction."""
 
 from __future__ import annotations
 
@@ -78,3 +78,4 @@ class LLMCorrector(Corrector):
 
     def close(self) -> None:
         return None
+

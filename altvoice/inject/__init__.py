@@ -1,4 +1,4 @@
-"""Injection package."""
+﻿"""Injection package."""
 
 from __future__ import annotations
 
@@ -21,3 +21,4 @@ def get_injector(method: str = "clipboard", restore_clipboard: bool = True):
         restore_clipboard=restore_clipboard,
         method=method,
     )
+

@@ -80,3 +80,4 @@ python -m altvoice audio --seconds 3 --out mic-test.wav
 Then hold Alt, speak a Chinese sentence, release, and verify the preview and
 insertion. Test with at least one non-Chinese target language and with preview
 disabled.
+

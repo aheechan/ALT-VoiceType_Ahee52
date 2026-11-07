@@ -1,4 +1,4 @@
-"""Command line entry points for AltVoice."""
+﻿"""Command line entry points for ALT-VoiceType."""
 
 from __future__ import annotations
 
@@ -437,3 +437,4 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

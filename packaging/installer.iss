@@ -1,4 +1,4 @@
-; AltVoice Inno Setup script (per-user install).
+﻿; ALT-VoiceType Inno Setup script (per-user install).
 ; Build the app first with packaging/altvoice.spec, then compile this file.
 
 #define MyAppName "ALT-VoiceType"
@@ -35,7 +35,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional icons:"
-Name: "autostart"; Description: "Start AltVoice when I sign in"; GroupDescription: "Startup:"
+Name: "autostart"; Description: "Start ALT-VoiceType when I sign in"; GroupDescription: "Startup:"
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
@@ -50,3 +50,4 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch ALT-VoiceType"; Flags: nowait postinstall skipifsilent
+

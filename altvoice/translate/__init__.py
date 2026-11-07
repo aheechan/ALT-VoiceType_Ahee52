@@ -1,4 +1,4 @@
-"""Translation package."""
+﻿"""Translation package."""
 
 from .base import NullTranslator, TranslationError, Translator
 from .translator import IndexTranslateTranslator
@@ -9,3 +9,4 @@ __all__ = [
     "TranslationError",
     "Translator",
 ]
+

@@ -1,4 +1,4 @@
-"""Translation interfaces."""
+﻿"""Translation interfaces."""
 
 from __future__ import annotations
 
@@ -37,3 +37,4 @@ class NullTranslator(Translator):
         source_lang: str = "zh",
     ) -> str:
         return text
+

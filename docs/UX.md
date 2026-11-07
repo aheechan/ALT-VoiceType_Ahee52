@@ -79,3 +79,4 @@ the active profile and model status (`ASR ready`, `Translator loading`, `OOM: us
 - **Injection blocked:** keep the preview open and copy to clipboard; suggest running as admin or
   using clipboard mode.
 - **Network:** never required at runtime; model downloads are explicit and resumable.
+

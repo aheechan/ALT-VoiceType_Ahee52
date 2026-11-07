@@ -1,4 +1,4 @@
-"""Testable Alt hook decision logic, independent of Win32."""
+﻿"""Testable Alt hook decision logic, independent of Win32."""
 
 from __future__ import annotations
 
@@ -103,3 +103,4 @@ class AltHookLogic:
     def reset(self) -> None:
         self.detector.reset()
         self._pending_timer = False
+

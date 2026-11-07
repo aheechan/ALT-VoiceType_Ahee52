@@ -1,4 +1,4 @@
-"""Prompt construction for natural, context-aware translation."""
+﻿"""Prompt construction for natural, context-aware translation."""
 
 from __future__ import annotations
 
@@ -95,3 +95,4 @@ def clean_translation(text: str) -> str:
     )
     result = re.sub(r"</?(?:source|target|context|glossary)>", "", result, flags=re.IGNORECASE)
     return result.strip().strip("*").strip('"').strip("“”").strip()
+

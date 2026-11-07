@@ -1,4 +1,4 @@
-"""Fake ASR engine for tests, dry runs and pipeline development."""
+﻿"""Fake ASR engine for tests, dry runs and pipeline development."""
 
 from __future__ import annotations
 
@@ -21,3 +21,4 @@ class FakeASR(ASREngine):
         if text is None:
             text = os.environ.get("ALTVOICE_FAKE_ASR_TEXT", "这是一条测试语音。")
         return ASRResult(text=text, language=language, confidence=1.0, engine=self.name)
+

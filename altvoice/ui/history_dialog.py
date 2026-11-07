@@ -152,3 +152,4 @@ class HistoryDialog(QDialog):
             self.store.clear()
             self.refresh()
 
+

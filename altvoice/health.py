@@ -1,4 +1,4 @@
-"""Environment and model readiness checks shared by CLI and tray UI."""
+﻿"""Environment and model readiness checks shared by CLI and tray UI."""
 
 from __future__ import annotations
 
@@ -149,3 +149,4 @@ def format_report(
         lines.append("Download commands (verify file names upstream):")
         lines.extend(download_commands(config, report.profile))
     return "\n".join(lines)
+

@@ -82,3 +82,4 @@ Index-Translate GGUF:
 - [ ] PySide6: LGPL-3.0; dynamic linking and license notice required.
 - [ ] llama.cpp: MIT.
 - [ ] Do not commit weights, audio samples, or user data to git.
+

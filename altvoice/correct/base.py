@@ -1,4 +1,4 @@
-"""Correction interfaces and result types."""
+﻿"""Correction interfaces and result types."""
 
 from __future__ import annotations
 
@@ -44,3 +44,4 @@ class NullCorrector(Corrector):
         scene: str = "daily",
     ) -> CorrectionResult:
         return CorrectionResult(text=text, raw_text=text, accepted=True)
+

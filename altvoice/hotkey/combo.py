@@ -1,4 +1,4 @@
-"""Parse and detect user-configured Alt hotkey chords."""
+﻿"""Parse and detect user-configured Alt hotkey chords."""
 
 from __future__ import annotations
 
@@ -132,3 +132,4 @@ class ComboHookLogic:
         if not (self.combo.vks & self._pressed):
             self._triggered = False
         return ComboDecision(suppress=vk in self._main_vks and self._triggered)
+

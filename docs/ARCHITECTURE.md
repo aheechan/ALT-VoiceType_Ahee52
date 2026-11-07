@@ -113,3 +113,4 @@ user can copy manually.
 - Inno Setup creates Start Menu/desktop shortcuts and optional autostart.
 - Code signing is recommended to reduce SmartScreen/AV false positives from the keyboard hook.
 - The app never downloads code at runtime; model files are verified by SHA256 from a manifest.
+

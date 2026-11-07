@@ -1,4 +1,4 @@
-"""Qt tray and preview UI for ALT-VoiceType."""
+﻿"""Qt tray and preview UI for ALT-VoiceType."""
 
 from __future__ import annotations
 
@@ -1077,4 +1077,5 @@ def run_tray(config_path: str | None = None, smoke_seconds: float = 0.0) -> int:
         return code
     finally:
         guard.close()
+
 

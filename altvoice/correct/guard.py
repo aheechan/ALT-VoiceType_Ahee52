@@ -1,4 +1,4 @@
-"""Diff guard for ASR correction.
+﻿"""Diff guard for ASR correction.
 
 The corrector is allowed to fix recognition errors, not rewrite the speaker.
 A simple character edit-distance cap catches the common failure mode where an
@@ -75,3 +75,4 @@ def decide(
     if len(corrected) < len(original) * 0.5:
         return CorrectionDecision(False, ratio, "correction drops too much text")
     return CorrectionDecision(True, ratio, "")
+

@@ -1,4 +1,4 @@
-"""Core configuration and language metadata for AltVoice."""
+﻿"""Core configuration and language metadata for ALT-VoiceType."""
 
 from __future__ import annotations
 
@@ -108,14 +108,14 @@ def language_prompt_name(code: str) -> str:
 def default_config_dir() -> Path:
     if os.name == "nt":
         base = os.environ.get("APPDATA") or str(Path.home())
-        return Path(base) / "AltVoice"
+        return Path(base) / "ALT-VoiceType"
     return Path.home() / ".config" / "altvoice"
 
 
 def default_models_dir() -> Path:
     if os.name == "nt":
         base = os.environ.get("LOCALAPPDATA") or str(Path.home())
-        return Path(base) / "AltVoice" / "models"
+        return Path(base) / "ALT-VoiceType" / "models"
     return Path.home() / ".local" / "share" / "altvoice" / "models"
 
 
@@ -297,3 +297,4 @@ class AppConfig:
 
 def load_config(path: str | Path | None = None) -> AppConfig:
     return AppConfig.load(path)
+

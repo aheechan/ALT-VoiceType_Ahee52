@@ -153,3 +153,4 @@ zero outbound network requests; 8-hour stability.
 - Tag releases `v0.1.0`; keep model weights out of git.
 - GitHub remote requires a repository created by the account owner and a scoped credential;
   local development does not.
+

@@ -1,4 +1,4 @@
-"""SQLite history and glossary persistence.
+﻿"""SQLite history and glossary persistence.
 
 The in-memory ContextStore is enough for a single dictation session. This store
 keeps recent utterances and user terminology across restarts so the corrector
@@ -144,3 +144,4 @@ class HistoryStore:
 
     def __exit__(self, *exc: object) -> None:
         self.close()
+

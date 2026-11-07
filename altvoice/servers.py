@@ -1,6 +1,6 @@
 """Local llama.cpp server supervision.
 
-AltVoice talks to OpenAI-compatible endpoints. This module optionally starts
+ALT-VoiceType talks to OpenAI-compatible endpoints. This module optionally starts
 ``llama-server`` for the corrector and translator, waits for ``/v1/models`` and
 stops only the processes it started. If a server is already running, it is
 reused rather than killed.
@@ -264,21 +264,6 @@ class ServerManager:
                 server.probe(timeout_s=15.0)
                 status(f"{server.spec.name} 服务就绪")
             except Exception as exc:
-                # Newer GPUs (RTX 40/50) may have a driver/backend combination
-                # that never finishes inference. Retry this server on CPU before
-                # giving up, so dictation still produces text.
-                if server.spec.gpu_layers != 0:
-                    status(f"{server.spec.name} GPU 推理不可用，切换 CPU…")
-                    try:
-                        server.stop()
-                        server.spec.gpu_layers = 0
-                        server.start()
-                        server.wait_ready(timeout_s=90.0)
-                        server.probe(timeout_s=25.0)
-                        status(f"{server.spec.name} 已切换 CPU 并就绪")
-                        continue
-                    except Exception:
-                        pass
                 errors.append(str(exc))
                 self.failed.add(server.spec.name)
         return errors
@@ -289,3 +274,4 @@ class ServerManager:
                 server.stop()
             except Exception:
                 pass
+

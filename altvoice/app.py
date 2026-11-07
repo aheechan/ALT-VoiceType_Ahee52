@@ -91,6 +91,8 @@ class VoiceAppController:
                 language=cfg.asr.language,
                 beam_size=cfg.asr.beam_size,
             )
+            self.on_status("预热 ASR…")
+            engine.load()
             if cfg.servers.enabled:
                 self._servers = ServerManager.from_config(cfg, self.profile)
                 self.on_status("预热中…")
@@ -330,6 +332,7 @@ class VoiceAppController:
                 temp_path,
                 target_lang=self._effective_target(),
                 inject=False,
+                on_status=self.on_status,
             )
             if self._cancelled:
                 return
@@ -460,3 +463,4 @@ class VoiceAppController:
             self._servers.stop_all()
         if self.history is not None:
             self.history.close()
+
