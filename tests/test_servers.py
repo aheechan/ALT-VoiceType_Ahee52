@@ -145,7 +145,7 @@ class FakeServer:
             raise ServerError("boom")
         self.started = True
 
-    def wait_ready(self):
+    def wait_ready(self, timeout_s=90.0):
         return None
 
     def probe(self):
