@@ -196,12 +196,23 @@ class VoiceAppController:
                 self.on_error(f"切换模型档位失败：{exc}")
                 return
             new.hotkey = old.hotkey
-            new.audio = old.audio
+            old_audio = old.audio
+            new.audio.samplerate = old_audio.samplerate
+            new.audio.channels = old_audio.channels
+            new.audio.device = old_audio.device
+            new.audio.trim_silence = old_audio.trim_silence
+            new.audio.silence_threshold = old_audio.silence_threshold
+            new.audio.padding_ms = old_audio.padding_ms
             new.ui = old.ui
             new.injection = old.injection
             new.history = old.history
-            new.servers = old.servers
-            new.asr.device = old.asr.device
+            old_servers = old.servers
+            new.servers.binary = old_servers.binary
+            new.servers.host = old_servers.host
+            new.servers.startup_timeout_s = old_servers.startup_timeout_s
+            new.servers.log_dir = old_servers.log_dir
+            new.servers.extra_args = old_servers.extra_args
+            new.servers.context_size = old_servers.context_size
             self.config = new
             self.profile = profile
             self.target_lang = normalize_language(new.translator.target_language) or "zh"
