@@ -245,6 +245,11 @@ class ServerManager:
             if parsed.hostname not in ("127.0.0.1", "localhost", "::1", None):
                 continue
             port = parsed.port or default_port
+            extra_args = list(config.servers.extra_args)
+            if "--reasoning" not in extra_args:
+                # Qwen3 templates may otherwise put everything in
+                # message.reasoning_content and leave message.content empty.
+                extra_args += ["--reasoning", "off"]
             specs.append(
                 ServerSpec(
                     name=name,
@@ -255,7 +260,7 @@ class ServerManager:
                     alias=cfg.model,
                     context_size=config.servers.context_size,
                     gpu_layers=0 if active_profile == "cpu-safe" else config.servers.gpu_layers,
-                    extra_args=list(config.servers.extra_args),
+                    extra_args=extra_args,
                     log_dir=config.servers.log_dir,
                 )
             )
