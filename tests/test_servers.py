@@ -148,7 +148,7 @@ class FakeServer:
     def wait_ready(self, timeout_s=90.0):
         return None
 
-    def probe(self):
+    def probe(self, timeout_s=15.0):
         return None
 
     def stop(self):
