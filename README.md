@@ -11,87 +11,99 @@
 > 作者：**Ahee52**  
 > 状态：0.1.0 预览版  
 > 当前发布包：**CPU ASR + 内置 CUDA llama.cpp**  
-> 数据目录：`%APPDATA%\ALT-VoiceType`  
-> 模型目录：安装目录下的 `models`
+> 配置与日志：`%APPDATA%\ALT-VoiceType`  
+> 安装版模型：`<安装目录>\models`  
+> 源码版模型：`%LOCALAPPDATA%\ALT-VoiceType\models`
 
 ---
 
-## 为什么当前是 CPU + Torch 版本
+## 目录
 
-作者已经尝试过更快的 CUDA + PyTorch 方案，但最终没有把它放进当前发布包，原因是客观的：
+- [这个仓库是什么](#这个仓库是什么)
+- [两条使用路线](#两条使用路线)
+- [作者的取舍：为什么是 CPU ASR](#作者的取舍为什么是-cpu-asr)
+- [固定模型与三个档位](#固定模型与三个档位)
+- [方式一：一键安装包](#方式一一键安装包)
+- [方式二：从源码体验](#方式二从源码体验)
+- [模型下载与放置](#模型下载与放置)
+- [运行机制](#运行机制)
+- [缓存与自动清理](#缓存与自动清理)
+- [CUDA 扩展](#cuda-扩展)
+- [快捷键与 ESC](#快捷键与-esc)
+- [开发、测试与打包](#开发测试与打包)
+- [常见问题](#常见问题)
+- [参与贡献](#参与贡献)
+- [许可](#许可)
+
+---
+
+## 这个仓库是什么
+
+这是一个可以直接运行的 Windows 语音输入项目，不只是安装包下载页。
+
+仓库包含：
+
+```text
+altvoice/          Python 包：ASR、纠错、翻译、热键、注入、UI
+tests/             105 个单元/UI 测试
+packaging/         PyInstaller + Inno Setup 打包脚本
+scripts/           辅助脚本
+docs/              架构、部署、上传说明
+benchmarks/        ASR 测试清单
+```
+
+它适合：
+
+- 直接下载安装包使用；
+- 从源码运行和修改；
+- 研究离线 ASR、纠错、翻译的完整链路；
+- 贡献 CUDA 加速、英语/小语种输入或新的 UI。
+
+---
+
+## 两条使用路线
+
+| 路线 | 适合 | 需要 |
+|---|---|---|
+| **一键安装包** | 普通用户 | 下载 4.42GB 分卷，双击安装 |
+| **源码运行** | 开发者、想体验仓库的人 | Python、模型文件、麦克风 |
+
+安装包是“开箱即用”；源码路线是“可修改、可实验、可贡献”。
+
+---
+
+## 作者的取舍：为什么是 CPU ASR
+
+作者已经尝试过更快的 **CUDA + PyTorch** 方案，但最终没有把它放进当前发布包。
+
+原因：
 
 1. **打包体积**  
-   CUDA 版 PyTorch 会额外增加约 2.5–3.5GB 安装体积，安装包增加约 1.5–2.5GB。
+   CUDA 版 PyTorch 会增加约 2.5–3.5GB 安装体积，安装包增加约 1.5–2.5GB。
 
-2. **显卡和驱动差异**  
-   20/30/40/50 系对 CUDA 版本的要求不同。50 系 Blackwell 需要 CUDA 12.8+，旧驱动用户需要先更新驱动。
+2. **显卡与驱动差异**  
+   RTX 20/30/40/50 系对 CUDA 版本要求不同。50 系 Blackwell 需要 CUDA 12.8+，老驱动必须先更新。
 
-3. **不同机器环境差异**  
-   CUDA Toolkit、驱动、DLL 冲突、PATH 设置都会影响运行；CPU 版更稳定，解压即用。
+3. **机器环境差异**  
+   CUDA Toolkit、驱动、DLL、PATH 都可能冲突；CPU 版更容易复现和排错。
 
-所以当前发布的是：
+当前发布包的组合是：
 
 ```text
-CPU + Torch
+ASR：CPU + Torch
+纠错/翻译：内置 CUDA llama.cpp
 ```
 
-这不是“只能这样”，而是一个**优先保证可运行、可复现、体积可控**的取舍。
+这不是“只能这样”，而是一个优先保证**可运行、可复现、体积可控**的选择。
 
 **鼓励社区实现 CUDA + PyTorch 加速版。**  
-代码中的 ASR 适配器、模型服务和设备配置已经为 CUDA 扩展留出入口；详见下文 [CUDA 扩展](#cuda-扩展)。
+ASR 适配器、设备配置和模型服务已经预留了扩展入口。
 
 ---
 
-## 功能
+## 固定模型与三个档位
 
-- **完全离线**：ASR、纠错、翻译都在本机运行，默认不发送网络请求。
-- **默认固定中文输入**：当前 ASR 输入语言固定为中文，适合中文听写和中文口语翻译。
-- **多语言输出**：可输出英语、日语、韩语、西班牙语、法语、德语、俄语、葡萄牙语、意大利语、阿拉伯语、越南语、泰语、印尼语、土耳其语等。
-- **上下文纠错**：Qwen3-1.7B-Abliterated 负责同音字、断句、术语和数字规范化。
-- **直接输入**：结果自动粘贴到上一个光标位置。
-- **双栏主界面**：识别文字 / 转译文字，各自带复制按钮和“已复制”反馈。
-- **可拖拽、可缩放**：当前尺寸为最小尺寸，四个角和四条边都可以拖拽缩放。
-- **实时音量表**：录音时显示波形；结束后示波器变灰。
-- **0.39 秒收尾**：第二次按快捷键后继续采集 0.39 秒，避免截断尾音。
-- **ESC 取消录音**：录音中按 ESC 立即丢弃本次录音，不识别、不插入、不写历史。
-- **可配置快捷键**：左 Alt、右 Alt、左/右 Alt + 任意按键；不独占 Alt。
-- **模型预热**：主界面显示加载/预热/就绪状态。
-- **数字规范化**：中文数字自动转阿拉伯数字，例如“二零二五年”→“2025年”，“三千五百块”→“3500块”，“百分之三十”→“30%”。
-
----
-
-## 输入语言说明
-
-当前版本的输入语言固定为中文：
-
-```text
-音频 → 中文 ASR → 中文纠错 → 目标语言翻译
-```
-
-这是有意的默认设置，不是限制。
-
-如果希望支持**英文输入**，可以自行调整：
-
-1. 修改 `altvoice/pipeline.py` 中 ASR 调用的语言参数；
-2. 修改 `altvoice/config.py` 的 `ASRConfig.language`；
-3. 选择支持英语的 ASR 模型或为 Qwen3-ASR 提供英文提示；
-4. 在纠错提示词中调整输入语言说明。
-
-也欢迎参与者增加更多小语种输入、纠错和翻译支持。
-
----
-
-## 三个资源档位
-
-当前固定只使用三个模型，三个档位只是资源策略和输入时长不同：
-
-| 档位 | 输入上限 | 资源模式 | 说明 |
-|---|---:|---|---|
-| **eco** | 20 秒 | CPU | 最低资源，适合无独显或轻量使用 |
-| **standard** | 45 秒 | GPU（目标） | 纠错/翻译使用 GPU；当前 CPU 包中 ASR 仍为 CPU |
-| **extended** | 120 秒 | GPU（目标） | 更长输入，适合长句/连续听写 |
-
-### 固定三个模型
+当前固定只使用三个模型：
 
 | 角色 | 模型 | 大小 |
 |---|---|---:|
@@ -100,23 +112,258 @@ CPU + Torch
 | 翻译 | Index-Translate-2B Q4 | 1.22 GB |
 | **合计** | | **4.00 GB** |
 
-模型文件安装到：
+三个档位只改变输入时长和资源策略：
+
+| 档位 | 输入上限 | 资源模式 | 说明 |
+|---|---:|---|---|
+| **eco** | 20 秒 | CPU | 最低资源 |
+| **standard** | 45 秒 | GPU（目标） | 默认档位 |
+| **extended** | 120 秒 | GPU（目标） | 长句/连续听写 |
+
+当前 CPU ASR 发布包中，`standard` / `extended` 的纠错和翻译使用 GPU；ASR 仍是 CPU。
+
+---
+
+## 方式一：一键安装包
+
+### 需要下载
 
 ```text
+ALT-VoiceType-Setup-0.1.0.exe
+ALT-VoiceType-Setup-0.1.0-1.bin
+ALT-VoiceType-Setup-0.1.0-2.bin
+ALT-VoiceType-Setup-0.1.0-3.bin
+SHA256SUMS.txt
+README-GitHub.txt
+```
+
+全部放在同一个文件夹，双击 exe。
+
+安装时**会显示目录选择页**，你可以选择 C/D/E 任意磁盘。
+
+### 实测大小
+
+```text
+安装包：约 4.42 GB
+安装后：约 6.0 GB
+安装峰值磁盘：约 14 GB
+```
+
+包含：
+
+- 程序本体
+- 三个模型
+- 内置 CUDA llama.cpp
+- 配置和日志目录
+
+### 系统要求
+
+```text
+Windows 10/11 64 位
+麦克风
+可选 NVIDIA 显卡（50 系需要较新驱动）
+```
+
+### 安装后
+
+```text
+<安装目录>\ALT-VoiceType.exe
 <安装目录>\models
+<安装目录>\llama
 ```
 
-例如：
+配置文件：
 
 ```text
-D:\ALT-VoiceType\models
+%APPDATA%\ALT-VoiceType\config.json
 ```
 
-默认完整安装后约：
+---
+
+## 方式二：从源码体验
+
+这是 GitHub 仓库最有价值的部分：你可以直接运行和修改它。
+
+### 1. 环境
 
 ```text
-6.0 GB
+Windows 10/11 64 位
+Python 3.11 或 3.12
+Git
+麦克风
+可选：NVIDIA 驱动、ffmpeg
 ```
+
+### 2. 克隆
+
+```powershell
+git clone https://github.com/aheechan/ALT-VoiceType_Ahee52.git
+cd ALT-VoiceType_Ahee52
+```
+
+### 3. 创建虚拟环境
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+### 4. 安装依赖
+
+```powershell
+pip install -e ".[ui,audio,asr-qwen,download]"
+```
+
+需要 sherpa 回退时：
+
+```powershell
+pip install -e ".[ui,audio,asr-qwen,asr-sherpa,download]"
+```
+
+### 5. 准备模型
+
+源码模式默认从：
+
+```text
+%LOCALAPPDATA%\ALT-VoiceType\models
+```
+
+读取模型。
+
+可以手动下载，也可以把安装包里的 `models` 目录复制到这个位置。
+
+### 6. 写配置
+
+```powershell
+python -m altvoice setup --profile 12gb-balanced
+```
+
+这会生成：
+
+```text
+%APPDATA%\ALT-VoiceType\config.json
+```
+
+### 7. 检查环境
+
+```powershell
+python -m altvoice health
+```
+
+输出应包含：
+
+```text
+[OK] asr
+[OK] corrector
+[OK] translator
+```
+
+### 8. 启动
+
+```powershell
+python -m altvoice run
+```
+
+或者安装后的命令：
+
+```powershell
+altvoice run
+```
+
+### 9. 源码模式的日志
+
+```text
+%APPDATA%\ALT-VoiceType\logs\app.log
+%APPDATA%\ALT-VoiceType\logs\corrector.log
+%APPDATA%\ALT-VoiceType\logs\translator.log
+```
+
+---
+
+## 模型下载与放置
+
+源码模式需要自己准备模型。
+
+### 1. ASR：Qwen3-ASR-0.6B
+
+Hugging Face：
+
+<https://huggingface.co/Qwen/Qwen3-ASR-0.6B>
+
+放置目录：
+
+```text
+%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_asr_0_6b
+```
+
+下载：
+
+```powershell
+huggingface-cli download Qwen/Qwen3-ASR-0.6B `
+  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType\models\qwen3_asr_0_6b"
+```
+
+### 2. 纠错：Qwen3-1.7B-Abliterated Q4
+
+完整安装包会内置该模型。
+
+源码用户可以自行获取兼容的 Qwen3-1.7B GGUF，并在配置中指定路径。
+
+目标目录：
+
+```text
+%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_1_7b_abliterated_q4
+```
+
+配置字段：
+
+```json
+"corrector": {
+  "model_path": "...\\qwen3_1_7b_abliterated_q4\\你的模型.gguf"
+}
+```
+
+### 3. 翻译：Index-Translate-2B Q4
+
+Hugging Face：
+
+<https://huggingface.co/IndexTeam/Index-Translate-2B-GGUF>
+
+目标文件：
+
+```text
+Index-Translate-2B.Q4_K_M.gguf
+```
+
+目标目录：
+
+```text
+%LOCALAPPDATA%\ALT-VoiceType\models\index_translate_2b_q4
+```
+
+下载：
+
+```powershell
+huggingface-cli download IndexTeam/Index-Translate-2B-GGUF `
+  --include "*Index-Translate-2B.Q4_K_M.gguf" `
+  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType\models\index_translate_2b_q4"
+```
+
+### 4. llama.cpp
+
+源码模式还需要 `llama-server`：
+
+```text
+llama-server.exe
+```
+
+安装方式：
+
+```powershell
+winget install ggml.llamacpp
+```
+
+完整安装包已经内置 CUDA 版 `llama-server`，源码模式需要自己准备。
 
 ---
 
@@ -130,114 +377,55 @@ D:\ALT-VoiceType\models
    │  sounddevice，20 ms 帧
    ▼
 VAD / 静音裁剪
-   │
    ▼
-ASR（Qwen3-ASR-0.6B，CPU）
-   │  中文语音 → 原始文本
+ASR（Qwen3-ASR-0.6B）
    ▼
 纠错（Qwen3-1.7B-Abliterated）
-   │  同音字、标点、术语、上下文
    ▼
 数字规范化
-   │  中文数字 → 阿拉伯数字
    ▼
 翻译（Index-Translate-2B）
-   │  中文 → 目标语言；目标中文时跳过
    ▼
 Windows 文本注入
-   │  恢复光标，自动粘贴
    ▼
-主界面双栏显示
+双栏主界面
 ```
 
-- 录音、ASR、纠错、翻译都在后台线程执行。
-- 主界面自动出现时不会抢当前输入框焦点。
-- 只有触发录音的主按键会被拦截，Alt 本身不被吞掉。
-- 录音结束后有 0.39 秒收尾。
-- 录音中按 ESC 会取消本次输入。
-- 所有模型通过本地 `qwen-asr` / `llama.cpp` 加载。
+关键设计：
 
----
-
-## 安装完整离线版
-
-### 文件
-
-发布页需要下载：
-
-```text
-ALT-VoiceType-Setup-0.1.0.exe
-ALT-VoiceType-Setup-0.1.0-1.bin
-ALT-VoiceType-Setup-0.1.0-2.bin
-ALT-VoiceType-Setup-0.1.0-3.bin
-SHA256SUMS.txt
-README-GitHub.txt
-```
-
-每个 `.bin` 都小于 1.8GB，是为了适配 GitHub Release 单文件 2GB 限制。
-
-### 步骤
-
-1. 将 exe 和全部 3 个 bin 下载到同一个文件夹；
-2. 不要重命名，不要只下载 exe；
-3. 双击 `ALT-VoiceType-Setup-0.1.0.exe`；
-4. 安装器会自动查找同目录分卷；
-5. 安装完成后启动 `ALT-VoiceType`；
-6. 等主界面显示“加载完毕，可以开始输入”；
-7. 第一次使用建议先点击 **预热模型**。
-
-### 实测大小
-
-作者本地测试的整合包：
-
-```text
-下载文件合计：约 4.42 GB
-安装后占用：约 6.0 GB
-安装峰值磁盘：约 14 GB
-```
-
-模型部分：
-
-```text
-4.00 GB
-```
-
-程序本体：
-
-```text
-约 1.37 GB
-```
+- 录音、ASR、纠错、翻译在后台线程；
+- 主窗口自动出现时不抢焦点；
+- 只拦截真正触发录音的主按键，Alt 不被独占；
+- 录音结束有 **0.39 秒**收尾；
+- 录音中按 **ESC** 取消；
+- 本地 `qwen-asr` / `llama.cpp` 推理，无云端 API。
 
 ---
 
 ## 缓存与自动清理
 
-这个项目对用户输入信息的处理原则是：
-
-> 音频尽量不落地，文本历史有限保留，缓存可自动清理。
-
 | 数据 | 位置 | 生命周期 |
 |---|---|---|
-| 录音内存 | 进程内存 | 识别或取消后立即释放 |
-| 临时 WAV | `%TEMP%\altvoice_*.wav` | 处理完立即删除；启动时清理 1 小时前的残留 |
-| 历史文本 | `%APPDATA%\ALT-VoiceType\history.db` | 默认保留 7 天，最多 500 条，自动清理 |
-| 会话上下文 | 进程内存 | 程序退出即消失 |
-| 日志 | `%APPDATA%\ALT-VoiceType\logs` | 只记录状态/错误，不保存完整识别文本 |
-| 模型文件 | 安装目录 `models` | 不自动删除；卸载程序时随安装目录删除 |
+| 录音内存 | 进程内存 | 识别/取消后立即释放 |
+| 临时 WAV | `%TEMP%\altvoice_*.wav` | 处理完删除；启动清 1 小时前残留 |
+| 历史文本 | `%APPDATA%\ALT-VoiceType\history.db` | 7 天 / 500 条自动清理 |
+| 会话上下文 | 进程内存 | 退出即消失 |
+| 日志 | `%APPDATA%\ALT-VoiceType\logs` | 不保存完整识别文本 |
+| 模型 | 安装目录 `models` | 卸载时随目录删除 |
 
-历史记录可以在历史窗口中清空；也可以直接在程序退出后删除：
+手动清空历史：
 
-```text
-%APPDATA%\ALT-VoiceType\history.db
+```powershell
+Remove-Item "$env:APPDATA\ALT-VoiceType\history.db"
 ```
 
 ---
 
 ## CUDA 扩展
 
-当前发布包是 **CPU + Torch**，不包含 CUDA 版 PyTorch。
+当前发布包不包含 CUDA 版 PyTorch，ASR 走 CPU。
 
-如果社区希望实现更快的 ASR，推荐方向：
+如果要做 CUDA ASR，建议：
 
 ```text
 PyTorch 2.8 + cu128
@@ -256,69 +444,28 @@ NVIDIA 驱动 570+
 
 前提：
 
-- 显卡驱动足够新；
-- PyTorch wheel 包含对应算力；
-- 50 系必须使用 CUDA 12.8 或更新版本。
+- 驱动足够新；
+- wheel 包含对应算力；
+- 50 系必须 CUDA 12.8+。
 
 体积预估：
 
 ```text
-安装体积增加：约 2.5–3.5 GB
+安装后增加：约 2.5–3.5 GB
 安装包增加：约 1.5–2.5 GB
 ```
 
-CUDA 版应作为**单独安装包**发布，例如：
+CUDA 版应单独发布：
 
 ```text
 ALT-VoiceType-CUDA-Setup-0.1.0.exe
 ```
 
-不要和 CPU 包混在一起，以免没有 CUDA 环境的用户无法启动。
+不要和 CPU 包混在一起。
 
 ---
 
-## 从源码运行
-
-要求：
-
-```text
-Windows 10/11 64 位
-Python 3.11/3.12
-麦克风
-```
-
-```powershell
-git clone https://github.com/aheechan/ALT-VoiceType_Ahee52.git
-cd ALT-VoiceType_Ahee52
-
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-
-pip install -e ".[ui,audio,asr-qwen,download]"
-altvoice run
-```
-
-环境检查：
-
-```powershell
-altvoice health
-```
-
-配置：
-
-```text
-%APPDATA%\ALT-VoiceType\config.json
-```
-
-模型：
-
-```text
-<安装目录>\models
-```
-
----
-
-## 快捷键
+## 快捷键与 ESC
 
 默认：
 
@@ -326,7 +473,7 @@ altvoice health
 左 Alt（lalt）
 ```
 
-设置中可配置：
+可配置：
 
 ```text
 lalt
@@ -342,55 +489,122 @@ alt+shift
 ESC → 取消本次录音
 ```
 
+取消后不会识别、不会插入、不会写历史。
+
 ---
 
-## 数据来源与许可
+## 开发、测试与打包
 
-- 代码：**Apache-2.0**
-- ASR：Qwen3-ASR-0.6B
-- 纠错：Qwen3-1.7B-Abliterated Q4
-- 翻译：Index-Translate-2B Q4
-- 模型权重不随 Git 仓库分发；完整安装包内置三个模型
-- 使用模型前请遵守各自上游许可证
+### 测试
 
-Qwen3-ASR-0.6B 标准模型：
+```powershell
+python -m unittest discover -s tests
+```
 
-<https://huggingface.co/Qwen/Qwen3-ASR-0.6B>
+当前：
 
-Index-Translate-2B：
+```text
+105 tests OK
+```
 
-<https://huggingface.co/IndexTeam/Index-Translate-2B-GGUF>
+### 打包程序
 
-> 破限/abliterated 纠错模型只随完整安装包分发，本仓库不提供单独链接。
+```powershell
+$env:PYTHONPATH = ".pylibs"
+python -m PyInstaller --noconfirm --workpath build --distpath dist packaging/altvoice.spec
+```
+
+### 打包安装器
+
+```powershell
+$iscc = "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
+& $iscc "/DSourceDir=$PWD\dist\ALT-VoiceType" packaging\installer.iss
+```
+
+完整包需要同时指定模型目录和 llama.cpp 目录：
+
+```powershell
+& $iscc "/DSourceDir=$PWD\dist\ALT-VoiceType" `
+  "/DModelsDir=$PWD\models" `
+  "/DLlamaDir=C:\path\to\llama.cpp" `
+  packaging\installer-bundle.iss
+```
+
+### 手动上传到 GitHub
+
+见：
+
+[docs/UPLOAD-MANUAL.md](docs/UPLOAD-MANUAL.md)
+
+---
+
+## 常见问题
+
+### 翻译一直输出中文
+
+先检查：
+
+```text
+%APPDATA%\ALT-VoiceType\logs\translator.log
+```
+
+常见原因：
+
+1. 没有 `llama-server`；
+2. GPU 初始化失败；
+3. 模型服务没有拿到 `content`。
+
+完整安装包已经内置 CUDA `llama-server`，并使用：
+
+```text
+--reasoning off
+```
+
+如果仍然中文，请提交日志。
+
+### 按 Alt 没反应
+
+- 检查设置中的快捷键；
+- 等待“加载完毕”；
+- 检查日志是否有热键错误。
+
+### 识别很慢
+
+- CPU ASR 首次加载较慢；
+- 先点击“预热模型”；
+- 长音频受 20/45/120 秒档位限制。
+
+### 安装时提示未知发布者
+
+安装包未做代码签名。  
+选择“更多信息 → 仍要运行”，或用 `SHA256SUMS.txt` 校验。
 
 ---
 
 ## 参与贡献
 
-这是一个完全开源、离线优先的语音输入项目。作者已经尽力在**稳定性、体积和响应速度**之间做取舍，但它还可以更好。
+这是一个完全开源、离线优先的项目。作者已经在稳定性、体积和响应速度之间做了取舍，但它还可以更好。
 
-欢迎参与：
+欢迎：
 
-- CUDA + PyTorch 加速版
+- CUDA + PyTorch 加速
 - 英文和小语种输入
-- 更多纠错规则和数字规范化
-- 更轻量的打包方式
-- Windows 兼容性测试（20/30/40/50 系）
-- UI、文档和翻译改进
+- 纠错规则与数字规范化
+- 更轻量的打包
+- RTX 20/30/40/50 兼容性测试
+- UI、文档、翻译
 
-如果这个项目对你有价值，欢迎提交 Issue、PR，或者把它分享给需要的人。
+如果这个项目对你有价值，欢迎 Issue、PR 或分享给需要的人。
 
 **帮助所有人打通世界沟通的隔阂。**
 
 ---
 
-## 手动上传 GitHub
+## 许可
 
-源码仓库请上传到 GitHub 仓库；安装包请上传到 **Releases**，不要提交进 Git 历史。
-
-详细的手把手步骤：
-
-[docs/UPLOAD-MANUAL.md](docs/UPLOAD-MANUAL.md)
+- 代码：**Apache-2.0**
+- 模型权重不随 Git 仓库分发
+- 使用模型时遵守各上游许可证
 
 ---
 

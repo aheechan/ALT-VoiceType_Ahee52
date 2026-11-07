@@ -1,4 +1,4 @@
-﻿; ALT-VoiceType full offline installer with the five-model / four-tier set.
+; ALT-VoiceType full offline installer with the five-model / four-tier set.
 ; Build the app first, then compile with the ModelsDir define pointing at the
 ; installed model directory. DiskSpanning splits the output into <2 GB slices
 ; so the files can be uploaded to GitHub Releases individually.
@@ -12,7 +12,10 @@
 #define SourceDir "..\dist\ALT-VoiceType"
 #endif
 #ifndef ModelsDir
-#define ModelsDir "C:\Users\72157\AppData\Local\ALT-VoiceType\models"
+#define ModelsDir "D:\ALT-VoiceType\models"
+#endif
+#ifndef LlamaDir
+#define LlamaDir "D:\llama.cpp"
 #endif
 
 [Setup]
@@ -22,6 +25,8 @@ AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={localappdata}\Programs\ALT-VoiceType
 DefaultGroupName={#MyAppName}
+DisableDirPage=no
+UsePreviousAppDir=no
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=..\dist\installer
@@ -46,6 +51,8 @@ Name: "autostart"; Description: "Start ALT-VoiceType when I sign in"; GroupDescr
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "{#LlamaDir}\llama-server.exe"; DestDir: "{app}\llama"; Flags: ignoreversion
+Source: "{#LlamaDir}\*.dll"; DestDir: "{app}\llama"; Flags: ignoreversion
 Source: "{#ModelsDir}\qwen3_asr_0_6b\*"; DestDir: "{app}\models\qwen3_asr_0_6b"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "{#ModelsDir}\qwen3_1_7b_abliterated_q4\*"; DestDir: "{app}\models\qwen3_1_7b_abliterated_q4"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "{#ModelsDir}\index_translate_2b_q4\*"; DestDir: "{app}\models\index_translate_2b_q4"; Flags: recursesubdirs createallsubdirs ignoreversion

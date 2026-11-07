@@ -235,7 +235,7 @@ def _nested_from_dict(cls: type, data: dict[str, Any]) -> Any:
 
 @dataclass
 class AppConfig:
-    profile: str = "auto"
+    profile: str = "12gb-balanced"
     models_dir: str = field(default_factory=lambda: str(default_models_dir()))
     hotkey: HotkeyConfig = field(default_factory=HotkeyConfig)
     audio: AudioConfig = field(default_factory=AudioConfig)

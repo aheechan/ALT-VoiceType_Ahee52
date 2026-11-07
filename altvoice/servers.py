@@ -12,6 +12,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -26,10 +27,21 @@ class ServerError(RuntimeError):
     """Raised when a local model server cannot be started or becomes healthy."""
 
 
+def bundled_llama_server() -> str:
+    """Return the llama-server shipped next to a frozen executable, if any."""
+    if not getattr(sys, "frozen", False):
+        return ""
+    candidate = Path(sys.executable).resolve().parent / "llama" / "llama-server.exe"
+    return str(candidate) if candidate.is_file() else ""
+
+
 def resolve_binary(binary: str) -> str:
-    """Resolve llama-server from PATH or a winget package directory."""
+    """Resolve llama-server from PATH, a bundled runtime, or winget."""
     if not binary:
         return ""
+    bundled = bundled_llama_server()
+    if bundled:
+        return bundled
     candidate = Path(binary)
     if candidate.is_file():
         return str(candidate)
@@ -233,6 +245,11 @@ class ServerManager:
             if parsed.hostname not in ("127.0.0.1", "localhost", "::1", None):
                 continue
             port = parsed.port or default_port
+            extra_args = list(config.servers.extra_args)
+            if "--reasoning" not in extra_args:
+                # Qwen3 templates may otherwise put everything in
+                # message.reasoning_content and leave message.content empty.
+                extra_args += ["--reasoning", "off"]
             specs.append(
                 ServerSpec(
                     name=name,
@@ -243,7 +260,7 @@ class ServerManager:
                     alias=cfg.model,
                     context_size=config.servers.context_size,
                     gpu_layers=0 if active_profile == "cpu-safe" else config.servers.gpu_layers,
-                    extra_args=list(config.servers.extra_args),
+                    extra_args=extra_args,
                     log_dir=config.servers.log_dir,
                 )
             )
@@ -264,20 +281,6 @@ class ServerManager:
                 server.probe(timeout_s=15.0)
                 status(f"{server.spec.name} 服务就绪")
             except Exception as exc:
-                # Translation must still work if the GPU backend cannot infer.
-                # This is the only service allowed to fall back to CPU.
-                if server.spec.name == "translator" and server.spec.gpu_layers != 0:
-                    status("翻译 GPU 不可用，切换 CPU…")
-                    try:
-                        server.stop()
-                        server.spec.gpu_layers = 0
-                        server.start()
-                        server.wait_ready(timeout_s=90.0)
-                        server.probe(timeout_s=25.0)
-                        status("翻译已切换 CPU 并就绪")
-                        continue
-                    except Exception:
-                        pass
                 errors.append(str(exc))
                 self.failed.add(server.spec.name)
         return errors
