@@ -1,4 +1,4 @@
-Release assets for ALT-VoiceType_Ahee52 0.1.0
+﻿Release assets for ALT-VoiceType_Ahee52 0.1.0
 ==============================================
 
 These release assets are intentionally NOT stored in this Git repository.
@@ -7,7 +7,7 @@ committed to Git.
 
 Build or source the assets from:
 
-  C:\altvoice\dist\bundle\
+  C:\Local Repositories\ALT-VoiceType\dist\bundle\
 
 Upload all of these to the GitHub Release:
 
@@ -25,3 +25,4 @@ The checksum manifest in this folder is a copy for reference; regenerate it
 from the actual files before publishing if they are rebuilt.
 
 See docs/GITHUB-RELEASE.md for the complete upload procedure.
+

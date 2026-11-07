@@ -1,4 +1,4 @@
-# GitHub 发布与上传流程
+﻿# GitHub 发布与上传流程
 
 本文对应仓库根目录和 `dist/bundle` 的发布文件。原则：
 
@@ -11,7 +11,7 @@
 上传到 GitHub 的源码目录：
 
 ```text
-C:\altvoice-github\ALT-VoiceType_Ahee52\
+C:\Local Repositories\ALT-VoiceType-github\ALT-VoiceType_Ahee52\
 ```
 
 包含：
@@ -57,7 +57,7 @@ ALT-VoiceType_Ahee52
 在源码目录打开 PowerShell：
 
 ```powershell
-cd C:\altvoice-github\ALT-VoiceType_Ahee52
+cd C:\Local Repositories\ALT-VoiceType-github\ALT-VoiceType_Ahee52
 
 git init
 git add .
@@ -103,7 +103,7 @@ ALT-VoiceType_Ahee52 0.1.0
 5. 上传以下文件，全部来自：
 
 ```text
-C:\altvoice\dist\bundle\
+C:\Local Repositories\ALT-VoiceType\dist\bundle\
 ```
 
 文件清单：
@@ -133,11 +133,11 @@ README-GitHub.txt
 ```powershell
 gh release create v0.1.0 `
   --title "ALT-VoiceType_Ahee52 0.1.0" `
-  --notes-file "C:\altvoice\dist\bundle\README-GitHub.txt" `
-  "C:\altvoice\dist\bundle\ALT-VoiceType_Ahee52-Full-Setup-0.1.0.exe" `
-  "C:\altvoice\dist\bundle\ALT-VoiceType_Ahee52-Full-Setup-0.1.0-*.bin" `
-  "C:\altvoice\dist\bundle\SHA256SUMS.txt" `
-  "C:\altvoice\dist\bundle\README-GitHub.txt"
+  --notes-file "C:\Local Repositories\ALT-VoiceType\dist\bundle\README-GitHub.txt" `
+  "C:\Local Repositories\ALT-VoiceType\dist\bundle\ALT-VoiceType_Ahee52-Full-Setup-0.1.0.exe" `
+  "C:\Local Repositories\ALT-VoiceType\dist\bundle\ALT-VoiceType_Ahee52-Full-Setup-0.1.0-*.bin" `
+  "C:\Local Repositories\ALT-VoiceType\dist\bundle\SHA256SUMS.txt" `
+  "C:\Local Repositories\ALT-VoiceType\dist\bundle\README-GitHub.txt"
 ```
 
 `gh` 需要先登录：
@@ -190,3 +190,4 @@ ALT-VoiceType_Ahee52-Setup-0.1.0.exe
 - 安装包可以找到同目录的 6 个 bin；
 - 完整包安装后约 12.1GB，四个档位都能选择；
 - 没有把 `.gguf`、`.safetensors` 或 `dist/` 提交到 Git。
+
