@@ -214,6 +214,8 @@ class UIConfig:
 class HistoryConfig:
     enabled: bool = True
     path: str | None = None
+    retention_days: int = 7
+    max_entries: int = 500
 
 
 def _nested_from_dict(cls: type, data: dict[str, Any]) -> Any:

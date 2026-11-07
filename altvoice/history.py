@@ -1,4 +1,4 @@
-﻿"""SQLite history and glossary persistence.
+"""SQLite history and glossary persistence.
 
 The in-memory ContextStore is enough for a single dictation session. This store
 keeps recent utterances and user terminology across restarts so the corrector
@@ -21,13 +21,21 @@ def default_history_path() -> Path:
 
 
 class HistoryStore:
-    def __init__(self, path: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        path: str | Path | None = None,
+        retention_days: int = 7,
+        max_entries: int = 500,
+    ) -> None:
         self.path = Path(path) if path else default_history_path()
+        self.retention_days = max(1, int(retention_days))
+        self.max_entries = max(50, int(max_entries))
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.RLock()
         self._conn = sqlite3.connect(str(self.path), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._init_schema()
+        self.prune()
 
     def _init_schema(self) -> None:
         with self._lock, self._conn:
@@ -79,6 +87,7 @@ class HistoryStore:
                     source_lang or "zh",
                 ),
             )
+        self.prune()
 
     def recent(self, n: int = 5, app: str | None = None) -> list[dict[str, str]]:
         n = max(1, min(100, int(n)))
@@ -128,6 +137,17 @@ class HistoryStore:
                 "INSERT INTO glossary (source, target, updated) VALUES (?, ?, ?) "
                 "ON CONFLICT(source) DO UPDATE SET target=excluded.target, updated=excluded.updated",
                 (source, target, time.time()),
+            )
+
+    def prune(self) -> None:
+        """Keep only recent, bounded utterance rows."""
+        cutoff = time.time() - self.retention_days * 86400
+        with self._lock, self._conn:
+            self._conn.execute("DELETE FROM utterances WHERE ts < ?", (cutoff,))
+            self._conn.execute(
+                "DELETE FROM utterances WHERE id NOT IN "
+                "(SELECT id FROM utterances ORDER BY id DESC LIMIT ?)",
+                (self.max_entries,),
             )
 
     def clear(self) -> None:

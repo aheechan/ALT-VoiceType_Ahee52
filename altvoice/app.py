@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import tempfile
 import threading
+import time
 from pathlib import Path
 from typing import Callable
 
@@ -65,10 +66,27 @@ class VoiceAppController:
         if self.config.history.enabled:
             try:
                 self.history = HistoryStore(
-                    self.config.history.path or default_history_path()
+                    self.config.history.path or default_history_path(),
+                    retention_days=self.config.history.retention_days,
+                    max_entries=self.config.history.max_entries,
                 )
             except Exception as exc:
                 self.on_error(f"历史记录不可用：{exc}")
+        self._cleanup_temp_audio()
+
+    def _cleanup_temp_audio(self) -> None:
+        """Remove orphaned WAV files left by a crash or forced shutdown."""
+        cutoff = time.time() - 3600
+        directory = Path(self._temp_dir or tempfile.gettempdir())
+        try:
+            for path in directory.glob("altvoice_*.wav"):
+                try:
+                    if path.stat().st_mtime < cutoff:
+                        path.unlink()
+                except OSError:
+                    pass
+        except OSError:
+            pass
 
     @property
     def recording(self) -> bool:

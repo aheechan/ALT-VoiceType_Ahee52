@@ -788,6 +788,7 @@ class TrayApp(QObject):
             on_stop=self._request_stop,
             on_cancel=self.controller.cancel_recording,
             on_toggle=self._toggle_recording,
+            on_escape=self._cancel_if_recording,
         )
 
     def _build_menu(self) -> None:
@@ -980,6 +981,16 @@ class TrayApp(QObject):
             self._request_stop()
         else:
             self.controller.start_recording()
+
+    def _cancel_if_recording(self) -> bool:
+        if not self.controller.recording:
+            return False
+        self.controller.cancel_recording()
+        self._set_status("已取消录音")
+        if self._main is not None:
+            self._main.set_status("已取消录音")
+            self._main.meter.set_tail()
+        return True
 
     def _request_stop(self) -> None:
         if self._main is None:
