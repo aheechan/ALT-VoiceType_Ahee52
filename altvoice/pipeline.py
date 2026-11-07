@@ -10,6 +10,7 @@ from .config import normalize_language
 from .context import ContextStore
 from .correct import CorrectionResult, Corrector, NullCorrector
 from .inject import InjectionError, Injector, NullInjector
+from .numerals import normalize_numbers
 from .translate import NullTranslator, TranslationError, Translator
 
 
@@ -108,6 +109,7 @@ class VoicePipeline:
         )
         correct_ms = (time.perf_counter() - correct_start) * 1000.0
         corrected = correction.text.strip() or raw_text
+        corrected = normalize_numbers(corrected)
 
         translation = corrected
         translate_ms = 0.0
