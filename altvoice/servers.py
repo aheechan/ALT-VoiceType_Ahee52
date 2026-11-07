@@ -260,8 +260,8 @@ class ServerManager:
                 else:
                     status(f"启动 {server.spec.name} 模型服务…")
                     server.start()
-                    server.wait_ready()
-                server.probe()
+                    server.wait_ready(timeout_s=30.0)
+                server.probe(timeout_s=15.0)
                 status(f"{server.spec.name} 服务就绪")
             except Exception as exc:
                 # Newer GPUs (RTX 40/50) may have a driver/backend combination
@@ -273,8 +273,8 @@ class ServerManager:
                         server.stop()
                         server.spec.gpu_layers = 0
                         server.start()
-                        server.wait_ready()
-                        server.probe()
+                        server.wait_ready(timeout_s=90.0)
+                        server.probe(timeout_s=25.0)
                         status(f"{server.spec.name} 已切换 CPU 并就绪")
                         continue
                     except Exception:
