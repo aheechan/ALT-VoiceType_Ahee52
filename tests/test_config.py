@@ -66,8 +66,8 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(select_profile(12.0), "12gb-balanced")
         self.assertEqual(select_profile(8.0), "12gb-safe")
         self.assertEqual(select_profile(4.0), "cpu-safe")
-        self.assertEqual(select_profile(16.0), "16gb-quality")
-        self.assertEqual(select_profile(24.0), "24gb-quality")
+        self.assertEqual(select_profile(16.0), "12gb-max")
+        self.assertEqual(select_profile(24.0), "12gb-max")
         self.assertEqual(select_profile(None), "cpu-safe")
         self.assertEqual(select_profile(12.0, "12gb-safe"), "12gb-safe")
 
@@ -75,7 +75,7 @@ class ProfileTests(unittest.TestCase):
         self.assertLess(estimate_vram("12gb-balanced"), 10.0)
         models = profile_models("12gb-balanced")
         self.assertEqual(models["asr"].key, "qwen3_asr_0_6b")
-        self.assertEqual(models["translator"].key, "qwen3_4b_abliterated_q4")
+        self.assertEqual(models["translator"].key, "index_translate_2b_q4")
         self.assertLess(estimate_vram("12gb-max"), 12.0)
 
     def test_all_profiles_have_three_roles(self):

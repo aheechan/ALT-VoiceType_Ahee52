@@ -1,4 +1,4 @@
-﻿"""Qwen3-ASR adapter (qwen-asr package, transformers backend)."""
+"""Qwen3-ASR adapter (qwen-asr package, transformers backend)."""
 
 from __future__ import annotations
 
@@ -38,9 +38,9 @@ class Qwen3ASREngine(ASREngine):
         max_new_tokens: int = 256,
     ) -> None:
         self.model_path = model_path or os.environ.get("QWEN3_ASR_MODEL") or model_name
-        # Packaged builds use CPU torch; keep ASR on CPU to avoid CUDA
-        # initialization stalls on newer GPUs (RTX 40/50).
-        self.device = "cpu"
+        # Respect the profile device: CPU tiers stay on CPU, GPU tiers use
+        # CUDA when the packaged torch build supports it.
+        self.device = "cuda" if str(device).startswith("cuda") else "cpu"
         self.max_new_tokens = int(max_new_tokens)
         self._model = None
 

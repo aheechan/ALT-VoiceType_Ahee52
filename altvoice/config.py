@@ -1,9 +1,10 @@
-﻿"""Core configuration and language metadata for ALT-VoiceType."""
+"""Core configuration and language metadata for ALT-VoiceType."""
 
 from __future__ import annotations
 
 import json
 import os
+import sys
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from pathlib import Path
 from typing import Any, get_type_hints
@@ -113,6 +114,10 @@ def default_config_dir() -> Path:
 
 
 def default_models_dir() -> Path:
+    # Installed builds keep weights next to the executable so the user can
+    # choose the install drive and uninstalling removes the weights too.
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent / "models"
     if os.name == "nt":
         base = os.environ.get("LOCALAPPDATA") or str(Path.home())
         return Path(base) / "ALT-VoiceType" / "models"

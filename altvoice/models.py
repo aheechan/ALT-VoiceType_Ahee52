@@ -1,4 +1,4 @@
-﻿"""Model catalog, VRAM profiles and hardware detection.
+"""Model catalog, VRAM profiles and hardware detection.
 
 The RTX 3070 12 GB is the baseline. Profiles are deliberately conservative:
 they account for the CUDA context, KV cache and a normal Windows desktop, not
@@ -227,49 +227,38 @@ PROFILE_ORDER: list[str] = [
     "12gb-safe",
     "12gb-balanced",
     "12gb-max",
-    "16gb-quality",
 ]
 PROFILE_LABELS: dict[str, str] = {
-    "12gb-safe": "safe",
-    "12gb-balanced": "balanced",
-    "12gb-max": "12gb-max",
-    "16gb-quality": "16gb-quality",
-    "24gb-quality": "24gb-quality",
+    "12gb-safe": "eco · 20s · CPU",
+    "12gb-balanced": "standard · 45s · GPU",
+    "12gb-max": "extended · 120s · GPU",
 }
 
 PROFILES: dict[str, dict[str, str]] = {
-    "12gb-balanced": {
-        "description": "0.6B ASR + 1.7B abliterated correction + 4B abliterated translation",
+    "12gb-safe": {
+        "description": "20s 输入上限 · CPU 全模型 · 最低资源",
+        "duration_s": "20",
         "asr": "qwen3_asr_0_6b",
         "corrector": "qwen3_1_7b_abliterated_q4",
-        "translator": "qwen3_4b_abliterated_q4",
+        "translator": "index_translate_2b_q4",
+    },
+    "12gb-balanced": {
+        "description": "45s 输入上限 · 全 GPU · 标准速度",
+        "duration_s": "45",
+        "asr": "qwen3_asr_0_6b",
+        "corrector": "qwen3_1_7b_abliterated_q4",
+        "translator": "index_translate_2b_q4",
     },
     "12gb-max": {
-        "description": "1.7B uncensored ASR + 1.7B abliterated correction + 2B translation",
-        "asr": "qwen3_asr_1_7b_uncensored",
-        "corrector": "qwen3_1_7b_abliterated_q4",
-        "translator": "index_translate_2b_q4",
-    },
-    "12gb-safe": {
-        "description": "0.6B ASR + 1.7B abliterated correction + 2B translation",
+        "description": "120s 输入上限 · 全 GPU · 高资源",
+        "duration_s": "120",
         "asr": "qwen3_asr_0_6b",
         "corrector": "qwen3_1_7b_abliterated_q4",
         "translator": "index_translate_2b_q4",
     },
-    "16gb-quality": {
-        "description": "1.7B uncensored ASR + 1.7B uncensored correction + 4B abliterated translation",
-        "asr": "qwen3_asr_1_7b_uncensored",
-        "corrector": "qwen3_1_7b_abliterated_q4",
-        "translator": "qwen3_4b_abliterated_q4",
-    },
-    "24gb-quality": {
-        "description": "1.7B uncensored ASR + 1.7B uncensored correction + 4B abliterated translation, more context",
-        "asr": "qwen3_asr_1_7b_uncensored",
-        "corrector": "qwen3_1_7b_abliterated_q4",
-        "translator": "qwen3_4b_abliterated_q4",
-    },
     "cpu-safe": {
-        "description": "No CUDA: SenseVoice/Sherpa + 2B translation, slower",
+        "description": "CPU-only fallback (hidden)",
+        "duration_s": "20",
         "asr": "sensevoice_small",
         "corrector": "rules_only",
         "translator": "index_translate_2b_q4",
@@ -319,11 +308,9 @@ def select_profile(vram_gb: float | None = None, requested: str = "auto") -> str
         return "cpu-safe"
     if vram_gb < 10:
         return "12gb-safe"
-    if vram_gb < 13:
+    if vram_gb < 16:
         return "12gb-balanced"
-    if vram_gb < 18:
-        return "16gb-quality"
-    return "24gb-quality"
+    return "12gb-max"
 
 
 def profile_models(profile: str) -> dict[str, ModelSpec]:

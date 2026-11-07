@@ -271,7 +271,7 @@ class VoiceAppController:
             with self._lock:
                 if self._pending_stop is not None or self._stop_event is None:
                     return
-                self.on_status(f"收尾 {delay_s:.0f} 秒…")
+                self.on_status(f"收尾 {delay_s:.2f} 秒…")
                 timer = threading.Timer(delay_s, self._finish_stop)
                 timer.daemon = True
                 self._pending_stop = timer

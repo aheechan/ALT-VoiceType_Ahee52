@@ -1,4 +1,4 @@
-﻿"""First-run configuration builder.
+"""First-run configuration builder.
 
 This is deliberately non-interactive: the installer or the user runs
 ``python -m altvoice setup --profile 12gb-balanced`` and gets a valid config with
@@ -13,7 +13,7 @@ from pathlib import Path
 
 from .config import AppConfig, default_config_path, normalize_language
 from .model_store import download_commands, locations, model_path
-from .models import profile_models
+from .models import PROFILES, profile_models
 
 _ASR_ENGINE = {
     "qwen3_asr_1_7b": "qwen3",
@@ -33,6 +33,10 @@ def build_config(
     if models_dir:
         cfg.models_dir = str(models_dir)
     models = profile_models(profile)
+    profile_info = PROFILES[profile]
+    cfg.audio.max_seconds = float(profile_info.get("duration_s", "30"))
+    cfg.servers.gpu_layers = 0 if profile == "12gb-safe" else 99
+    cfg.asr.device = "cpu" if profile == "12gb-safe" else "cuda"
 
     asr_spec = models["asr"]
     cfg.asr.engine = _ASR_ENGINE.get(asr_spec.key, "auto")
