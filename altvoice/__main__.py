@@ -1,4 +1,4 @@
-"""Module entry point, also used by the PyInstaller windowed build."""
+﻿"""Module entry point, also used by the PyInstaller windowed build."""
 
 from __future__ import annotations
 
@@ -30,3 +30,4 @@ _ensure_streams()
 from altvoice.cli import main  # noqa: E402
 
 raise SystemExit(main())
+

@@ -1,4 +1,4 @@
-"""Pure Alt gesture state machine.
+﻿"""Pure Alt gesture state machine.
 
 The Windows hook is intentionally thin: all timing and suppression decisions
 live here so they can be tested without a keyboard or a message loop.
@@ -99,3 +99,4 @@ class AltGestureDetector:
     def reset(self) -> None:
         self._state = "idle"
         self._alt_down_at = 0.0
+

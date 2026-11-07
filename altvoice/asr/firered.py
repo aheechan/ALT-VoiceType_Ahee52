@@ -1,4 +1,4 @@
-"""FireRedASR2 adapter.
+﻿"""FireRedASR2 adapter.
 
 Supports both the current FireRedASR2S Python API and the older FireRedASR v1
 API. FireRedASR2-AED is the primary 12 GB Chinese engine: 1.1B parameters,
@@ -169,3 +169,4 @@ class FireRedASREngine(ASREngine):
                 torch.cuda.empty_cache()
         except Exception:
             pass
+

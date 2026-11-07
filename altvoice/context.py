@@ -1,4 +1,4 @@
-"""Local conversation context and glossary."""
+﻿"""Local conversation context and glossary."""
 
 from __future__ import annotations
 
@@ -74,3 +74,4 @@ class ContextStore:
 
     def __len__(self) -> int:
         return len(self._utterances)
+

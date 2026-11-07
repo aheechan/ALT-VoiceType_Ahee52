@@ -1,6 +1,6 @@
 """Local llama.cpp server supervision.
 
-AltVoice talks to OpenAI-compatible endpoints. This module optionally starts
+ALT-VoiceType talks to OpenAI-compatible endpoints. This module optionally starts
 ``llama-server`` for the corrector and translator, waits for ``/v1/models`` and
 stops only the processes it started. If a server is already running, it is
 reused rather than killed.
@@ -161,6 +161,39 @@ class LlamaServer:
             f"{self.spec.name}: not ready after {timeout_s:.0f}s; see {self.spec.log_path()}"
         )
 
+    def probe(self, timeout_s: float = 25.0) -> None:
+        """Run one tiny completion to catch a server that is up but cannot infer.
+
+        Some newer GPU/driver combinations expose a healthy HTTP endpoint while
+        the accelerator path still hangs. A real request is the only reliable
+        check before handing the server to the dictation pipeline.
+        """
+        payload = json.dumps(
+            {
+                "model": self.spec.alias,
+                "messages": [{"role": "user", "content": "ok"}],
+                "temperature": 0.0,
+                "max_tokens": 1,
+                "stream": False,
+            }
+        ).encode("utf-8")
+        request = urllib.request.Request(
+            self.spec.health_url().replace("/models", "/chat/completions"),
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=timeout_s) as response:
+                body = response.read().decode("utf-8", errors="replace")
+                if response.status != 200:
+                    raise ServerError(f"{self.spec.name}: probe returned {response.status}")
+            data = json.loads(body)
+            if not isinstance(data.get("choices"), list):
+                raise ServerError(f"{self.spec.name}: probe response has no choices")
+        except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
+            raise ServerError(f"{self.spec.name}: inference probe failed: {exc}") from exc
+
     def stop(self) -> None:
         process = self._process
         self._process = None
@@ -182,6 +215,7 @@ class LlamaServer:
 class ServerManager:
     def __init__(self, servers: list[LlamaServer] | None = None) -> None:
         self.servers = servers or []
+        self.failed: set[str] = set()
 
     @classmethod
     def from_config(cls, config: AppConfig, profile: str | None = None) -> "ServerManager":
@@ -218,17 +252,20 @@ class ServerManager:
     def start_all(self, on_status=None) -> list[str]:
         status = on_status or (lambda _msg: None)
         errors: list[str] = []
+        self.failed.clear()
         for server in self.servers:
             try:
                 if server.is_ready():
                     status(f"{server.spec.name} 服务已在运行")
-                    continue
-                status(f"启动 {server.spec.name} 模型服务…")
-                server.start()
-                server.wait_ready()
+                else:
+                    status(f"启动 {server.spec.name} 模型服务…")
+                    server.start()
+                    server.wait_ready(timeout_s=30.0)
+                server.probe(timeout_s=15.0)
                 status(f"{server.spec.name} 服务就绪")
             except Exception as exc:
                 errors.append(str(exc))
+                self.failed.add(server.spec.name)
         return errors
 
     def stop_all(self) -> None:
@@ -237,3 +274,4 @@ class ServerManager:
                 server.stop()
             except Exception:
                 pass
+

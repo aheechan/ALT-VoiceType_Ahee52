@@ -143,3 +143,4 @@ class SetupDialog(QDialog):
         path.mkdir(parents=True, exist_ok=True)
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
 
+

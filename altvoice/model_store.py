@@ -1,4 +1,4 @@
-"""Model location checks and download command generation."""
+﻿"""Model location checks and download command generation."""
 
 from __future__ import annotations
 
@@ -78,3 +78,4 @@ def download_commands(config: AppConfig, profile: str) -> list[str]:
 
 def all_present(config: AppConfig, profile: str) -> bool:
     return all(item.exists for item in locations(config, profile))
+

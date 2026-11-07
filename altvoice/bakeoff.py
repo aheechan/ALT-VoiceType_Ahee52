@@ -1,4 +1,4 @@
-"""ASR bake-off harness: CER, latency and failure reporting."""
+﻿"""ASR bake-off harness: CER, latency and failure reporting."""
 
 from __future__ import annotations
 
@@ -236,3 +236,4 @@ def write_report(report: dict[str, Any], out_dir: str | Path) -> tuple[Path, Pat
             )
     csv_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return json_path, csv_path
+

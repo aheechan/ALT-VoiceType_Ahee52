@@ -1,11 +1,11 @@
-# -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec for the AltVoice tray application.
+﻿# -*- mode: python ; coding: utf-8 -*-
+"""PyInstaller spec for the ALT-VoiceType tray application.
 
 Build from the repository root:
 
     pyinstaller --clean --noconfirm packaging/altvoice.spec
 
-Model weights are not bundled. They live under %LOCALAPPDATA%\\AltVoice\\models
+Model weights are not bundled. They live under %LOCALAPPDATA%\\ALT-VoiceType\\models
 or the path configured in config.json.
 """
 
@@ -50,7 +50,7 @@ exe = EXE(  # noqa: F821
     a.scripts,
     [],
     exclude_binaries=True,
-    name="AltVoice",
+    name="ALT-VoiceType",
     debug=False,
     icon=str(project_root / "altvoice" / "assets" / "icon.ico"),
     bootloader_ignore_signals=False,
@@ -71,5 +71,6 @@ coll = COLLECT(  # noqa: F821
     strip=False,
     upx=False,
     upx_exclude=[],
-    name="AltVoice",
+    name="ALT-VoiceType",
 )
+

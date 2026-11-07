@@ -1,4 +1,4 @@
-# ALT-VoiceType_Ahee52
+﻿# ALT-VoiceType_Ahee52
 
 **English** | [中文](README.md)
 
@@ -162,7 +162,7 @@ The files below are the **standard, non-uncensored** models. The uncensored vari
 Model root:
 
 ```text
-%LOCALAPPDATA%\AltVoice\models
+%LOCALAPPDATA%\ALT-VoiceType\models
 ```
 
 PowerShell shorthand:
@@ -180,7 +180,7 @@ Hugging Face:
 Destination:
 
 ```text
-%LOCALAPPDATA%\AltVoice\models\qwen3_asr_0_6b
+%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_asr_0_6b
 ```
 
 Download:
@@ -201,7 +201,7 @@ Hugging Face:
 Destination:
 
 ```text
-%LOCALAPPDATA%\AltVoice\models\qwen3_asr_1_7b
+%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_asr_1_7b
 ```
 
 Download:
@@ -228,7 +228,7 @@ Qwen3-1.7B-Q8_0.gguf
 Destination:
 
 ```text
-%LOCALAPPDATA%\AltVoice\models\qwen3_1_7b_instruct_q4\Qwen3-1.7B-Q8_0.gguf
+%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_1_7b_instruct_q4\Qwen3-1.7B-Q8_0.gguf
 ```
 
 Download:
@@ -254,7 +254,7 @@ Index-Translate-2B.Q4_K_M.gguf
 Destination:
 
 ```text
-%LOCALAPPDATA%\AltVoice\models\index_translate_2b_q4\Index-Translate-2B.Q4_K_M.gguf
+%LOCALAPPDATA%\ALT-VoiceType\models\index_translate_2b_q4\Index-Translate-2B.Q4_K_M.gguf
 ```
 
 Download:
@@ -280,7 +280,7 @@ Qwen3-4B-Q4_K_M.gguf
 Destination:
 
 ```text
-%LOCALAPPDATA%\AltVoice\models\qwen3_4b_instruct_q4\Qwen3-4B-Q4_K_M.gguf
+%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_4b_instruct_q4\Qwen3-4B-Q4_K_M.gguf
 ```
 
 Download:
@@ -298,7 +298,7 @@ This is the non-uncensored alternative for the 4B translator used by `balanced` 
 Edit:
 
 ```text
-%APPDATA%\AltVoice\config.json
+%APPDATA%\ALT-VoiceType\config.json
 ```
 
 Point these fields at the downloaded files:
@@ -360,7 +360,7 @@ Environment check only:
 altvoice health
 ```
 
-Configuration is stored in `%APPDATA%\AltVoice\config.json`; models are read from `%LOCALAPPDATA%\AltVoice\models`.
+Configuration is stored in `%APPDATA%\ALT-VoiceType\config.json`; models are read from `%LOCALAPPDATA%\ALT-VoiceType\models`.
 
 ## Hotkeys
 
@@ -444,3 +444,4 @@ Some games and elevated windows block synthetic input. Run the app at the same p
 ---
 
 **ALT-VoiceType_Ahee52** · offline voice input for Windows
+

@@ -1,7 +1,7 @@
-"""Runtime stubs for optional Japanese tokenizer dependencies of qwen-asr.
+﻿"""Runtime stubs for optional Japanese tokenizer dependencies of qwen-asr.
 
 qwen_asr imports its forced-aligner module at package import time, which pulls
-nagisa -> a training-only mecab_system_eval dependency. AltVoice does not use
+nagisa -> a training-only mecab_system_eval dependency. ALT-VoiceType does not use
 forced alignment, so a small tokenizer stub is enough to let the ASR model load
 in the frozen app.
 """
@@ -32,3 +32,4 @@ def _install() -> None:
 
 
 _install()
+

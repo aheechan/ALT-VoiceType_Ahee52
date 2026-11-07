@@ -1,4 +1,4 @@
-"""ASR engine registry."""
+﻿"""ASR engine registry."""
 
 from __future__ import annotations
 
@@ -82,3 +82,4 @@ def create_engine(
     if key == "sherpa":
         return SherpaASREngine(model_path=model_path)
     raise ValueError(f"unknown ASR engine: {name!r}; known: {', '.join(_ALIASES)}")
+

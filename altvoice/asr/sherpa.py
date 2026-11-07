@@ -1,4 +1,4 @@
-"""sherpa-onnx adapter for SenseVoice / Paraformer CPU fallback."""
+﻿"""sherpa-onnx adapter for SenseVoice / Paraformer CPU fallback."""
 
 from __future__ import annotations
 
@@ -93,3 +93,4 @@ class SherpaASREngine(ASREngine):
 
     def close(self) -> None:
         self._recognizer = None
+

@@ -1,4 +1,4 @@
-"""Minimal OpenAI-compatible chat client using only the standard library."""
+﻿"""Minimal OpenAI-compatible chat client using only the standard library."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ class ChatClient:
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "User-Agent": "AltVoice/0.1",
+            "User-Agent": "ALT-VoiceType/0.1",
         }
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
@@ -105,3 +105,4 @@ class ChatClient:
         if not isinstance(content, str):
             raise LLMError("LLM message.content is not text")
         return strip_thinking(content)
+

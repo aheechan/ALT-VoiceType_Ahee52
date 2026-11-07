@@ -60,3 +60,4 @@ and prints missing-file checks. Download the models, then launch `ALT-VoiceType.
   its silent install still needs a real desktop test.
 - To package a custom build directory, pass `/DSourceDir=...` to ISCC.
 - Do not run the local llama.cpp servers on `0.0.0.0`; they have no authentication.
+

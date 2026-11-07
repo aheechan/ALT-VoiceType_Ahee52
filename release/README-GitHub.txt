@@ -1,4 +1,4 @@
-ALT-VoiceType_Ahee52 整合安装包 0.1.0
+﻿ALT-VoiceType_Ahee52 整合安装包 0.1.0
 ====================================
 
 这个包是离线整合包：包含程序本体和 4 个档位共用的 5 个模型。
@@ -36,7 +36,7 @@ SHA256SUMS.txt
 
 模型安装位置
 ------------
-%LOCALAPPDATA%\AltVoice\models\
+%LOCALAPPDATA%\ALT-VoiceType\models\
 
 包含以下 5 个模型：
 - qwen3_asr_0_6b
@@ -80,3 +80,4 @@ certutil -hashfile ALT-VoiceType_Ahee52-Full-Setup-0.1.0.exe SHA256
 - 安装包未签名，Windows SmartScreen 可能提示“未知发布者”。
 - 安装时需要同时保留安装包和已安装文件，峰值占用约 22 GB。
 - 如果只需要程序、不需要模型，请使用单独的 341 MB 精简安装包。
+

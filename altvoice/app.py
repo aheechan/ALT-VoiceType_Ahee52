@@ -91,13 +91,20 @@ class VoiceAppController:
                 language=cfg.asr.language,
                 beam_size=cfg.asr.beam_size,
             )
+            self.on_status("预热 ASR…")
+            engine.load()
             if cfg.servers.enabled:
                 self._servers = ServerManager.from_config(cfg, self.profile)
                 self.on_status("预热中…")
                 for error in self._servers.start_all(on_status=self.on_status):
                     self.on_error(error)
+            failed_servers = self._servers.failed if self._servers is not None else set()
             corrector = NullCorrector()
-            if cfg.corrector.enabled and self.profile != "cpu-safe":
+            if (
+                cfg.corrector.enabled
+                and self.profile != "cpu-safe"
+                and "corrector" not in failed_servers
+            ):
                 corrector = LLMCorrector(
                     base_url=cfg.corrector.base_url,
                     model=cfg.corrector.model,
@@ -107,7 +114,7 @@ class VoiceAppController:
                     max_tokens=cfg.corrector.max_tokens,
                 )
             translator = NullTranslator()
-            if cfg.translator.enabled:
+            if cfg.translator.enabled and "translator" not in failed_servers:
                 translator = IndexTranslateTranslator(
                     base_url=cfg.translator.base_url,
                     model=cfg.translator.model,
@@ -325,6 +332,7 @@ class VoiceAppController:
                 temp_path,
                 target_lang=self._effective_target(),
                 inject=False,
+                on_status=self.on_status,
             )
             if self._cancelled:
                 return
@@ -455,3 +463,4 @@ class VoiceAppController:
             self._servers.stop_all()
         if self.history is not None:
             self.history.close()
+

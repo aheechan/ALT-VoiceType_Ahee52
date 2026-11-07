@@ -1,4 +1,4 @@
-"""Audio helpers: WAV I/O, silence trimming and optional microphone capture."""
+﻿"""Audio helpers: WAV I/O, silence trimming and optional microphone capture."""
 
 from __future__ import annotations
 
@@ -237,3 +237,4 @@ def rms(samples: np.ndarray) -> float:
     if len(samples) == 0:
         return 0.0
     return float(math.sqrt(float(np.mean(np.square(samples))) + 1e-12))
+

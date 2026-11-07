@@ -1,4 +1,4 @@
-"""Settings dialog for the rolled-back compact tray UI."""
+﻿"""Settings dialog for the rolled-back compact tray UI."""
 
 from __future__ import annotations
 
@@ -89,4 +89,5 @@ class SettingsDialog(QDialog):
         if profile != old_profile:
             self.profile_changed.emit(profile)
         self.accept()
+
 

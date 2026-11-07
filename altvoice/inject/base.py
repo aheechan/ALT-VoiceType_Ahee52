@@ -1,4 +1,4 @@
-"""Text injection interfaces."""
+﻿"""Text injection interfaces."""
 
 from __future__ import annotations
 
@@ -23,3 +23,4 @@ class NullInjector(Injector):
 
     def inject(self, text: str) -> None:
         self.last_text = text
+

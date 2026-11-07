@@ -1,4 +1,4 @@
-"""First-run configuration builder.
+﻿"""First-run configuration builder.
 
 This is deliberately non-interactive: the installer or the user runs
 ``python -m altvoice setup --profile 12gb-balanced`` and gets a valid config with
@@ -93,3 +93,4 @@ def run_setup(
             for command in download_commands(cfg, profile):
                 print(command, file=out)
     return 0
+

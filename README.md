@@ -1,4 +1,4 @@
-# ALT-VoiceType_Ahee52
+﻿# ALT-VoiceType_Ahee52
 
 [English](README.en.md) | **中文**
 
@@ -162,7 +162,7 @@ ALT-VoiceType_Ahee52-Setup-0.1.0.exe
 统一模型根目录：
 
 ```text
-%LOCALAPPDATA%\AltVoice\models
+%LOCALAPPDATA%\ALT-VoiceType\models
 ```
 
 在 PowerShell 中可写为：
@@ -180,7 +180,7 @@ Hugging Face：
 存放路径：
 
 ```text
-%LOCALAPPDATA%\AltVoice\models\qwen3_asr_0_6b
+%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_asr_0_6b
 ```
 
 下载：
@@ -201,7 +201,7 @@ Hugging Face：
 存放路径：
 
 ```text
-%LOCALAPPDATA%\AltVoice\models\qwen3_asr_1_7b
+%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_asr_1_7b
 ```
 
 下载：
@@ -228,7 +228,7 @@ Qwen3-1.7B-Q8_0.gguf
 存放路径：
 
 ```text
-%LOCALAPPDATA%\AltVoice\models\qwen3_1_7b_instruct_q4\Qwen3-1.7B-Q8_0.gguf
+%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_1_7b_instruct_q4\Qwen3-1.7B-Q8_0.gguf
 ```
 
 下载：
@@ -254,7 +254,7 @@ Index-Translate-2B.Q4_K_M.gguf
 存放路径：
 
 ```text
-%LOCALAPPDATA%\AltVoice\models\index_translate_2b_q4\Index-Translate-2B.Q4_K_M.gguf
+%LOCALAPPDATA%\ALT-VoiceType\models\index_translate_2b_q4\Index-Translate-2B.Q4_K_M.gguf
 ```
 
 下载：
@@ -280,7 +280,7 @@ Qwen3-4B-Q4_K_M.gguf
 存放路径：
 
 ```text
-%LOCALAPPDATA%\AltVoice\models\qwen3_4b_instruct_q4\Qwen3-4B-Q4_K_M.gguf
+%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_4b_instruct_q4\Qwen3-4B-Q4_K_M.gguf
 ```
 
 下载：
@@ -298,7 +298,7 @@ huggingface-cli download Qwen/Qwen3-4B-GGUF `
 模型下载后，编辑：
 
 ```text
-%APPDATA%\AltVoice\config.json
+%APPDATA%\ALT-VoiceType\config.json
 ```
 
 确保以下字段指向实际文件：
@@ -360,7 +360,7 @@ altvoice run
 altvoice health
 ```
 
-程序会使用 `%APPDATA%\AltVoice\config.json`，模型默认从 `%LOCALAPPDATA%\AltVoice\models` 读取。
+程序会使用 `%APPDATA%\ALT-VoiceType\config.json`，模型默认从 `%LOCALAPPDATA%\ALT-VoiceType\models` 读取。
 
 ## 快捷键
 
@@ -444,3 +444,4 @@ docs/              架构、模型、运行、发布文档
 ---
 
 **ALT-VoiceType_Ahee52** · offline voice input for Windows
+

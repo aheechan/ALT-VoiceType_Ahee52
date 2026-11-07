@@ -1,4 +1,4 @@
-"""ASR engine interfaces and registry."""
+﻿"""ASR engine interfaces and registry."""
 
 from __future__ import annotations
 
@@ -44,3 +44,4 @@ class ASREngine(ABC):
 
     def __exit__(self, *exc: object) -> None:
         self.close()
+

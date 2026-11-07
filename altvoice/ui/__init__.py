@@ -9,3 +9,4 @@ def run_tray(config_path: str | None = None, smoke_seconds: float = 0.0) -> int:
 
 __all__ = ["run_tray"]
 
+

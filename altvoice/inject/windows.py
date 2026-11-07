@@ -1,4 +1,4 @@
-"""Windows clipboard and SendInput text injection.
+﻿"""Windows clipboard and SendInput text injection.
 
 The clipboard path is the default because it works in the widest range of
 applications. SendInput Unicode is a fallback for apps where clipboard paste is
@@ -269,3 +269,4 @@ class WindowsClipboardInjector(Injector):
 class WindowsUnicodeInjector(Injector):
     def inject(self, text: str) -> None:
         send_unicode_text(text)
+

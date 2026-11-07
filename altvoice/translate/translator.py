@@ -1,4 +1,4 @@
-"""Index-Translate backed translator."""
+﻿"""Index-Translate backed translator."""
 
 from __future__ import annotations
 
@@ -65,3 +65,4 @@ class IndexTranslateTranslator(Translator):
 
     def close(self) -> None:
         return None
+

@@ -61,8 +61,11 @@ class VoicePipeline:
         target_lang: str = "zh",
         inject: bool = True,
         scene: str | None = None,
+        on_status=None,
     ) -> PipelineResult:
+        status = on_status or (lambda _message: None)
         start = time.perf_counter()
+        status("识别中…")
         asr_result: ASRResult = self.asr.transcribe(audio_path, language="zh")
         elapsed = (time.perf_counter() - start) * 1000.0
         result = self.process_text(
@@ -71,6 +74,7 @@ class VoicePipeline:
             inject=inject,
             scene=scene,
             source_lang=asr_result.language or "zh",
+            on_status=status,
         )
         result.engine = asr_result.engine
         result.asr_latency_ms = asr_result.latency_ms or elapsed
@@ -85,13 +89,16 @@ class VoicePipeline:
         scene: str | None = None,
         source_lang: str = "zh",
         app: str = "",
+        on_status=None,
     ) -> PipelineResult:
+        status = on_status or (lambda _message: None)
         start = time.perf_counter()
         raw_text = (raw_text or "").strip()
         target = normalize_language(target_lang) or "zh"
         source = normalize_language(source_lang) or "zh"
         active_scene = scene or self.context.scene
 
+        status("纠错中…")
         correct_start = time.perf_counter()
         correction: CorrectionResult = self.corrector.correct(
             raw_text,
@@ -106,6 +113,7 @@ class VoicePipeline:
         translate_ms = 0.0
         error = ""
         if target != "zh" and target != source:
+            status("翻译中…")
             translate_start = time.perf_counter()
             try:
                 translation = self.translator.translate(
@@ -159,3 +167,4 @@ class VoicePipeline:
             close = getattr(obj, "close", None)
             if callable(close):
                 close()
+

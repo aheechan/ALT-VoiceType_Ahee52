@@ -1,4 +1,4 @@
-"""Model catalog, VRAM profiles and hardware detection.
+﻿"""Model catalog, VRAM profiles and hardware detection.
 
 The RTX 3070 12 GB is the baseline. Profiles are deliberately conservative:
 they account for the CUDA context, KV cache and a normal Windows desktop, not
@@ -348,3 +348,4 @@ def profile_summary(profile: str) -> str:
         f"translator={models['translator'].display_name}, "
         f"weights~{estimate_vram(profile):.1f} GB"
     )
+
