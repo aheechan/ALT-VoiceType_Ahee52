@@ -24,8 +24,8 @@ DefaultDirName={localappdata}\Programs\ALT-VoiceType
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
-OutputDir=..\dist\bundle
-OutputBaseFilename=ALT-VoiceType-Full-Setup-{#MyAppVersion}
+OutputDir=..\dist\installer
+OutputBaseFilename=ALT-VoiceType-Setup-{#MyAppVersion}
 Compression=lzma2/fast
 SolidCompression=no
 DiskSpanning=yes
@@ -46,11 +46,9 @@ Name: "autostart"; Description: "Start ALT-VoiceType when I sign in"; GroupDescr
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
-Source: "{#ModelsDir}\qwen3_asr_0_6b\*"; DestDir: "{localappdata}\ALT-VoiceType\models\qwen3_asr_0_6b"; Flags: recursesubdirs createallsubdirs ignoreversion
-Source: "{#ModelsDir}\qwen3_asr_1_7b_uncensored\*"; DestDir: "{localappdata}\ALT-VoiceType\models\qwen3_asr_1_7b_uncensored"; Flags: recursesubdirs createallsubdirs ignoreversion
-Source: "{#ModelsDir}\qwen3_1_7b_abliterated_q4\*"; DestDir: "{localappdata}\ALT-VoiceType\models\qwen3_1_7b_abliterated_q4"; Flags: recursesubdirs createallsubdirs ignoreversion
-Source: "{#ModelsDir}\index_translate_2b_q4\*"; DestDir: "{localappdata}\ALT-VoiceType\models\index_translate_2b_q4"; Flags: recursesubdirs createallsubdirs ignoreversion
-Source: "{#ModelsDir}\qwen3_4b_abliterated_q4\*"; DestDir: "{localappdata}\ALT-VoiceType\models\qwen3_4b_abliterated_q4"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "{#ModelsDir}\qwen3_asr_0_6b\*"; DestDir: "{app}\models\qwen3_asr_0_6b"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "{#ModelsDir}\qwen3_1_7b_abliterated_q4\*"; DestDir: "{app}\models\qwen3_1_7b_abliterated_q4"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "{#ModelsDir}\index_translate_2b_q4\*"; DestDir: "{app}\models\index_translate_2b_q4"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -62,4 +60,3 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch ALT-VoiceType"; Flags: nowait postinstall skipifsilent
-

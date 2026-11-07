@@ -62,3 +62,4 @@ Negative / risks:
 - **True TSF IME in v0.1:** COM registration, composition and candidate UI would add weeks before
   the core quality is validated.
 - **35B-A3B translator:** text gains over 9B are small; 70 GB VRAM breaks the 12 GB baseline.
+

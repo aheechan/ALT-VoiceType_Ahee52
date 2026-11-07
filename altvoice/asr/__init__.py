@@ -49,7 +49,7 @@ def available_engines() -> dict[str, bool]:
 def create_engine(
     name: str = "auto",
     model_path: str | None = None,
-    device: str = "cuda",
+    device: str = "cpu",
     language: str = "zh",
     beam_size: int = 3,
 ) -> ASREngine:

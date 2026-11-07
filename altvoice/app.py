@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import tempfile
 import threading
+import time
 from pathlib import Path
 from typing import Callable
 
@@ -65,10 +66,27 @@ class VoiceAppController:
         if self.config.history.enabled:
             try:
                 self.history = HistoryStore(
-                    self.config.history.path or default_history_path()
+                    self.config.history.path or default_history_path(),
+                    retention_days=self.config.history.retention_days,
+                    max_entries=self.config.history.max_entries,
                 )
             except Exception as exc:
                 self.on_error(f"历史记录不可用：{exc}")
+        self._cleanup_temp_audio()
+
+    def _cleanup_temp_audio(self) -> None:
+        """Remove orphaned WAV files left by a crash or forced shutdown."""
+        cutoff = time.time() - 3600
+        directory = Path(self._temp_dir or tempfile.gettempdir())
+        try:
+            for path in directory.glob("altvoice_*.wav"):
+                try:
+                    if path.stat().st_mtime < cutoff:
+                        path.unlink()
+                except OSError:
+                    pass
+        except OSError:
+            pass
 
     @property
     def recording(self) -> bool:
@@ -196,12 +214,23 @@ class VoiceAppController:
                 self.on_error(f"切换模型档位失败：{exc}")
                 return
             new.hotkey = old.hotkey
-            new.audio = old.audio
+            old_audio = old.audio
+            new.audio.samplerate = old_audio.samplerate
+            new.audio.channels = old_audio.channels
+            new.audio.device = old_audio.device
+            new.audio.trim_silence = old_audio.trim_silence
+            new.audio.silence_threshold = old_audio.silence_threshold
+            new.audio.padding_ms = old_audio.padding_ms
             new.ui = old.ui
             new.injection = old.injection
             new.history = old.history
-            new.servers = old.servers
-            new.asr.device = old.asr.device
+            old_servers = old.servers
+            new.servers.binary = old_servers.binary
+            new.servers.host = old_servers.host
+            new.servers.startup_timeout_s = old_servers.startup_timeout_s
+            new.servers.log_dir = old_servers.log_dir
+            new.servers.extra_args = old_servers.extra_args
+            new.servers.context_size = old_servers.context_size
             self.config = new
             self.profile = profile
             self.target_lang = normalize_language(new.translator.target_language) or "zh"
@@ -271,7 +300,7 @@ class VoiceAppController:
             with self._lock:
                 if self._pending_stop is not None or self._stop_event is None:
                     return
-                self.on_status(f"收尾 {delay_s:.0f} 秒…")
+                self.on_status(f"收尾 {delay_s:.2f} 秒…")
                 timer = threading.Timer(delay_s, self._finish_stop)
                 timer.daemon = True
                 self._pending_stop = timer

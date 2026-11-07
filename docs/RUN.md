@@ -117,3 +117,4 @@ Behavior:
 | `ASR unavailable` | Install a backend and set `asr.model_path` |
 | Alt menu flashes | Increase `hotkey.threshold_ms`; report the app for testing |
 | Nothing inserted | Try `injection.method: "sendinput"` or use preview/copy |
+

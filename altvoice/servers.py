@@ -264,6 +264,20 @@ class ServerManager:
                 server.probe(timeout_s=15.0)
                 status(f"{server.spec.name} 服务就绪")
             except Exception as exc:
+                # Translation must still work if the GPU backend cannot infer.
+                # This is the only service allowed to fall back to CPU.
+                if server.spec.name == "translator" and server.spec.gpu_layers != 0:
+                    status("翻译 GPU 不可用，切换 CPU…")
+                    try:
+                        server.stop()
+                        server.spec.gpu_layers = 0
+                        server.start()
+                        server.wait_ready(timeout_s=90.0)
+                        server.probe(timeout_s=25.0)
+                        status("翻译已切换 CPU 并就绪")
+                        continue
+                    except Exception:
+                        pass
                 errors.append(str(exc))
                 self.failed.add(server.spec.name)
         return errors

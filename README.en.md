@@ -1,4 +1,4 @@
-﻿# ALT-VoiceType_Ahee52
+# ALT-VoiceType_Ahee52
 
 **English** | [中文](README.md)
 
@@ -6,361 +6,257 @@
 
 **Fully offline voice input for Windows: Chinese ASR, context-aware correction, and natural multilingual translation.**
 
-Press the hotkey, speak, press it again. Recognition, correction, and translation all run locally, and the result is pasted directly at the current caret position. No cloud API is used.
+Press the hotkey, speak, press it again. Recognition, correction, and translation run locally, and the result is pasted at the current caret position. No cloud API is required.
 
-> **Status: 0.1.0 preview.** This repository contains the application source, model profiles, Windows hotkey/injection layer, PySide6 UI, packaging scripts, and tests. The model weights are distributed only through the full offline installer, not in this repository.
+> Author: **Ahee52**  
+> Status: 0.1.0 preview  
+> Current package: **CPU + Torch**  
+> Data: `%APPDATA%\ALT-VoiceType`  
+> Models: `<install directory>\models`
 
 ---
 
-## Contents
+## Why the current build is CPU + Torch
 
-- [Features](#features)
-- [How it works](#how-it-works)
-- [Four model tiers](#four-model-tiers)
-- [Full offline installer](#full-offline-installer)
-- [Lite installer](#lite-installer)
-- [Manual non-uncensored models](#manual-non-uncensored-models)
-- [Run from source](#run-from-source)
-- [Hotkeys](#hotkeys)
-- [Project layout](#project-layout)
-- [Privacy and license](#privacy-and-license)
-- [Troubleshooting](#troubleshooting)
+The author has explored the faster CUDA + PyTorch option, but it is not part of the current release because of practical constraints:
+
+1. **Package size**  
+   CUDA PyTorch adds roughly 2.5–3.5 GB installed and 1.5–2.5 GB to the installer.
+
+2. **GPU and driver differences**  
+   RTX 20/30/40/50 generations need different CUDA levels. Blackwell (RTX 50) needs CUDA 12.8+, and older drivers must be updated.
+
+3. **Machine-to-machine differences**  
+   CUDA Toolkit versions, drivers, DLL conflicts, and PATH settings all affect reliability. The CPU build is easier to reproduce and run.
+
+The current release therefore uses:
+
+```text
+CPU + Torch
+```
+
+This is a deliberate trade-off in favor of **reliability, reproducibility, and package size**, not a claim that CUDA cannot be faster.
+
+**The community is encouraged to build a CUDA + PyTorch accelerated edition.**  
+The ASR adapter, model-service layer, and device configuration already expose extension points; see [CUDA extension](#cuda-extension).
 
 ---
 
 ## Features
 
-- **Fully offline** — ASR, correction, and translation run on the local machine.
-- **Chinese-first ASR** — Qwen3-ASR handles Mandarin, accents, and mixed Chinese/English speech.
-- **Context-aware correction** — a 1.7B corrector plus deterministic guards reduces homophone, punctuation, and name errors.
-- **Local translation** — Index-Translate 2B / Qwen3-4B produces natural Chinese-to-English/Japanese/Korean output.
-- **Direct insertion** — the result is pasted at the last caret position; no manual copy/paste.
-- **Two result panels** — recognized text and translated text, each with its own copy button and “Copied” feedback.
-- **Draggable main window** — black/white frameless window, shown by default, without stealing input focus.
-- **Live level meter** — the waveform is shown while recording; after the second hotkey press it turns gray, but capture continues for **2 seconds** so trailing speech is not cut off.
-- **Warm-up button** — explicit model warm-up with live loading/ready status.
-- **Configurable hotkey** — left Alt, right Alt, or left/right Alt plus any key; Alt is not exclusively grabbed, so `Alt+Tab` and similar shortcuts still work.
-- **Offline installer options** — a full five-model bundle, or a lite installer with manual model downloads.
+- **Fully offline** — ASR, correction, and translation run locally.
+- **Chinese input by default** — the current ASR input language is fixed to Chinese.
+- **Multilingual output** — English, Japanese, Korean, Spanish, French, German, Russian, Portuguese, Italian, Arabic, Vietnamese, Thai, Indonesian, Turkish, and more.
+- **Context-aware correction** — Qwen3-1.7B-Abliterated handles homophones, punctuation, terminology, and number normalization.
+- **Direct insertion** — pastes at the previous caret position.
+- **Two result panels** — recognized text and translated text, each with a copy button and “Copied” feedback.
+- **Draggable and resizable** — the current size is the minimum; drag any corner or edge.
+- **Live level meter** — waveform while recording; turns gray after the stop hotkey.
+- **0.39 s tail** — capture continues briefly to preserve trailing speech.
+- **ESC cancels recording** — discard the current utterance without recognition, insertion, or history.
+- **Configurable hotkey** — left/right Alt alone or with any key; Alt is not exclusively grabbed.
+- **Model warm-up** — explicit button and live status.
+- **Number normalization** — Chinese numerals become Arabic digits: 二零二五 → 2025, 三千五百 → 3500, 百分之三十 → 30%.
+
+---
+
+## Input language
+
+The current input language is Chinese:
+
+```text
+audio → Chinese ASR → Chinese correction → target-language translation
+```
+
+To support English input, adjust:
+
+1. the ASR language parameter in `altvoice/pipeline.py`;
+2. `ASRConfig.language` in `altvoice/config.py`;
+3. the ASR model/prompt for English;
+4. the correction prompt’s source-language description.
+
+Contributions for more source languages are very welcome.
+
+---
+
+## Three resource tiers
+
+Only three models are used. The tiers differ in duration limit and resource policy:
+
+| Tier | Duration | Resource | Notes |
+|---|---:|---|---|
+| **eco** | 20 s | CPU | Lowest resource use |
+| **standard** | 45 s | GPU (target) | Correction/translation on GPU; ASR is CPU in the current CPU package |
+| **extended** | 120 s | GPU (target) | Longer dictation |
+
+### Fixed models
+
+| Role | Model | Size |
+|---|---|---:|
+| ASR | Qwen3-ASR-0.6B | 1.75 GB |
+| Correction | Qwen3-1.7B-Abliterated Q4 | 1.03 GB |
+| Translation | Index-Translate-2B Q4 | 1.22 GB |
+| **Total** | | **4.00 GB** |
+
+Models install to:
+
+```text
+<install directory>\models
+```
+
+The complete installation is about **5.4 GB**.
+
+---
 
 ## How it works
 
 ```text
 Global keyboard hook
-   │  lalt / ralt / lalt+q / ralt+space ...
+   │  lalt / ralt / lalt+q ...
    ▼
-Audio capture thread
+Audio capture
    │  sounddevice, 20 ms frames
    ▼
-VAD / silence trimming
-   │
+VAD / silence trim
    ▼
-ASR (Qwen3-ASR)
-   │  speech → raw text
+ASR (Qwen3-ASR-0.6B, CPU)
    ▼
-Correction (Qwen3-1.7B + guards)
-   │  homophones, punctuation, glossary, context
+Correction (Qwen3-1.7B-Abliterated)
    ▼
-Translation (Index-Translate 2B/4B)
-   │  Chinese → target language; skipped when target is Chinese
+Number normalization
+   ▼
+Translation (Index-Translate-2B)
    ▼
 Windows text injection
-   │  restore the previous caret, then paste
    ▼
-Main window panels (recognized / translated)
+Two-panel main window
 ```
 
-Design notes:
+- All heavy work runs on background threads.
+- Automatic window updates do not steal focus.
+- Only the non-Alt main key of a firing chord is swallowed.
+- Recording has a 0.39 s tail.
+- ESC cancels the current recording.
+- Models are served by local `qwen-asr` / `llama.cpp`.
 
-- Recording, ASR, correction, and translation run on worker threads; the UI only displays state.
-- The main window is shown with a non-activating flag, so automatic updates do not steal focus from the target input box.
-- Only the non-Alt main key of a triggered chord is swallowed; Alt itself is passed through.
-- After the second hotkey press, audio keeps recording for 2 seconds before the worker stops.
-- Switching a model tier stops the old local servers first, then loads and warms the new profile.
-- Local models are served by `llama.cpp` and `qwen-asr`; no remote inference API is required.
-
-## Four model tiers
-
-The full installer contains five model files, combined into four selectable tiers:
-
-| Tier | ASR | Correction | Translation | Intended use |
-|---|---|---|---|---|
-| **safe** | Qwen3-ASR-0.6B | Qwen3-1.7B Abliterated | Index-Translate-2B | 12 GB VRAM, speed first |
-| **balanced** | Qwen3-ASR-0.6B | Qwen3-1.7B Abliterated | Qwen3-4B Abliterated | 12 GB, better translation |
-| **12gb-max** | Qwen3-ASR-1.7B Uncensored | Qwen3-1.7B Abliterated | Index-Translate-2B | 12 GB, better ASR |
-| **16gb-quality** | Qwen3-ASR-1.7B Uncensored | Qwen3-1.7B Abliterated | Qwen3-4B Abliterated | 16 GB+, quality first |
-
-> **Uncensored-model notice**
->
-> The 1.7B Uncensored ASR, 1.7B Abliterated corrector, and 4B Abliterated translator are distributed **only inside the full offline installer**.
-> This repository and the manual-download section below provide only **non-uncensored standard models**. No standalone links for the uncensored variants are provided.
+---
 
 ## Full offline installer
 
 ### Files
 
-The release page contains:
-
 ```text
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0.exe
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0-1.bin
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0-2.bin
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0-3.bin
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0-4.bin
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0-5.bin
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0-6.bin
+ALT-VoiceType-Setup-0.1.0.exe
+ALT-VoiceType-Setup-0.1.0-1.bin
+ALT-VoiceType-Setup-0.1.0-2.bin
+ALT-VoiceType-Setup-0.1.0-3.bin
 SHA256SUMS.txt
+README-GitHub.txt
 ```
 
-Each `.bin` is under 1.8 GB to stay below the GitHub Release 2 GB per-file limit.
+Each `.bin` is under 1.8 GB to stay below GitHub’s 2 GB per-release-asset limit.
 
 ### Steps
 
-1. Download the **exe and all six bin files** into the same folder.
-2. Do not rename them, and do not download only the exe.
-3. Run `ALT-VoiceType_Ahee52-Full-Setup-0.1.0.exe`.
-4. Follow the wizard; the installer reads the matching bin files automatically.
-5. Start `ALT-VoiceType` and wait for “loaded, ready to type”.
-6. On first use, click **Warm up models** and wait for completion.
+1. Download the exe and all three bins into the same folder.
+2. Do not rename them; do not download only the exe.
+3. Run `ALT-VoiceType-Setup-0.1.0.exe`.
+4. The installer finds the slices automatically.
+5. Start `ALT-VoiceType`.
+6. Wait for “loaded, ready to type”.
+7. Click **Warm up models** on first use.
 
-### Requirements
+### Measured sizes
 
-- Windows 10/11 x64
-- NVIDIA GPU with 12 GB+ VRAM recommended; CPU works but is slower
-- Installed size: about **12.1 GB**
-- Download size: about **9.43 GB**
-- At least **25 GB** free disk during installation (installer + installed files)
-- A microphone (3.5 mm or USB)
-
-### Verify
-
-```powershell
-certutil -hashfile ALT-VoiceType_Ahee52-Full-Setup-0.1.0.exe SHA256
-```
-
-Expected hashes for every slice are in `SHA256SUMS.txt`.
-
-## Lite installer
-
-The lite installer is about **341 MB** and contains the application only:
+Author’s local test:
 
 ```text
-ALT-VoiceType_Ahee52-Setup-0.1.0.exe
+Download: about 3.93 GB
+Installed: about 5.4 GB
+Peak disk during install: about 10 GB
 ```
 
-On first launch it checks for models. Missing models can be downloaded by the setup dialog or manually using the next section.
+Models: 4.00 GB. Application: about 1.37 GB.
 
-Use the lite installer when:
+---
 
-- you already have the model files;
-- you want to choose only the models you need;
-- disk space is limited.
+## Cache and automatic cleanup
 
-## Manual non-uncensored models
+| Data | Location | Lifetime |
+|---|---|---|
+| Recording buffer | process memory | released after recognition or cancel |
+| Temporary WAV | `%TEMP%\altvoice_*.wav` | deleted after processing; stale files older than 1 hour removed on startup |
+| History | `%APPDATA%\ALT-VoiceType\history.db` | 7 days / 500 entries by default, auto-pruned |
+| Session context | process memory | gone on exit |
+| Logs | `%APPDATA%\ALT-VoiceType\logs` | status/errors only, no full transcript |
+| Models | `<install>\models` | not automatically deleted; removed with the installation |
 
-The files below are the **standard, non-uncensored** models. The uncensored variants are not listed here.
-
-Model root:
+You can clear history manually:
 
 ```text
-%LOCALAPPDATA%\ALT-VoiceType\models
+%APPDATA%\ALT-VoiceType\history.db
 ```
 
-PowerShell shorthand:
+---
 
-```powershell
-$m = "$env:LOCALAPPDATA\ALT-VoiceType\models"
-```
+## CUDA extension
 
-### 1. ASR: Qwen3-ASR-0.6B
+The current package is CPU + Torch and does **not** include CUDA PyTorch.
 
-Hugging Face:
-
-<https://huggingface.co/Qwen/Qwen3-ASR-0.6B>
-
-Destination:
+Recommended CUDA direction:
 
 ```text
-%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_asr_0_6b
+PyTorch 2.8 + cu128
+CUDA 12.8
+NVIDIA driver 570+
 ```
 
-Download:
-
-```powershell
-huggingface-cli download Qwen/Qwen3-ASR-0.6B `
-  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType\models\qwen3_asr_0_6b"
-```
-
-This is the standard ASR used by **safe** and **balanced**.
-
-### 2. ASR: Qwen3-ASR-1.7B (standard)
-
-Hugging Face:
-
-<https://huggingface.co/Qwen/Qwen3-ASR-1.7B>
-
-Destination:
+One cu128 build can cover:
 
 ```text
-%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_asr_1_7b
+RTX 20  sm_75
+RTX 30  sm_86
+RTX 40  sm_89
+RTX 50  sm_120
 ```
 
-Download:
+Requirements: a recent driver, a wheel containing the target architecture, and CUDA 12.8+ for Blackwell.
 
-```powershell
-huggingface-cli download Qwen/Qwen3-ASR-1.7B `
-  --local-dir "$env:LOCALAPPDATA%\ALT-VoiceType\models\qwen3_asr_1_7b"
-```
-
-This is the non-uncensored alternative for the ASR used by `12gb-max` and `16gb-quality`. Point `asr.model_path` at this directory to use it.
-
-### 3. Correction: Qwen3-1.7B-Instruct Q8
-
-Hugging Face:
-
-<https://huggingface.co/Qwen/Qwen3-1.7B-GGUF>
-
-Filename:
+Estimated increase:
 
 ```text
-Qwen3-1.7B-Q8_0.gguf
+Installed: +2.5–3.5 GB
+Installer: +1.5–2.5 GB
 ```
 
-Destination:
+CUDA should ship as a separate installer:
 
 ```text
-%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_1_7b_instruct_q4\Qwen3-1.7B-Q8_0.gguf
+ALT-VoiceType-CUDA-Setup-0.1.0.exe
 ```
 
-Download:
-
-```powershell
-huggingface-cli download Qwen/Qwen3-1.7B-GGUF `
-  --include "*Qwen3-1.7B-Q8_0.gguf" `
-  --local-dir "$env:LOCALAPPDATA%\ALT-VoiceType\models\qwen3_1_7b_instruct_q4"
-```
-
-### 4. Translation: Index-Translate-2B Q4
-
-Hugging Face:
-
-<https://huggingface.co/IndexTeam/Index-Translate-2B-GGUF>
-
-Filename:
-
-```text
-Index-Translate-2B.Q4_K_M.gguf
-```
-
-Destination:
-
-```text
-%LOCALAPPDATA%\ALT-VoiceType\models\index_translate_2b_q4\Index-Translate-2B.Q4_K_M.gguf
-```
-
-Download:
-
-```powershell
-huggingface-cli download IndexTeam/Index-Translate-2B-GGUF `
-  --include "*Index-Translate-2B.Q4_K_M.gguf" `
-  --local-dir "$env:LOCALAPPDATA%\ALT-VoiceType\models\index_translate_2b_q4"
-```
-
-### 5. Translation: Qwen3-4B-Instruct Q4 (standard)
-
-Hugging Face:
-
-<https://huggingface.co/Qwen/Qwen3-4B-GGUF>
-
-Filename:
-
-```text
-Qwen3-4B-Q4_K_M.gguf
-```
-
-Destination:
-
-```text
-%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_4b_instruct_q4\Qwen3-4B-Q4_K_M.gguf
-```
-
-Download:
-
-```powershell
-huggingface-cli download Qwen/Qwen3-4B-GGUF `
-  --include "*Qwen3-4B-Q4_K_M.gguf" `
-  --local-dir "$env:LOCALAPPDATA%\ALT-VoiceType\models\qwen3_4b_instruct_q4"
-```
-
-This is the non-uncensored alternative for the 4B translator used by `balanced` and `16gb-quality`.
-
-### Configure standard models
-
-Edit:
-
-```text
-%APPDATA%\ALT-VoiceType\config.json
-```
-
-Point these fields at the downloaded files:
-
-```json
-{
-  "asr": {
-    "model_path": "C:\\Users\\<you>\\AppData\\Local\\ALT-VoiceType\\models\\qwen3_asr_0_6b"
-  },
-  "corrector": {
-    "model_path": "C:\\Users\\<you>\\AppData\\Local\\ALT-VoiceType\\models\\qwen3_1_7b_instruct_q4\\Qwen3-1.7B-Q8_0.gguf"
-  },
-  "translator": {
-    "model_path": "C:\\Users\\<you>\\AppData\\Local\\ALT-VoiceType\\models\\index_translate_2b_q4\\Index-Translate-2B.Q4_K_M.gguf"
-  }
-}
-```
-
-The bundled tier presets point at the uncensored paths. After manually switching to standard models, do not switch tiers again in Settings, or the paths will be reset.
-
-### Slow Hugging Face access
-
-If direct Hugging Face downloads are slow:
-
-```powershell
-$env:HF_ENDPOINT = "https://hf-mirror.com"
-```
-
-The download commands remain the same.
+---
 
 ## Run from source
 
-Requirements:
-
-- Windows 10/11 x64
-- Python 3.11 or 3.12
-- Optional NVIDIA driver; CPU is supported but slower
-- A microphone
-
 ```powershell
-git clone https://github.com/<your-name>/ALT-VoiceType_Ahee52.git
+git clone https://github.com/aheechan/ALT-VoiceType_Ahee52.git
 cd ALT-VoiceType_Ahee52
 
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
 pip install -e ".[ui,audio,asr-qwen,download]"
-```
-
-Run:
-
-```powershell
 altvoice run
 ```
 
-Environment check only:
+Health check:
 
 ```powershell
 altvoice health
 ```
 
-Configuration is stored in `%APPDATA%\ALT-VoiceType\config.json`; models are read from `%LOCALAPPDATA%\ALT-VoiceType\models`.
+---
 
 ## Hotkeys
 
@@ -370,79 +266,72 @@ Default:
 Left Alt (lalt)
 ```
 
-Configurable in Settings:
+Configurable:
 
 ```text
 lalt
 ralt
 lalt+q
 ralt+space
-lalt+shift
-alt+q
+alt+shift
 ```
 
-- Left and right Alt are distinguished.
-- Alt is not exclusively grabbed; `Alt+Tab`, `Alt+F4`, and other system shortcuts still work.
-- Only the main non-Alt key of a firing chord is suppressed.
-- Changes apply immediately after saving.
-
-## Project layout
+While recording:
 
 ```text
-altvoice/
-  asr/             ASR adapters (Qwen3-ASR, Sherpa fallback)
-  correct/         corrector, prompts, guards
-  translate/       translation prompts, client, cleanup
-  llm/             OpenAI-compatible local llama.cpp client
-  hotkey/          global hook, left/right Alt chords
-  inject/          Windows text injection and focus restore
-  ui/              PySide6 tray, main window, settings, history
-  audio.py         microphone capture and level callback
-  pipeline.py      ASR → correction → translation → injection
-  app.py           controller, recording state machine, 2 s tail
-  models.py        model catalog and four tiers
-  servers.py       llama.cpp server supervision
-
-packaging/         PyInstaller spec, Inno Setup installers, bundle script
-tests/             unit tests and UI smoke tests
-docs/              architecture, models, running, release docs
+ESC → cancel this recording
 ```
 
-## Privacy and license
+---
 
-- Offline by default; raw audio is not persisted.
-- Optional local SQLite history can be disabled or cleared.
-- Code is **Apache-2.0**.
-- Model weights are not part of this repository; each model follows its upstream license.
-- The uncensored models included in the full offline installer are distributed only with that installer; this repository does not provide standalone links.
+## Data sources and license
 
-## Troubleshooting
+- Code: **Apache-2.0**
+- ASR: Qwen3-ASR-0.6B
+- Correction: Qwen3-1.7B-Abliterated Q4
+- Translation: Index-Translate-2B Q4
+- Model weights are not stored in Git; the full installer bundles the three models.
+- Follow each upstream model license.
 
-### Installer cannot find a slice
+Qwen3-ASR-0.6B:
 
-Keep the exe and `-1.bin` through `-6.bin` in the **same folder**. Do not rename them, and avoid names such as `.bin.txt` or `(1)`.
+<https://huggingface.co/Qwen/Qwen3-ASR-0.6B>
 
-### SmartScreen says “Unknown publisher”
+Index-Translate-2B:
 
-The installer is currently unsigned. Use “More info → Run anyway”, or verify the file with `SHA256SUMS.txt`.
+<https://huggingface.co/IndexTeam/Index-Translate-2B-GGUF>
 
-### The hotkey does nothing
+> The abliterated correction model is distributed only in the full installer; no standalone link is provided here.
 
-Check that Settings uses `lalt` or `ralt`, and that another application is not already using the chord. Confirm the model is warmed up.
+---
 
-### Recognition is slow
+## Contribute
 
-- Make sure the app is using the GPU, not CPU.
-- `12gb-max` / `16gb-quality` use the 1.7B ASR, which is much slower on CPU.
-- Click **Warm up models** before dictating.
-- Close other GPU-heavy applications.
+This is an open-source, offline-first voice input project. The author has made a pragmatic trade-off between **stability, size, and response speed**, and it can still improve.
 
-### Text is not pasted
+Welcome contributions:
 
-Some games and elevated windows block synthetic input. Run the app at the same privilege level as the target window, and use a target that supports Ctrl+V.
+- CUDA + PyTorch acceleration
+- English and minority-language input
+- Correction rules and number normalization
+- Smaller packaging
+- Windows compatibility testing (RTX 20/30/40/50)
+- UI, docs, and translations
+
+If this project is useful to you, open an Issue, send a PR, or share it with someone who needs it.
+
+**Help people across the world communicate without barriers.**
+
+---
+
+## Manual GitHub upload
+
+Upload source to the Git repository and installers to **Releases** — never commit the binaries.
+
+Step-by-step guide:
+
+[docs/UPLOAD-MANUAL.md](docs/UPLOAD-MANUAL.md)
 
 ---
 
 **ALT-VoiceType_Ahee52** · offline voice input for Windows
-
-

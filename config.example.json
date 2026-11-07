@@ -1,6 +1,6 @@
 {
   "profile": "auto",
-  "models_dir": "C:/Users/you/AppData/Local/AltVoice/models",
+  "models_dir": "C:/Users/you/AppData/Local/ALT-VoiceType/models",
   "hotkey": {
     "mode": "toggle_alt",
     "threshold_ms": 280,
@@ -18,7 +18,7 @@
   },
   "asr": {
     "engine": "firered",
-    "model_path": "C:/Users/you/AppData/Local/AltVoice/models/FireRedASR2-AED",
+    "model_path": "C:/Users/you/AppData/Local/ALT-VoiceType/models/FireRedASR2-AED",
     "device": "cuda",
     "language": "zh",
     "beam_size": 3
@@ -31,7 +31,7 @@
     "timeout_s": 20.0,
     "max_edit_ratio": 0.25,
     "max_tokens": 512,
-    "model_path": "C:/Users/you/AppData/Local/AltVoice/models/qwen3_1_7b_instruct_q4/Qwen3-1.7B-Q8_0.gguf",
+    "model_path": "C:/Users/you/AppData/Local/ALT-VoiceType/models/qwen3_1_7b_instruct_q4/Qwen3-1.7B-Q8_0.gguf",
     "autostart": true
   },
   "translator": {
@@ -43,7 +43,7 @@
     "target_language": "zh",
     "style": "daily",
     "max_tokens": 1024,
-    "model_path": "C:/Users/you/AppData/Local/AltVoice/models/index_translate_9b_q4/Index-Translate-9B.Q4_K_M.gguf",
+    "model_path": "C:/Users/you/AppData/Local/ALT-VoiceType/models/index_translate_9b_q4/Index-Translate-9B.Q4_K_M.gguf",
     "autostart": true
   },
   "servers": {

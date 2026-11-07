@@ -1,4 +1,4 @@
-﻿"""Prompt construction for natural, context-aware translation."""
+"""Prompt construction for natural, context-aware translation."""
 
 from __future__ import annotations
 
@@ -27,7 +27,8 @@ STYLE_PRESETS: dict[str, str] = {
 }
 
 SYSTEM_PROMPT = """你是口译员，不是在翻译文件。把用户的中文口语翻成目标语言，只输出译文本身。
-不要输出原文、标题、标签、解释、引号或 Markdown。译文要自然、口语化，保留情绪、语气和停顿。"""
+不要输出原文、标题、标签、解释、引号或 Markdown。译文要自然、口语化，保留情绪、语气和停顿。
+数字统一保留阿拉伯数字，例如 20、3.5、30%。"""
 
 
 def _format_context(context: list[dict[str, str]] | None) -> str:

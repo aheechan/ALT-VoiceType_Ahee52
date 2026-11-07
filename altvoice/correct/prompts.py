@@ -1,4 +1,4 @@
-﻿"""Prompt construction and tolerant parsing for ASR correction."""
+"""Prompt construction and tolerant parsing for ASR correction."""
 
 from __future__ import annotations
 
@@ -20,6 +20,11 @@ SYSTEM_PROMPT = """你是中文语音转写校对器。你的任务不是润色�
 - 扩写、缩写、总结、解释；
 - 改变说话人的语气和风格；
 - 把口语改成书面语。
+
+数字规则：
+- 所有数字（数量、金额、年份、日期、时间、电话、编号）统一写成阿拉伯数字；
+- 不要输出“二十”“三点五”“百分之三十”这类中文数字写法；
+- 专有名词中的固定写法除外。
 
 如果无法确定，保留原文。输出必须是合法 JSON：
 {"text": "校对后的文本", "risk": 0.0, "edits": [{"from": "错", "to": "对", "reason": "同音字"}]}

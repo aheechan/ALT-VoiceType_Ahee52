@@ -1,4 +1,4 @@
-﻿"""Qt tray and preview UI for ALT-VoiceType."""
+"""Qt tray and preview UI for ALT-VoiceType."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from ..app import VoiceAppController
 from ..config import LANGUAGES, TARGET_LANGUAGES, default_config_dir, default_config_path
 
 try:
-    from PySide6.QtCore import QObject, Qt, QTimer, Signal
+    from PySide6.QtCore import QObject, QRect, Qt, QTimer, Signal
     from PySide6.QtGui import QAction, QActionGroup, QColor, QIcon, QPainter, QPen, QPixmap
     from PySide6.QtWidgets import (
         QApplication,
@@ -478,9 +478,11 @@ class MainWindow(QWidget):
         self._tray = tray
         self._placed = False
         self._drag = None
+        self._resize_mode = ""
+        self._resize_origin = None
+        self._resize_geometry = None
         self._result = None
         self.setWindowTitle("ALT-VoiceType")
-        self.setFixedWidth(440)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
         self.setStyleSheet(
             "QWidget#main { background: #0A0A0A; border: 1px solid #3A3A3A;"
@@ -590,6 +592,10 @@ class MainWindow(QWidget):
         layout.addLayout(footer)
 
         self.refresh()
+        self.adjustSize()
+        self._min_height = self.sizeHint().height()
+        self.setMinimumSize(440, self._min_height)
+        self.resize(440, self._min_height)
 
     def _select_language(self, code: str) -> None:
         index = self.language.findData(code)
@@ -662,7 +668,7 @@ class MainWindow(QWidget):
 
     def set_tail(self) -> None:
         self.meter.set_tail()
-        self.status.setText("收尾 2 秒…")
+        self.status.setText("收尾 0.39 秒…")
 
     def show_result(self, result) -> None:
         self._result = result
@@ -688,18 +694,51 @@ class MainWindow(QWidget):
         self.clear_result()
         self._tray._accept_result(result, text)
 
+    def _resize_hit(self, pos) -> str:
+        margin = 8
+        left = pos.x() <= margin
+        right = pos.x() >= self.width() - margin
+        top = pos.y() <= margin
+        bottom = pos.y() >= self.height() - margin
+        return (
+            ("t" if top else "b" if bottom else "")
+            + ("l" if left else "r" if right else "")
+        )
+
     def mousePressEvent(self, event):  # noqa: N802 - Qt API
         if event.button() == Qt.MouseButton.LeftButton:
+            mode = self._resize_hit(event.position().toPoint())
+            if mode:
+                self._resize_mode = mode
+                self._resize_origin = event.globalPosition().toPoint()
+                self._resize_geometry = self.geometry()
+                return
             self._drag = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):  # noqa: N802 - Qt API
+        if self._resize_mode and event.buttons() & Qt.MouseButton.LeftButton:
+            delta = event.globalPosition().toPoint() - self._resize_origin
+            geo = QRect(self._resize_geometry)
+            if "l" in self._resize_mode:
+                geo.setLeft(min(geo.left() + delta.x(), geo.right() - self.minimumWidth()))
+            if "r" in self._resize_mode:
+                geo.setRight(max(geo.right() + delta.x(), geo.left() + self.minimumWidth()))
+            if "t" in self._resize_mode:
+                geo.setTop(min(geo.top() + delta.y(), geo.bottom() - self.minimumHeight()))
+            if "b" in self._resize_mode:
+                geo.setBottom(max(geo.bottom() + delta.y(), geo.top() + self.minimumHeight()))
+            self.setGeometry(geo)
+            return
         if self._drag is not None and event.buttons() & Qt.MouseButton.LeftButton:
             self.move(event.globalPosition().toPoint() - self._drag)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):  # noqa: N802 - Qt API
         self._drag = None
+        self._resize_mode = ""
+        self._resize_origin = None
+        self._resize_geometry = None
         super().mouseReleaseEvent(event)
 
 
@@ -749,6 +788,7 @@ class TrayApp(QObject):
             on_stop=self._request_stop,
             on_cancel=self.controller.cancel_recording,
             on_toggle=self._toggle_recording,
+            on_escape=self._cancel_if_recording,
         )
 
     def _build_menu(self) -> None:
@@ -942,12 +982,22 @@ class TrayApp(QObject):
         else:
             self.controller.start_recording()
 
+    def _cancel_if_recording(self) -> bool:
+        if not self.controller.recording:
+            return False
+        self.controller.cancel_recording()
+        self._set_status("已取消录音")
+        if self._main is not None:
+            self._main.set_status("已取消录音")
+            self._main.meter.set_tail()
+        return True
+
     def _request_stop(self) -> None:
         if self._main is None:
             self._main = MainWindow(self)
         self._main.show_panel(activate=False)
         self._main.set_tail()
-        self.controller.stop_recording(delay_s=2.0)
+        self.controller.stop_recording(delay_s=0.39)
 
     def _warm_up(self) -> None:
         if self._main is not None:

@@ -20,7 +20,7 @@ class ModelStoreTests(unittest.TestCase):
             commands = download_commands(cfg, "12gb-balanced")
             joined = "\n".join(commands)
             self.assertIn("Qwen/Qwen3-ASR-0.6B", joined)
-            self.assertIn("Huihui-Qwen3-4B-Instruct-2507-abliterated-GGUF", joined)
+            self.assertIn("IndexTeam/Index-Translate-2B-GGUF", joined)
 
     def test_exists_for_dir_and_file(self):
         with workspace_tempdir() as tmp:
@@ -37,7 +37,7 @@ class ModelStoreTests(unittest.TestCase):
             items = {item.key: item for item in locations(cfg, "12gb-balanced")}
             self.assertTrue(items["qwen3_asr_0_6b"].exists)
             self.assertTrue(items["qwen3_1_7b_abliterated_q4"].exists)
-            self.assertFalse(items["qwen3_4b_abliterated_q4"].exists)
+            self.assertFalse(items["index_translate_2b_q4"].exists)
 
     def test_none_kind_is_present(self):
         cfg = AppConfig()

@@ -103,19 +103,19 @@ ALT-VoiceType_Ahee52 0.1.0
 5. 上传以下文件，全部来自：
 
 ```text
-C:\Local Repositories\ALT-VoiceType\dist\bundle\
+C:\Local Repositories\ALT-VoiceType\dist\installer\
 ```
 
 文件清单：
 
 ```text
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0.exe
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0-1.bin
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0-2.bin
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0-3.bin
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0-4.bin
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0-5.bin
-ALT-VoiceType_Ahee52-Full-Setup-0.1.0-6.bin
+ALT-VoiceType-Setup-0.1.0.exe
+ALT-VoiceType-Setup-0.1.0-1.bin
+ALT-VoiceType-Setup-0.1.0-2.bin
+ALT-VoiceType-Setup-0.1.0-3.bin
+ALT-VoiceType-Setup-0.1.0-4.bin
+ALT-VoiceType-Setup-0.1.0-5.bin
+ALT-VoiceType-Setup-0.1.0-6.bin
 SHA256SUMS.txt
 README-GitHub.txt
 ```
@@ -133,11 +133,11 @@ README-GitHub.txt
 ```powershell
 gh release create v0.1.0 `
   --title "ALT-VoiceType_Ahee52 0.1.0" `
-  --notes-file "C:\Local Repositories\ALT-VoiceType\dist\bundle\README-GitHub.txt" `
-  "C:\Local Repositories\ALT-VoiceType\dist\bundle\ALT-VoiceType_Ahee52-Full-Setup-0.1.0.exe" `
-  "C:\Local Repositories\ALT-VoiceType\dist\bundle\ALT-VoiceType_Ahee52-Full-Setup-0.1.0-*.bin" `
-  "C:\Local Repositories\ALT-VoiceType\dist\bundle\SHA256SUMS.txt" `
-  "C:\Local Repositories\ALT-VoiceType\dist\bundle\README-GitHub.txt"
+  --notes-file "C:\Local Repositories\ALT-VoiceType\dist\installer\README-GitHub.txt" `
+  "C:\Local Repositories\ALT-VoiceType\dist\installer\ALT-VoiceType-Setup-0.1.0.exe" `
+  "C:\Local Repositories\ALT-VoiceType\dist\installer\ALT-VoiceType-Setup-0.1.0-*.bin" `
+  "C:\Local Repositories\ALT-VoiceType\dist\installer\SHA256SUMS.txt" `
+  "C:\Local Repositories\ALT-VoiceType\dist\installer\README-GitHub.txt"
 ```
 
 `gh` 需要先登录：
@@ -162,7 +162,7 @@ gh auth login
 2. 校验 SHA256：
 
 ```powershell
-certutil -hashfile ALT-VoiceType_Ahee52-Full-Setup-0.1.0.exe SHA256
+certutil -hashfile ALT-VoiceType-Setup-0.1.0.exe SHA256
 ```
 
 3. 运行安装器。
@@ -190,6 +190,7 @@ ALT-VoiceType_Ahee52-Setup-0.1.0.exe
 - 安装包可以找到同目录的 6 个 bin；
 - 完整包安装后约 12.1GB，四个档位都能选择；
 - 没有把 `.gguf`、`.safetensors` 或 `dist/` 提交到 Git。
+
 
 
 

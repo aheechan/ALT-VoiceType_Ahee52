@@ -1,4 +1,4 @@
-﻿"""Global Alt hook for Windows.
+"""Global Alt hook for Windows.
 
 A low-level keyboard hook buffers Alt events so a long press can become
 push-to-talk without stealing normal Alt-menu behavior. Short taps are replayed;
@@ -77,10 +77,13 @@ class WindowsAltHook:
         on_stop=None,
         on_cancel=None,
         on_toggle=None,
+        on_escape=None,
     ) -> None:
         if not IS_WINDOWS:
             raise HotkeyError("the global Alt hook is only available on Windows")
         self.threshold_ms = max(80, int(threshold_ms))
+        self._on_escape = on_escape or (lambda: False)
+        self._escape_suppress = False
         self.mode = mode
         self.combo = combo
         self._on_start = on_start or (lambda: None)
@@ -172,6 +175,14 @@ class WindowsAltHook:
                 kb = ctypes.cast(l_param, ctypes.POINTER(KBDLLHOOKSTRUCT)).contents
                 down = w_param in (WM_KEYDOWN, WM_SYSKEYDOWN)
                 injected = bool(kb.flags & LLKHF_INJECTED)
+                if int(kb.vkCode) == 0x1B and not injected:
+                    if down:
+                        if self._on_escape():
+                            self._escape_suppress = True
+                            return 1
+                    elif self._escape_suppress:
+                        self._escape_suppress = False
+                        return 1
                 with self._lock:
                     if self._combo_logic is not None:
                         decision = self._combo_logic.handle_key(
