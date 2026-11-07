@@ -81,3 +81,4 @@ certutil -hashfile ALT-VoiceType_Ahee52-Full-Setup-0.1.0.exe SHA256
 - 安装时需要同时保留安装包和已安装文件，峰值占用约 22 GB。
 - 如果只需要程序、不需要模型，请使用单独的 341 MB 精简安装包。
 
+

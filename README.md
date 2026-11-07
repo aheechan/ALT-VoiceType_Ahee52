@@ -168,7 +168,7 @@ ALT-VoiceType_Ahee52-Setup-0.1.0.exe
 在 PowerShell 中可写为：
 
 ```powershell
-$m = "$env:LOCALAPPDATA\AltVoice\models"
+$m = "$env:LOCALAPPDATA\ALT-VoiceType\models"
 ```
 
 ### 1. ASR：Qwen3-ASR-0.6B
@@ -187,7 +187,7 @@ Hugging Face：
 
 ```powershell
 huggingface-cli download Qwen/Qwen3-ASR-0.6B `
-  --local-dir "$env:LOCALAPPDATA\AltVoice\models\qwen3_asr_0_6b"
+  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType\models\qwen3_asr_0_6b"
 ```
 
 这是 **safe / balanced** 两个档位的标准 ASR。
@@ -208,7 +208,7 @@ Hugging Face：
 
 ```powershell
 huggingface-cli download Qwen/Qwen3-ASR-1.7B `
-  --local-dir "$env:LOCALAPPDATA\AltVoice\models\qwen3_asr_1_7b"
+  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType\models\qwen3_asr_1_7b"
 ```
 
 这是 `12gb-max` / `16gb-quality` 中破限 ASR 的**非破限替代品**。使用它需要把配置文件中的 `asr.model_path` 指向此目录。
@@ -236,7 +236,7 @@ Qwen3-1.7B-Q8_0.gguf
 ```powershell
 huggingface-cli download Qwen/Qwen3-1.7B-GGUF `
   --include "*Qwen3-1.7B-Q8_0.gguf" `
-  --local-dir "$env:LOCALAPPDATA\AltVoice\models\qwen3_1_7b_instruct_q4"
+  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType\models\qwen3_1_7b_instruct_q4"
 ```
 
 ### 4. 翻译：Index-Translate-2B Q4
@@ -262,7 +262,7 @@ Index-Translate-2B.Q4_K_M.gguf
 ```powershell
 huggingface-cli download IndexTeam/Index-Translate-2B-GGUF `
   --include "*Index-Translate-2B.Q4_K_M.gguf" `
-  --local-dir "$env:LOCALAPPDATA\AltVoice\models\index_translate_2b_q4"
+  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType\models\index_translate_2b_q4"
 ```
 
 ### 5. 翻译：Qwen3-4B-Instruct Q4（标准版）
@@ -288,7 +288,7 @@ Qwen3-4B-Q4_K_M.gguf
 ```powershell
 huggingface-cli download Qwen/Qwen3-4B-GGUF `
   --include "*Qwen3-4B-Q4_K_M.gguf" `
-  --local-dir "$env:LOCALAPPDATA\AltVoice\models\qwen3_4b_instruct_q4"
+  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType\models\qwen3_4b_instruct_q4"
 ```
 
 这是 `balanced` / `16gb-quality` 中破限 4B 翻译的**非破限替代品**。
@@ -306,13 +306,13 @@ huggingface-cli download Qwen/Qwen3-4B-GGUF `
 ```json
 {
   "asr": {
-    "model_path": "C:\\Users\\<你>\\AppData\\Local\\AltVoice\\models\\qwen3_asr_0_6b"
+    "model_path": "C:\\Users\\<你>\\AppData\\Local\\ALT-VoiceType\\models\\qwen3_asr_0_6b"
   },
   "corrector": {
-    "model_path": "C:\\Users\\<你>\\AppData\\Local\\AltVoice\\models\\qwen3_1_7b_instruct_q4\\Qwen3-1.7B-Q8_0.gguf"
+    "model_path": "C:\\Users\\<你>\\AppData\\Local\\ALT-VoiceType\\models\\qwen3_1_7b_instruct_q4\\Qwen3-1.7B-Q8_0.gguf"
   },
   "translator": {
-    "model_path": "C:\\Users\\<你>\\AppData\\Local\\AltVoice\\models\\index_translate_2b_q4\\Index-Translate-2B.Q4_K_M.gguf"
+    "model_path": "C:\\Users\\<你>\\AppData\\Local\\ALT-VoiceType\\models\\index_translate_2b_q4\\Index-Translate-2B.Q4_K_M.gguf"
   }
 }
 ```
@@ -444,4 +444,5 @@ docs/              架构、模型、运行、发布文档
 ---
 
 **ALT-VoiceType_Ahee52** · offline voice input for Windows
+
 

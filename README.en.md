@@ -168,7 +168,7 @@ Model root:
 PowerShell shorthand:
 
 ```powershell
-$m = "$env:LOCALAPPDATA\AltVoice\models"
+$m = "$env:LOCALAPPDATA\ALT-VoiceType\models"
 ```
 
 ### 1. ASR: Qwen3-ASR-0.6B
@@ -187,7 +187,7 @@ Download:
 
 ```powershell
 huggingface-cli download Qwen/Qwen3-ASR-0.6B `
-  --local-dir "$env:LOCALAPPDATA\AltVoice\models\qwen3_asr_0_6b"
+  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType\models\qwen3_asr_0_6b"
 ```
 
 This is the standard ASR used by **safe** and **balanced**.
@@ -208,7 +208,7 @@ Download:
 
 ```powershell
 huggingface-cli download Qwen/Qwen3-ASR-1.7B `
-  --local-dir "$env:LOCALAPPDATA%\AltVoice\models\qwen3_asr_1_7b"
+  --local-dir "$env:LOCALAPPDATA%\ALT-VoiceType\models\qwen3_asr_1_7b"
 ```
 
 This is the non-uncensored alternative for the ASR used by `12gb-max` and `16gb-quality`. Point `asr.model_path` at this directory to use it.
@@ -236,7 +236,7 @@ Download:
 ```powershell
 huggingface-cli download Qwen/Qwen3-1.7B-GGUF `
   --include "*Qwen3-1.7B-Q8_0.gguf" `
-  --local-dir "$env:LOCALAPPDATA%\AltVoice\models\qwen3_1_7b_instruct_q4"
+  --local-dir "$env:LOCALAPPDATA%\ALT-VoiceType\models\qwen3_1_7b_instruct_q4"
 ```
 
 ### 4. Translation: Index-Translate-2B Q4
@@ -262,7 +262,7 @@ Download:
 ```powershell
 huggingface-cli download IndexTeam/Index-Translate-2B-GGUF `
   --include "*Index-Translate-2B.Q4_K_M.gguf" `
-  --local-dir "$env:LOCALAPPDATA%\AltVoice\models\index_translate_2b_q4"
+  --local-dir "$env:LOCALAPPDATA%\ALT-VoiceType\models\index_translate_2b_q4"
 ```
 
 ### 5. Translation: Qwen3-4B-Instruct Q4 (standard)
@@ -288,7 +288,7 @@ Download:
 ```powershell
 huggingface-cli download Qwen/Qwen3-4B-GGUF `
   --include "*Qwen3-4B-Q4_K_M.gguf" `
-  --local-dir "$env:LOCALAPPDATA%\AltVoice\models\qwen3_4b_instruct_q4"
+  --local-dir "$env:LOCALAPPDATA%\ALT-VoiceType\models\qwen3_4b_instruct_q4"
 ```
 
 This is the non-uncensored alternative for the 4B translator used by `balanced` and `16gb-quality`.
@@ -306,13 +306,13 @@ Point these fields at the downloaded files:
 ```json
 {
   "asr": {
-    "model_path": "C:\\Users\\<you>\\AppData\\Local\\AltVoice\\models\\qwen3_asr_0_6b"
+    "model_path": "C:\\Users\\<you>\\AppData\\Local\\ALT-VoiceType\\models\\qwen3_asr_0_6b"
   },
   "corrector": {
-    "model_path": "C:\\Users\\<you>\\AppData\\Local\\AltVoice\\models\\qwen3_1_7b_instruct_q4\\Qwen3-1.7B-Q8_0.gguf"
+    "model_path": "C:\\Users\\<you>\\AppData\\Local\\ALT-VoiceType\\models\\qwen3_1_7b_instruct_q4\\Qwen3-1.7B-Q8_0.gguf"
   },
   "translator": {
-    "model_path": "C:\\Users\\<you>\\AppData\\Local\\AltVoice\\models\\index_translate_2b_q4\\Index-Translate-2B.Q4_K_M.gguf"
+    "model_path": "C:\\Users\\<you>\\AppData\\Local\\ALT-VoiceType\\models\\index_translate_2b_q4\\Index-Translate-2B.Q4_K_M.gguf"
   }
 }
 ```
@@ -444,4 +444,5 @@ Some games and elevated windows block synthetic input. Run the app at the same p
 ---
 
 **ALT-VoiceType_Ahee52** · offline voice input for Windows
+
 
