@@ -29,7 +29,7 @@ class ConfigTests(unittest.TestCase):
     def test_default_config_validates(self):
         cfg = AppConfig()
         cfg.validate()
-        self.assertEqual(cfg.profile, "auto")
+        self.assertEqual(cfg.profile, "12gb-balanced")
         self.assertEqual(cfg.asr.language, "zh")
         self.assertIn(cfg.translator.target_language, LANGUAGES)
 
