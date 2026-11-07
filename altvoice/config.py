@@ -147,7 +147,7 @@ class AudioConfig:
 class ASRConfig:
     engine: str = "auto"  # auto | firered | qwen3 | sherpa | fake
     model_path: str | None = None
-    device: str = "cuda"
+    device: str = "cpu"
     language: str = "zh"
     beam_size: int = 3
 

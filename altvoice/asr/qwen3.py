@@ -33,12 +33,14 @@ class Qwen3ASREngine(ASREngine):
     def __init__(
         self,
         model_path: str | None = None,
-        device: str = "cuda",
+        device: str = "cpu",
         model_name: str = "Qwen/Qwen3-ASR-1.7B",
         max_new_tokens: int = 256,
     ) -> None:
         self.model_path = model_path or os.environ.get("QWEN3_ASR_MODEL") or model_name
-        self.device = device
+        # Packaged builds use CPU torch; keep ASR on CPU to avoid CUDA
+        # initialization stalls on newer GPUs (RTX 40/50).
+        self.device = "cpu"
         self.max_new_tokens = int(max_new_tokens)
         self._model = None
 
