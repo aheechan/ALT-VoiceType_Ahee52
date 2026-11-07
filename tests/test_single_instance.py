@@ -8,7 +8,7 @@ from altvoice.single_instance import SingleInstance
 @unittest.skipUnless(os.name == "nt", "Windows named mutex test")
 class SingleInstanceTests(unittest.TestCase):
     def test_second_instance_is_rejected(self):
-        name = f"Local\\AltVoiceTest-{uuid.uuid4()}"
+        name = f"Local\\ALT-VoiceTypeTest-{uuid.uuid4()}"
         first = SingleInstance(name)
         second = SingleInstance(name)
         try:
