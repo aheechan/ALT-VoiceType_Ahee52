@@ -1,26 +1,26 @@
 ; AltVoice Inno Setup script (per-user install).
 ; Build the app first with packaging/altvoice.spec, then compile this file.
 
-#define MyAppName "ALT-VoiceType_Ahee52"
+#define MyAppName "ALT-VoiceType"
 #define MyAppVersion "0.1.0"
 #define MyAppPublisher "ALT-VoiceType contributors"
-#define MyAppExeName "AltVoice.exe"
+#define MyAppExeName "ALT-VoiceType.exe"
 
 #ifndef SourceDir
-#define SourceDir "..\dist\AltVoice"
+#define SourceDir "..\dist\ALT-VoiceType"
 #endif
 
 [Setup]
-AppId={{8E4E3F6A-2B7A-4E1B-9C1A-000000000001}
+AppId={{8E4E3F6A-2B7A-4E1B-9C1A-000000000003}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={localappdata}\Programs\ALT-VoiceType_Ahee52
+DefaultDirName={localappdata}\Programs\ALT-VoiceType
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=..\dist\installer
-OutputBaseFilename=ALT-VoiceType_Ahee52-Setup-{#MyAppVersion}
+OutputBaseFilename=ALT-VoiceType-Setup-{#MyAppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -46,7 +46,7 @@ Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
 Name: "{userdesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Registry]
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "AltVoice"; ValueData: """{app}\{#MyAppExeName}"""; Flags: uninsdeletevalue; Tasks: autostart
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "ALT-VoiceType"; ValueData: """{app}\{#MyAppExeName}"""; Flags: uninsdeletevalue; Tasks: autostart
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Launch AltVoice"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Launch ALT-VoiceType"; Flags: nowait postinstall skipifsilent

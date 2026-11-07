@@ -161,6 +161,39 @@ class LlamaServer:
             f"{self.spec.name}: not ready after {timeout_s:.0f}s; see {self.spec.log_path()}"
         )
 
+    def probe(self, timeout_s: float = 25.0) -> None:
+        """Run one tiny completion to catch a server that is up but cannot infer.
+
+        Some newer GPU/driver combinations expose a healthy HTTP endpoint while
+        the accelerator path still hangs. A real request is the only reliable
+        check before handing the server to the dictation pipeline.
+        """
+        payload = json.dumps(
+            {
+                "model": self.spec.alias,
+                "messages": [{"role": "user", "content": "ok"}],
+                "temperature": 0.0,
+                "max_tokens": 1,
+                "stream": False,
+            }
+        ).encode("utf-8")
+        request = urllib.request.Request(
+            self.spec.health_url().replace("/models", "/chat/completions"),
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=timeout_s) as response:
+                body = response.read().decode("utf-8", errors="replace")
+                if response.status != 200:
+                    raise ServerError(f"{self.spec.name}: probe returned {response.status}")
+            data = json.loads(body)
+            if not isinstance(data.get("choices"), list):
+                raise ServerError(f"{self.spec.name}: probe response has no choices")
+        except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
+            raise ServerError(f"{self.spec.name}: inference probe failed: {exc}") from exc
+
     def stop(self) -> None:
         process = self._process
         self._process = None
@@ -182,6 +215,7 @@ class LlamaServer:
 class ServerManager:
     def __init__(self, servers: list[LlamaServer] | None = None) -> None:
         self.servers = servers or []
+        self.failed: set[str] = set()
 
     @classmethod
     def from_config(cls, config: AppConfig, profile: str | None = None) -> "ServerManager":
@@ -218,17 +252,35 @@ class ServerManager:
     def start_all(self, on_status=None) -> list[str]:
         status = on_status or (lambda _msg: None)
         errors: list[str] = []
+        self.failed.clear()
         for server in self.servers:
             try:
                 if server.is_ready():
                     status(f"{server.spec.name} 服务已在运行")
-                    continue
-                status(f"启动 {server.spec.name} 模型服务…")
-                server.start()
-                server.wait_ready()
+                else:
+                    status(f"启动 {server.spec.name} 模型服务…")
+                    server.start()
+                    server.wait_ready()
+                server.probe()
                 status(f"{server.spec.name} 服务就绪")
             except Exception as exc:
+                # Newer GPUs (RTX 40/50) may have a driver/backend combination
+                # that never finishes inference. Retry this server on CPU before
+                # giving up, so dictation still produces text.
+                if server.spec.gpu_layers != 0:
+                    status(f"{server.spec.name} GPU 推理不可用，切换 CPU…")
+                    try:
+                        server.stop()
+                        server.spec.gpu_layers = 0
+                        server.start()
+                        server.wait_ready()
+                        server.probe()
+                        status(f"{server.spec.name} 已切换 CPU 并就绪")
+                        continue
+                    except Exception:
+                        pass
                 errors.append(str(exc))
+                self.failed.add(server.spec.name)
         return errors
 
     def stop_all(self) -> None:

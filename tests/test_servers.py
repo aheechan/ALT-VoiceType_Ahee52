@@ -148,6 +148,9 @@ class FakeServer:
     def wait_ready(self):
         return None
 
+    def probe(self):
+        return None
+
     def stop(self):
         self.started = False
 
