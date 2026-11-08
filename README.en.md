@@ -30,6 +30,11 @@ Press the hotkey, speak, press it again. Everything runs locally and the result 
 | Data | `%APPDATA%\ALT-VoiceType` | `%APPDATA%\ALT-VoiceType-EN` |
 | Release | `v0.1.0-zh` | `v0.1.0-en` |
 
+Downloads:
+
+- Chinese edition: <https://github.com/aheechan/ALT-VoiceType_Ahee52/releases/tag/v0.1.0-zh>
+- English edition: <https://github.com/aheechan/ALT-VoiceType_Ahee52/releases/tag/v0.1.0-en>
+
 Both editions can be installed side by side.
 
 Full upload walkthrough: [docs/UPLOAD-BILINGUAL.md](docs/UPLOAD-BILINGUAL.md).

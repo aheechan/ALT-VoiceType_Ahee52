@@ -30,6 +30,11 @@
 | 数据目录 | `%APPDATA%\ALT-VoiceType` | `%APPDATA%\ALT-VoiceType-EN` |
 | Release | `v0.1.0-zh` | `v0.1.0-en` |
 
+下载入口：
+
+- 中文版：<https://github.com/aheechan/ALT-VoiceType_Ahee52/releases/tag/v0.1.0-zh>
+- English：<https://github.com/aheechan/ALT-VoiceType_Ahee52/releases/tag/v0.1.0-en>
+
 中文用户下载中文版，English users download the English edition。两个版本可以同时安装。
 
 完整上传流程见 [docs/UPLOAD-BILINGUAL.md](docs/UPLOAD-BILINGUAL.md)。
