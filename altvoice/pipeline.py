@@ -116,7 +116,7 @@ class VoicePipeline:
         translation = corrected
         translate_ms = 0.0
         error = ""
-        if target != "zh" and target != source:
+        if target != source:
             status("翻译中…")
             translate_start = time.perf_counter()
             try:
@@ -146,7 +146,7 @@ class VoicePipeline:
         self.context.add(
             source=raw_text,
             corrected=corrected,
-            translation=translation if target != "zh" else "",
+            translation=translation if target != source else "",
             app=app,
             scene=active_scene,
         )

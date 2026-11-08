@@ -432,7 +432,7 @@ class VoiceAppController:
 
     def _effective_target(self) -> str:
         if self.mode == "transcribe":
-            return "zh"
+            return self.config.asr.language or "zh"
         return self.target_lang
 
     def commit(self, result: PipelineResult | None = None, text: str | None = None) -> None:
