@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 
 from .config import AppConfig, default_config_path, normalize_language
+from .edition import current_edition
 from .model_store import download_commands, locations, model_path
 from .models import PROFILES, profile_models
 
@@ -37,7 +38,7 @@ def build_config(
     profile_info = PROFILES[profile]
     cfg.audio.max_seconds = float(profile_info.get("duration_s", "30"))
     cfg.servers.gpu_layers = 0 if profile == "12gb-safe" else 99
-    cfg.asr.device = "cpu" if profile == "12gb-safe" else "cuda"
+    cfg.asr.device = "cpu" if (profile == "12gb-safe" or current_edition().code == "en") else "cuda"
 
     asr_spec = models["asr"]
     cfg.asr.engine = _ASR_ENGINE.get(asr_spec.key, "auto")

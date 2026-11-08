@@ -39,7 +39,7 @@ from ..health import HealthReport, check_health
 from ..pipeline import PipelineResult
 from ..single_instance import SingleInstance
 from ..i18n import tr
-from .english import install_qt_english, translate_widget_tree
+from .english import install_qt_english, translate_widget_tree, tr as ui_tr
 from .history_dialog import HistoryDialog
 from .settings_dialog import SettingsDialog
 from .setup_dialog import SetupDialog
@@ -635,9 +635,9 @@ class MainWindow(QWidget):
         code = self._tray.controller.target_lang
         self._select_language(code)
         if code == "zh":
-            self.mode_label.setText("中文 → 中文 · 直接转写")
+            self.mode_label.setText(ui_tr("中文 → 中文 · 直接转写"))
         else:
-            self.mode_label.setText(f"中文 → {LANGUAGES.get(code, code)} · 翻译")
+            self.mode_label.setText(ui_tr(f"中文 → {LANGUAGES.get(code, code)} · 翻译"))
         self.set_status(self._tray.controller_status)
 
     def show_panel(self, activate: bool = True) -> None:
