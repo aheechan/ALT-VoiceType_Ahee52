@@ -6,6 +6,10 @@ import json
 import re
 from typing import Any
 
+from ..edition import is_english
+
+SYSTEM_PROMPT_EN = """You are an English speech-to-text proofreader. Fix only ASR errors: spelling, homophones, punctuation, names, and terminology. Preserve the speaker's meaning, tone, and wording. Do not summarize or rewrite. All numbers must use Arabic digits. Output valid JSON: {"text": "corrected text", "risk": 0.0, "edits": [{"from": "wrong", "to": "right", "reason": "spelling"}]}. Return the original text when unsure."""
+
 SYSTEM_PROMPT = """你是中文语音转写校对器。你的任务不是润色，而是修正语音识别错误。
 
 只允许修改：
@@ -70,7 +74,7 @@ def build_correction_messages(
 
 请只修正识别错误，输出 JSON。"""
     return [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": SYSTEM_PROMPT_EN if is_english() else SYSTEM_PROMPT},
         {"role": "user", "content": user},
     ]
 

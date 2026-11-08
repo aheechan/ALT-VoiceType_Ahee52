@@ -45,6 +45,4 @@ Desktop.ini
 .idea/
 .DS_Store
 
-# Release binaries live in GitHub Releases
-release/*.exe
-release/*.bin
+.whisperlibs/

@@ -55,6 +55,7 @@ class VoiceAppController:
         self._servers: ServerManager | None = None
         self._temp_dir = temp_dir
         self._lock = threading.RLock()
+        self._bootstrap_model_paths(config_provided=config is not None)
         self._recording = False
         self._cancelled = False
         self._stop_event: threading.Event | None = None
@@ -73,6 +74,35 @@ class VoiceAppController:
             except Exception as exc:
                 self.on_error(f"历史记录不可用：{exc}")
         self._cleanup_temp_audio()
+
+    def _bootstrap_model_paths(self, config_provided: bool = False) -> None:
+        """Fill omitted model paths for a fresh installed build."""
+        if config_provided:
+            return
+        cfg = self.config
+        if cfg.asr.model_path and cfg.corrector.model_path and cfg.translator.model_path:
+            return
+        from .setup_wizard import build_config
+
+        try:
+            fresh = build_config(self.profile, cfg.models_dir, self.target_lang)
+        except Exception as exc:
+            self.on_error(f"模型配置初始化失败：{exc}")
+            return
+        fresh.hotkey = cfg.hotkey
+        fresh.ui = cfg.ui
+        fresh.injection = cfg.injection
+        fresh.history = cfg.history
+        fresh.servers.binary = cfg.servers.binary
+        fresh.servers.host = cfg.servers.host
+        fresh.servers.log_dir = cfg.servers.log_dir
+        self.config = fresh
+        self.target_lang = normalize_language(fresh.translator.target_language) or "zh"
+        if self._config_path:
+            try:
+                fresh.save(self._config_path)
+            except OSError:
+                pass
 
     def _cleanup_temp_audio(self) -> None:
         """Remove orphaned WAV files left by a crash or forced shutdown."""
@@ -162,6 +192,7 @@ class VoiceAppController:
                 injector=injector,
                 context=context,
                 style=cfg.translator.style,
+                source_language=cfg.asr.language,
             )
             self.on_status("加载完毕，可以开始输入")
             return self._pipeline

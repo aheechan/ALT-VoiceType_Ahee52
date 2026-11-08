@@ -124,6 +124,42 @@ ASR 适配器、设备配置和模型服务已经预留了扩展入口。
 
 ---
 
+## 英文独立版
+
+英文输入版是独立产品，不和中文版共用安装目录或数据目录：
+
+```text
+产品：ALT-VoiceType English
+安装包：ALT-VoiceType-EN-Setup-0.1.0.exe
+数据：%APPDATA%\ALT-VoiceType-EN
+ASR：faster-whisper small.en（英文专用，CPU）
+纠错/翻译：Qwen3-1.7B + Index-Translate-2B
+```
+
+英文版安装包约 **3.57GB**，安装后约 **5.6GB**。
+
+英文版特点：
+
+- 默认输入 English
+- 默认输出 English
+- 主界面、设置、托盘菜单全部英文
+- 独立 AppId、独立快捷方式、独立历史记录
+- 可与中文版同时安装
+- 单独发布：`v0.1.0-en`
+
+源码运行英文版：
+
+```powershell
+$env:ALT_VOICE_EDITION = "en"
+python -m altvoice run
+```
+
+构建英文版：
+
+```powershell
+python -m PyInstaller --noconfirm --workpath build-en --distpath dist-en packaging/altvoice-en.spec
+```
+
 ## 方式一：一键安装包
 
 ### 需要下载

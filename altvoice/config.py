@@ -9,6 +9,8 @@ from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from pathlib import Path
 from typing import Any, get_type_hints
 
+from .edition import current_edition
+
 # Languages shown in the tray. The list is intentionally short for v0.1; the
 # translation model itself supports more, and adding a code here is enough.
 LANGUAGES: dict[str, str] = {
@@ -109,7 +111,7 @@ def language_prompt_name(code: str) -> str:
 def default_config_dir() -> Path:
     if os.name == "nt":
         base = os.environ.get("APPDATA") or str(Path.home())
-        return Path(base) / "ALT-VoiceType"
+        return Path(base) / current_edition().data_dir_name
     return Path.home() / ".config" / "altvoice"
 
 
@@ -120,7 +122,7 @@ def default_models_dir() -> Path:
         return Path(sys.executable).resolve().parent / "models"
     if os.name == "nt":
         base = os.environ.get("LOCALAPPDATA") or str(Path.home())
-        return Path(base) / "ALT-VoiceType" / "models"
+        return Path(base) / current_edition().data_dir_name / "models"
     return Path.home() / ".local" / "share" / "altvoice" / "models"
 
 
@@ -150,10 +152,10 @@ class AudioConfig:
 
 @dataclass
 class ASRConfig:
-    engine: str = "auto"  # auto | firered | qwen3 | sherpa | fake
+    engine: str = "auto"  # auto | firered | qwen3 | whisper | sherpa | fake
     model_path: str | None = None
     device: str = "cpu"
-    language: str = "zh"
+    language: str = current_edition().input_language
     beam_size: int = 3
 
 
@@ -177,7 +179,7 @@ class TranslatorConfig:
     model: str = "Index-Translate-9B"
     api_key: str = "EMPTY"
     timeout_s: float = 45.0
-    target_language: str = "zh"
+    target_language: str = current_edition().default_target
     style: str = "daily"
     max_tokens: int = 384
     model_path: str | None = None

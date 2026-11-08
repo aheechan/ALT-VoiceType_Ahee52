@@ -38,6 +38,8 @@ from ..hotkey.windows import HotkeyError, WindowsAltHook
 from ..health import HealthReport, check_health
 from ..pipeline import PipelineResult
 from ..single_instance import SingleInstance
+from ..i18n import tr
+from .english import install_qt_english, translate_widget_tree
 from .history_dialog import HistoryDialog
 from .settings_dialog import SettingsDialog
 from .setup_dialog import SetupDialog
@@ -592,6 +594,8 @@ class MainWindow(QWidget):
         layout.addLayout(footer)
 
         self.refresh()
+        translate_widget_tree(self)
+        self.setWindowTitle(tr("ALT-VoiceType"))
         self.adjustSize()
         self._min_height = self.sizeHint().height()
         self.setMinimumSize(440, self._min_height)
@@ -649,16 +653,16 @@ class MainWindow(QWidget):
             self.activateWindow()
 
     def set_status(self, text: str) -> None:
-        self.status.setText(text)
+        self.status.setText(tr(text))
         if "加载完毕" in text or "就绪" in text:
             self.warm_button.setEnabled(True)
-            self.warm_button.setText("已预热 · 重新预热")
+            self.warm_button.setText(tr("已预热 · 重新预热"))
         elif any(word in text for word in ("加载", "预热", "切换")):
             self.warm_button.setEnabled(False)
-            self.warm_button.setText("预热中…")
+            self.warm_button.setText(tr("预热中…"))
         elif "已粘贴" in text:
             self.warm_button.setEnabled(True)
-            self.warm_button.setText("已预热 · 重新预热")
+            self.warm_button.setText(tr("已预热 · 重新预热"))
         else:
             self.warm_button.setEnabled(True)
 
@@ -761,17 +765,18 @@ class TrayApp(QObject):
         )
         self.hotkey = self._make_hotkey()
         self.tray = QSystemTrayIcon(_make_icon())
-        self.tray.setToolTip(f"ALT-VoiceType · {self.controller.config.hotkey.combo} 开始/停止")
+        self.tray.setToolTip(tr(f"ALT-VoiceType · {self.controller.config.hotkey.combo} 开始/停止"))
         self._setup_dialog: SetupDialog | None = None
         self._history_dialog: HistoryDialog | None = None
         self._settings_dialog: SettingsDialog | None = None
         self._panel: TrayPanel | None = None
         self._main: MainWindow | None = None
         self._monitor: AudioMonitor | None = None
-        self.controller_status = "加载中…"
+        self.controller_status = tr("加载中…")
         self._stopped = False
         self.menu = QMenu()
         self._build_menu()
+        translate_widget_tree(self.menu)
         self.tray.setContextMenu(self.menu)
         self.tray.activated.connect(self._on_activated)
         self.status_changed.connect(self._set_status)
@@ -1113,6 +1118,7 @@ def run_tray(config_path: str | None = None, smoke_seconds: float = 0.0) -> int:
         return 4
     try:
         app = QApplication.instance() or QApplication(sys.argv)
+        install_qt_english()
         app.setQuitOnLastWindowClosed(False)
         app.setWindowIcon(_make_icon())
         if not QSystemTrayIcon.isSystemTrayAvailable():

@@ -83,6 +83,34 @@ In the current CPU-ASR package, `standard`/`extended` use GPU for correction/tra
 
 ---
 
+## English edition
+
+The English edition is a separate product with its own installer and data dir:
+
+```text
+Product: ALT-VoiceType English
+Installer: ALT-VoiceType-EN-Setup-0.1.0.exe
+Data: %APPDATA%\ALT-VoiceType-EN
+ASR: faster-whisper small.en (English-only, CPU)
+Correction/translation: Qwen3-1.7B + Index-Translate-2B
+```
+
+Installer: about **3.57 GB**; installed: about **5.6 GB**.
+
+- English input by default
+- English output by default
+- English main window, settings, and tray menu
+- Separate AppId, shortcut, history, and logs
+- Can coexist with the Chinese edition
+- Separate release: `v0.1.0-en`
+
+Source build:
+
+```powershell
+$env:ALT_VOICE_EDITION = "en"
+python -m altvoice run
+```
+
 ## Installer
 
 Download into one folder:
