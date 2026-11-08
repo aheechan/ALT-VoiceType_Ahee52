@@ -17,15 +17,37 @@
 
 ---
 
+## 版本选择（先看这里）
+
+| | 中文版 | 英文版 |
+|---|---|---|
+| 产品名 | ALT-VoiceType | ALT-VoiceType English |
+| 默认输入 | 中文 | English |
+| 默认输出 | 中文 | English |
+| ASR | Qwen3-ASR-0.6B | faster-whisper small.en |
+| 安装包 | 约 4.42GB | 约 3.57GB |
+| 安装后 | 约 6.0GB | 约 5.6GB |
+| 数据目录 | `%APPDATA%\ALT-VoiceType` | `%APPDATA%\ALT-VoiceType-EN` |
+| Release | `v0.1.0-zh` | `v0.1.0-en` |
+
+中文用户下载中文版，English users download the English edition。两个版本可以同时安装。
+
+完整上传流程见 [docs/UPLOAD-BILINGUAL.md](docs/UPLOAD-BILINGUAL.md)。
+
+---
+
 ## 目录
 
+- [版本选择（先看这里）](#版本选择先看这里)
 - [这个仓库是什么](#这个仓库是什么)
 - [两条使用路线](#两条使用路线)
 - [作者的取舍：为什么是 CPU ASR](#作者的取舍为什么是-cpu-asr)
 - [固定模型与三个档位](#固定模型与三个档位)
+- [中文版模型下载与放置](#中文版模型下载与放置)
+- [英文版模型下载与放置](#英文版模型下载与放置)
 - [方式一：一键安装包](#方式一一键安装包)
 - [方式二：从源码体验](#方式二从源码体验)
-- [模型下载与放置](#模型下载与放置)
+- [构建两个版本](#构建两个版本)
 - [运行机制](#运行机制)
 - [缓存与自动清理](#缓存与自动清理)
 - [CUDA 扩展](#cuda-扩展)
@@ -317,9 +339,9 @@ altvoice run
 
 ---
 
-## 模型下载与放置
+## 中文版模型下载与放置
 
-源码模式需要自己准备模型。
+源码模式需要自己准备模型。安装版已经包含这些文件，目录是 `<安装目录>\models`。
 
 ### 1. ASR：Qwen3-ASR-0.6B
 
@@ -344,9 +366,11 @@ huggingface-cli download Qwen/Qwen3-ASR-0.6B `
 
 完整安装包会内置该模型。
 
-源码用户可以自行获取兼容的 Qwen3-1.7B GGUF，并在配置中指定路径。
+Hugging Face：
 
-目标目录：
+<https://huggingface.co/mradermacher/Qwen3-1.7B-abliterated-v2-i1-GGUF>
+
+源码用户可以下载该仓库中的 Q4_K_M GGUF，放到下面的目录：
 
 ```text
 %LOCALAPPDATA%\ALT-VoiceType\models\qwen3_1_7b_abliterated_q4
@@ -401,6 +425,140 @@ winget install ggml.llamacpp
 ```
 
 完整安装包已经内置 CUDA 版 `llama-server`，源码模式需要自己准备。
+
+---
+
+## 英文版模型下载与放置
+
+英文版使用自己的数据目录和模型目录：
+
+```text
+%LOCALAPPDATA%\ALT-VoiceType-EN\models
+```
+
+### 1. ASR：faster-whisper small.en
+
+Hugging Face：
+
+<https://huggingface.co/Systran/faster-whisper-small.en>
+
+放置目录：
+
+```text
+%LOCALAPPDATA%\ALT-VoiceType-EN\models\faster_whisper_small_en
+```
+
+下载：
+
+```powershell
+huggingface-cli download Systran/faster-whisper-small.en `
+  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType-EN\models\faster_whisper_small_en"
+```
+
+### 2. 纠错：Qwen3-1.7B-Abliterated Q4
+
+同一个模型，放到英文版目录：
+
+```text
+%LOCALAPPDATA%\ALT-VoiceType-EN\models\qwen3_1_7b_abliterated_q4
+```
+
+### 3. 翻译：Index-Translate-2B Q4
+
+同一个模型，放到英文版目录：
+
+```text
+%LOCALAPPDATA%\ALT-VoiceType-EN\models\index_translate_2b_q4
+```
+
+目标文件：
+
+```text
+Index-Translate-2B.Q4_K_M.gguf
+```
+
+下载：
+
+```powershell
+huggingface-cli download IndexTeam/Index-Translate-2B-GGUF `
+  --include "*Index-Translate-2B.Q4_K_M.gguf" `
+  --local-dir "$env:LOCALAPPDATA%\ALT-VoiceType-EN\models\index_translate_2b_q4"
+```
+
+### 4. 源码启动英文版
+
+```powershell
+$env:ALT_VOICE_EDITION = "en"
+pip install -e ".[ui,audio,asr-whisper,download]"
+python -m altvoice setup --profile 12gb-balanced
+python -m altvoice health
+python -m altvoice run
+```
+
+`health` 中应出现：
+
+```text
+whisper    available
+Requested ASR: whisper
+```
+
+---
+
+## 构建两个版本
+
+### 中文版程序
+
+```powershell
+$env:ALT_VOICE_EDITION = "zh"
+$env:PYTHONPATH = ".pylibs"
+python -m PyInstaller --noconfirm --workpath build --distpath dist packaging/altvoice.spec
+```
+
+### 英文版程序
+
+```powershell
+$env:ALT_VOICE_EDITION = "en"
+$env:PYTHONPATH = ".pylibs;.whisperlibs"
+python -m PyInstaller --noconfirm --workpath build-en --distpath dist-en packaging/altvoice-en.spec
+```
+
+### 中文版安装器
+
+```powershell
+$iscc = "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
+& $iscc "/DSourceDir=$PWD\dist\ALT-VoiceType" `
+  "/DModelsDir=D:\ALT-VoiceType\models" `
+  "/DLlamaDir=D:\llama.cpp" `
+  packaging\installer-bundle.iss
+```
+
+输出：
+
+```text
+dist\installer
+```
+
+### 英文版安装器
+
+```powershell
+& $iscc "/DSourceDir=$PWD\dist-en\ALT-VoiceType-EN" `
+  "/DModelsDir=D:\ALT-VoiceType\models" `
+  "/DLlamaDir=D:\llama.cpp" `
+  "/DWhisperModelDir=$env:LOCALAPPDATA\ALT-VoiceType-EN\models" `
+  packaging\installer-en.iss
+```
+
+输出：
+
+```text
+dist\installer-en
+```
+
+### 上传 GitHub
+
+完整手把手流程见：
+
+[docs/UPLOAD-BILINGUAL.md](docs/UPLOAD-BILINGUAL.md)
 
 ---
 

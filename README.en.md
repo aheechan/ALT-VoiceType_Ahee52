@@ -17,6 +17,25 @@ Press the hotkey, speak, press it again. Everything runs locally and the result 
 
 ---
 
+## Choose an edition
+
+| | Chinese edition | English edition |
+|---|---|---|
+| Product | ALT-VoiceType | ALT-VoiceType English |
+| Default input | Chinese | English |
+| Default output | Chinese | English |
+| ASR | Qwen3-ASR-0.6B | faster-whisper small.en |
+| Installer | about 4.42 GB | about 3.57 GB |
+| Installed | about 6.0 GB | about 5.6 GB |
+| Data | `%APPDATA%\ALT-VoiceType` | `%APPDATA%\ALT-VoiceType-EN` |
+| Release | `v0.1.0-zh` | `v0.1.0-en` |
+
+Both editions can be installed side by side.
+
+Full upload walkthrough: [docs/UPLOAD-BILINGUAL.md](docs/UPLOAD-BILINGUAL.md).
+
+---
+
 ## What is this repository?
 
 A runnable Windows voice-input project, not just an installer download page.
@@ -195,7 +214,55 @@ huggingface-cli download IndexTeam/Index-Translate-2B-GGUF `
   --local-dir "$env:LOCALAPPDATA\ALT-VoiceType\models\index_translate_2b_q4"
 ```
 
-Correction: the full installer bundles Qwen3-1.7B-Abliterated Q4. Source users can supply a compatible Qwen3-1.7B GGUF and set `corrector.model_path`.
+Correction, Qwen3-1.7B-Abliterated Q4:
+
+<https://huggingface.co/mradermacher/Qwen3-1.7B-abliterated-v2-i1-GGUF>
+
+Place it in:
+
+```text
+%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_1_7b_abliterated_q4
+```
+
+### English edition models
+
+The English edition uses its own model directory:
+
+```text
+%LOCALAPPDATA%\ALT-VoiceType-EN\models
+```
+
+| Role | Model | Destination |
+|---|---|---|
+| ASR | faster-whisper small.en | `faster_whisper_small_en` |
+| Correction | Qwen3-1.7B-Abliterated Q4 | `qwen3_1_7b_abliterated_q4` |
+| Translation | Index-Translate-2B Q4 | `index_translate_2b_q4` |
+
+faster-whisper:
+
+<https://huggingface.co/Systran/faster-whisper-small.en>
+
+```powershell
+huggingface-cli download Systran/faster-whisper-small.en `
+  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType-EN\models\faster_whisper_small_en"
+```
+
+Source English run:
+
+```powershell
+$env:ALT_VOICE_EDITION = "en"
+pip install -e ".[ui,audio,asr-whisper,download]"
+python -m altvoice setup --profile 12gb-balanced
+python -m altvoice health
+python -m altvoice run
+```
+
+`health` should report:
+
+```text
+whisper    available
+Requested ASR: whisper
+```
 
 Source users also need `llama-server.exe`:
 
@@ -204,6 +271,47 @@ winget install ggml.llamacpp
 ```
 
 The installer already includes a CUDA runtime.
+
+### Build both editions
+
+Chinese app and installer:
+
+```powershell
+$env:ALT_VOICE_EDITION = "zh"
+$env:PYTHONPATH = ".pylibs"
+python -m PyInstaller --noconfirm --workpath build --distpath dist packaging/altvoice.spec
+
+$iscc = "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
+& $iscc "/DSourceDir=$PWD\dist\ALT-VoiceType" `
+  "/DModelsDir=D:\ALT-VoiceType\models" `
+  "/DLlamaDir=D:\llama.cpp" `
+  packaging\installer-bundle.iss
+```
+
+English app and installer:
+
+```powershell
+$env:ALT_VOICE_EDITION = "en"
+$env:PYTHONPATH = ".pylibs;.whisperlibs"
+python -m PyInstaller --noconfirm --workpath build-en --distpath dist-en packaging/altvoice-en.spec
+
+& $iscc "/DSourceDir=$PWD\dist-en\ALT-VoiceType-EN" `
+  "/DModelsDir=D:\ALT-VoiceType\models" `
+  "/DLlamaDir=D:\llama.cpp" `
+  "/DWhisperModelDir=$env:LOCALAPPDATA\ALT-VoiceType-EN\models" `
+  packaging\installer-en.iss
+```
+
+Outputs:
+
+```text
+dist\installer
+dist\installer-en
+```
+
+Full upload walkthrough:
+
+[docs/UPLOAD-BILINGUAL.md](docs/UPLOAD-BILINGUAL.md)
 
 ---
 
