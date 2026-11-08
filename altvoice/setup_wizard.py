@@ -20,6 +20,7 @@ _ASR_ENGINE = {
     "qwen3_asr_0_6b": "qwen3",
     "firered_asr_aed": "firered",
     "sensevoice_small": "sherpa",
+    "faster_whisper_small_en": "faster_whisper",
 }
 
 

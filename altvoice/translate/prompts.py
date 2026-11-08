@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from ..config import language_prompt_name
 
+SYSTEM_PROMPT_EN = """You are an interpreter. Translate the user's speech into the target language. Output only the translation: no source label, heading, explanation, quotes, or Markdown. Keep numbers as Arabic digits. Preserve tone and meaning."""
+
 STYLE_PRESETS: dict[str, str] = {
     "daily": (
         "日常口语。像朋友聊天一样自然，保留语气词、停顿和情绪；"
@@ -71,7 +73,7 @@ def build_translation_messages(
     parts.append(f"原文：\n{text}")
     parts.append("只输出译文，不要输出“原文”或“译文”标题。")
     return [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": SYSTEM_PROMPT_EN if source_lang == "en" else SYSTEM_PROMPT},
         {"role": "user", "content": "\n\n".join(parts)},
     ]
 

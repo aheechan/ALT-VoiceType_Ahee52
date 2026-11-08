@@ -11,6 +11,8 @@ import shutil
 import subprocess
 from dataclasses import dataclass, replace
 
+from .edition import current_edition
+
 
 @dataclass(frozen=True)
 class ModelSpec:
@@ -77,6 +79,18 @@ MODEL_CATALOG: dict[str, ModelSpec] = {
         license="Apache-2.0",
         source="https://github.com/QwenLM/Qwen3-ASR",
         notes="Fast 12 GB safe-profile ASR.",
+    ),
+    "faster_whisper_small_en": ModelSpec(
+        key="faster_whisper_small_en",
+        role="asr",
+        display_name="faster-whisper small.en",
+        params_b=0.24,
+        quant="int8",
+        disk_gb=0.47,
+        vram_gb=0.0,
+        license="MIT",
+        source="https://huggingface.co/Systran/faster-whisper-small.en",
+        notes="English-only CPU ASR used by the English edition.",
     ),
     "sensevoice_small": ModelSpec(
         key="sensevoice_small",
@@ -317,9 +331,12 @@ def profile_models(profile: str) -> dict[str, ModelSpec]:
     if profile not in PROFILES:
         raise ValueError(f"unknown profile {profile!r}")
     cfg = PROFILES[profile]
+    asr_key = cfg["asr"]
+    if current_edition().code == "en":
+        asr_key = "faster_whisper_small_en"
     return {
         role: MODEL_CATALOG[key]
-        for role, key in (("asr", cfg["asr"]), ("corrector", cfg["corrector"]), ("translator", cfg["translator"]))
+        for role, key in (("asr", asr_key), ("corrector", cfg["corrector"]), ("translator", cfg["translator"]))
     }
 
 

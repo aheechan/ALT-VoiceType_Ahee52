@@ -46,6 +46,7 @@ class VoicePipeline:
         context: ContextStore | None = None,
         style: str = "daily",
         glossary: dict[str, str] | None = None,
+        source_language: str = "zh",
     ) -> None:
         self.asr = asr
         self.corrector = corrector or NullCorrector()
@@ -53,6 +54,7 @@ class VoicePipeline:
         self.injector = injector or NullInjector()
         self.context = context or ContextStore()
         self.style = style
+        self.source_language = source_language or "zh"
         if glossary:
             self.context.set_glossary(glossary)
 
@@ -67,7 +69,7 @@ class VoicePipeline:
         status = on_status or (lambda _message: None)
         start = time.perf_counter()
         status("识别中…")
-        asr_result: ASRResult = self.asr.transcribe(audio_path, language="zh")
+        asr_result: ASRResult = self.asr.transcribe(audio_path, language=self.source_language)
         elapsed = (time.perf_counter() - start) * 1000.0
         result = self.process_text(
             asr_result.text,

@@ -9,6 +9,7 @@ from .fake import FakeASR
 from .firered import FireRedASREngine
 from .qwen3 import Qwen3ASREngine
 from .sherpa import SherpaASREngine
+from .whisper import WhisperASREngine
 
 __all__ = [
     "ASREngine",
@@ -18,6 +19,7 @@ __all__ = [
     "FireRedASREngine",
     "Qwen3ASREngine",
     "SherpaASREngine",
+    "WhisperASREngine",
     "create_engine",
     "available_engines",
 ]
@@ -32,6 +34,8 @@ _ALIASES = {
     "qwen3_asr": "qwen3",
     "qwen": "qwen3",
     "sherpa": "sherpa",
+    "whisper": "whisper",
+    "faster_whisper": "whisper",
     "sherpa-onnx": "sherpa",
     "sensevoice": "sherpa",
 }
@@ -42,6 +46,7 @@ def available_engines() -> dict[str, bool]:
         "firered": importlib.util.find_spec("fireredasr") is not None,
         "qwen3": importlib.util.find_spec("qwen_asr") is not None,
         "sherpa": importlib.util.find_spec("sherpa_onnx") is not None,
+        "whisper": importlib.util.find_spec("faster_whisper") is not None,
         "fake": True,
     }
 
@@ -55,7 +60,11 @@ def create_engine(
 ) -> ASREngine:
     key = _ALIASES.get((name or "auto").strip().lower(), (name or "auto").strip().lower())
     if key == "auto":
-        if importlib.util.find_spec("qwen_asr") is not None:
+        from ..edition import current_edition
+
+        if current_edition().asr_engine == "faster_whisper" and importlib.util.find_spec("faster_whisper") is not None:
+            key = "whisper"
+        elif importlib.util.find_spec("qwen_asr") is not None:
             key = "qwen3"
         elif (
             importlib.util.find_spec("fireredasr2s") is not None
@@ -81,5 +90,7 @@ def create_engine(
         return Qwen3ASREngine(model_path=model_path, device=device)
     if key == "sherpa":
         return SherpaASREngine(model_path=model_path)
+    if key == "whisper":
+        return WhisperASREngine(model_path=model_path, device=device)
     raise ValueError(f"unknown ASR engine: {name!r}; known: {', '.join(_ALIASES)}")
 
