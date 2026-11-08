@@ -1,4 +1,4 @@
-﻿"""Index-Translate backed translator."""
+"""Index-Translate backed translator."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ class IndexTranslateTranslator(Translator):
         target = normalize_language(target_lang)
         if not source:
             return ""
-        if not target or target == normalize_language(source_lang) or target == "zh":
+        if not target or target == normalize_language(source_lang):
             return source
         messages = build_translation_messages(
             source,

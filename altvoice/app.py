@@ -402,7 +402,7 @@ class VoiceAppController:
                     self.history.add_utterance(
                         source=result.raw_text,
                         corrected=result.corrected_text,
-                        translation=result.translation if result.target_lang != "zh" else "",
+                        translation=result.translation if result.target_lang != result.source_lang else "",
                         target_lang=result.target_lang,
                         source_lang=result.source_lang,
                     )

@@ -139,7 +139,7 @@ class PreviewDialog(QDialog):
         source.setFixedHeight(60)
         layout.addWidget(source)
 
-        result_label = QLabel("翻译" if result.target_lang != "zh" else "文本")
+        result_label = QLabel("翻译" if result.target_lang != result.source_lang else "文本")
         layout.addWidget(result_label)
         self.editor = _Editor()
         self.editor.setPlainText(result.output_text)
@@ -633,11 +633,12 @@ class MainWindow(QWidget):
 
     def refresh(self) -> None:
         code = self._tray.controller.target_lang
+        source = (self._tray.controller.config.asr.language or "zh").lower()
         self._select_language(code)
-        if code == "zh":
-            self.mode_label.setText(ui_tr("中文 → 中文 · 直接转写"))
+        if code == source:
+            self.mode_label.setText(ui_tr(f"{LANGUAGES.get(source, source)} → {LANGUAGES.get(code, code)} · 直接转写"))
         else:
-            self.mode_label.setText(ui_tr(f"中文 → {LANGUAGES.get(code, code)} · 翻译"))
+            self.mode_label.setText(ui_tr(f"{LANGUAGES.get(source, source)} → {LANGUAGES.get(code, code)} · 翻译"))
         self.set_status(self._tray.controller_status)
 
     def show_panel(self, activate: bool = True) -> None:
