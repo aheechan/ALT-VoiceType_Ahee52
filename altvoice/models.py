@@ -91,6 +91,7 @@ MODEL_CATALOG: dict[str, ModelSpec] = {
         license="MIT",
         source="https://huggingface.co/Systran/faster-whisper-small.en",
         notes="English-only CPU ASR used by the English edition.",
+        kind="dir",
     ),
     "sensevoice_small": ModelSpec(
         key="sensevoice_small",

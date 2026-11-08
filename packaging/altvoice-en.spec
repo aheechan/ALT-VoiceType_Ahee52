@@ -11,7 +11,7 @@ or the path configured in config.json.
 
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 project_root = Path(SPECPATH).resolve().parent  # noqa: F821 - PyInstaller injects SPECPATH
 
@@ -40,8 +40,7 @@ a = Analysis(  # noqa: F821
     binaries=[],
     datas=[
         (str(project_root / "altvoice" / "assets"), "altvoice/assets"),
-        (str(project_root / ".whisperlibs" / "faster_whisper"), "faster_whisper"),
-    ],
+    ] + collect_data_files("faster_whisper"),
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},

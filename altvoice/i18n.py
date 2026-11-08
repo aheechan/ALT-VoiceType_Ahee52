@@ -5,6 +5,7 @@ from __future__ import annotations
 from .edition import is_english
 
 EN = {
+    "ALT-VoiceType": "ALT-VoiceType English",
     "加载中…": "Loading…",
     "加载中...": "Loading…",
     "加载完毕": "Ready",
