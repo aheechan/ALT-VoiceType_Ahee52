@@ -1,4 +1,4 @@
-﻿"""Environment and model readiness checks shared by CLI and tray UI."""
+"""Environment and model readiness checks shared by CLI and tray UI."""
 
 from __future__ import annotations
 
@@ -40,12 +40,13 @@ class HealthReport:
 
     @property
     def asr_ready(self) -> bool:
-        if self.asr_engine in ("auto", ""):
+        requested = "whisper" if self.asr_engine in ("faster_whisper", "faster-whisper") else self.asr_engine
+        if requested in ("auto", ""):
             return any(
                 self.asr_engines.get(name, False)
-                for name in ("firered", "qwen3", "sherpa", "fake")
+                for name in ("firered", "qwen3", "whisper", "sherpa", "fake")
             )
-        return bool(self.asr_engines.get(self.asr_engine, False))
+        return bool(self.asr_engines.get(requested, False))
 
     @property
     def ready(self) -> bool:
@@ -71,6 +72,8 @@ def check_health(
     active = profile or select_profile(detect_vram_gb(), config.profile)
     engines = available_engines()
     engines["_requested"] = (config.asr.engine or "auto").strip().lower()
+    if engines["_requested"] in ("faster_whisper", "faster-whisper"):
+        engines["_requested"] = "whisper"
     items = locations(config, active)
     server_count = 0
     server_ready = 0
@@ -134,7 +137,7 @@ def format_report(
         )
     lines.append("")
     lines.append("ASR engines:")
-    for name in ("firered", "qwen3", "sherpa", "fake"):
+    for name in ("firered", "qwen3", "whisper", "sherpa", "fake"):
         lines.append(
             f"  {name:10} {'available' if report.asr_engines.get(name) else 'not installed'}"
         )
