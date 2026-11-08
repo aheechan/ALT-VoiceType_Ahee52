@@ -247,7 +247,8 @@ py -3.12 -m venv .venv
 ### 4. 安装依赖
 
 ```powershell
-pip install -e ".[ui,audio,asr-qwen,download]"
+pip install -e ".[ui,audio,asr-qwen,download]"  # 中文版
+pip install -e ".[ui,audio,asr-whisper,download]"  # 英文版
 ```
 
 需要 sherpa 回退时：

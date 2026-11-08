@@ -149,7 +149,7 @@ cd ALT-VoiceType_Ahee52
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
-pip install -e ".[ui,audio,asr-qwen,download]"
+pip install -e ".[ui,audio,asr-whisper,download]"
 
 python -m altvoice setup --profile 12gb-balanced
 python -m altvoice health
