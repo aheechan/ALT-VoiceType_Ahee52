@@ -12,7 +12,7 @@
 
 ```text
 README.md
-README.en.md
+README.zh.md
 altvoice/
 tests/
 packaging/
@@ -95,7 +95,7 @@ Add file → Upload files
 
 ```text
 README.md
-README.en.md
+README.zh.md
 LICENSE
 NOTICE
 CHANGELOG.md
@@ -309,8 +309,8 @@ Publish release
 ## 仓库
 
 ```text
-README.md 存在
-README.en.md 存在
+README.md 存在（英文，默认显示）
+README.zh.md 存在（中文）
 altvoice/ 存在
 packaging/ 存在
 tests/ 存在

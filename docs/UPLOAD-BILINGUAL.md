@@ -22,8 +22,8 @@
 放：
 
 ```text
-README.md
-README.en.md
+README.md          (English, GitHub default)
+README.zh.md       (Chinese)
 altvoice/
 tests/
 packaging/
@@ -142,7 +142,7 @@ git ls-files | Select-String -Pattern "\.gguf$|\.safetensors$|\.bin$|\.exe$"
 
 ```powershell
 Test-Path README.md
-Test-Path README.en.md
+Test-Path README.zh.md
 Test-Path altvoice
 Test-Path packaging
 Test-Path docs
@@ -260,8 +260,8 @@ Add file → Upload files
 拖入：
 
 ```text
-README.md
-README.en.md
+README.md          (English, GitHub default)
+README.zh.md       (Chinese)
 LICENSE
 NOTICE
 CHANGELOG.md
@@ -659,7 +659,7 @@ https://username:ghp_xxx@github.com/...
 
 ```text
 [ ] README.md
-[ ] README.en.md
+[ ] README.zh.md
 [ ] docs/UPLOAD-BILINGUAL.md
 [ ] altvoice/
 [ ] packaging/altvoice.spec

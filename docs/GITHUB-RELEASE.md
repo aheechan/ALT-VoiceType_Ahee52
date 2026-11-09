@@ -17,8 +17,8 @@ C:\Local Repositories\ALT-VoiceType-github\ALT-VoiceType_Ahee52\
 包含：
 
 ```text
-README.md              中文说明
-README.en.md           英文说明
+README.md              英文说明（GitHub 默认显示）
+README.zh.md           中文说明
 LICENSE
 NOTICE
 altvoice/              源代码
@@ -183,7 +183,7 @@ ALT-VoiceType_Ahee52-Setup-0.1.0.exe
 
 发布前确认：
 
-- `README.md` 和 `README.en.md` 都存在；
+- `README.md` 和 `README.zh.md` 都存在；
 - README 中的 Hugging Face 链接可以打开；
 - 模型存放路径和程序实际读取路径一致；
 - `SHA256SUMS.txt` 与当前分卷匹配；
