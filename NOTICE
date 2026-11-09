@@ -1,27 +1,47 @@
-﻿ALT-VoiceType
+ALT-VoiceType
 Copyright 2026 ALT-VoiceType contributors
 
-This product includes software and model weights developed by third parties.
-ALT-VoiceType does not redistribute model weights; users download them from the
-upstream repositories and remain responsible for complying with each license.
+This product includes software and, in its Windows installers, third-party
+model weights.
+
+Source repository:
+- The Git repository does not contain model weights. Users who run from source
+  obtain them from the upstream repositories and remain responsible for
+  complying with each license.
+
+Release installers:
+- The full Windows installers published in GitHub Releases bundle model weights
+  so the application can run offline.
+- The bundled models are listed in THIRD_PARTY-MODELS.md, together with their
+  upstream links and license notes.
+- The application code is Apache-2.0. The model weights are not relicensed as
+  Apache-2.0 merely because they are distributed alongside Apache-2.0 code.
+- Before commercial redistribution, verify the exact checkpoint card and its
+  current upstream terms.
 
 Runtime / library components:
-- PySide6 (LGPL-3.0) — dynamically linked Qt bindings, if the UI extra is installed.
-- PyTorch (BSD-3-Clause) — bundled ASR runtime.
+- PySide6 / Qt (LGPL-3.0) — dynamically linked Qt bindings, if the UI extra is installed.
+- PyTorch (BSD-3-Clause) — CPU ASR runtime bundled in the current installers.
 - Transformers, tokenizers, huggingface_hub, safetensors, accelerate (Apache-2.0).
+- faster-whisper (MIT) — English ASR adapter; model weights have separate terms.
+- CTranslate2 (MIT) — faster-whisper runtime.
+- onnxruntime (MIT) — faster-whisper dependency.
+- PyAV / FFmpeg (BSD-style / LGPL or GPL depending on the FFmpeg build) — audio decoding.
 - NumPy (BSD-3-Clause).
 - librosa (ISC), numba/llvmlite (BSD-2-Clause/BSD-3-Clause) — audio loading.
 - hf_xet (Apache-2.0) — resumable model downloads.
-- sounddevice (MIT) — optional microphone capture.
-- llama.cpp (MIT) — optional local LLM runtime.
+- sounddevice (MIT) — microphone capture.
+- llama.cpp (MIT) — bundled CUDA local LLM runtime.
 - sherpa-onnx (Apache-2.0) — optional CPU ASR runtime.
 - qwen-asr (Apache-2.0), Qwen team — Qwen3-ASR inference.
 
-Models (downloaded separately):
-- FireRedASR2S / FireRedASR2-AED (Apache-2.0), FireRedTeam.
-- Qwen3-ASR and Qwen3-Instruct (Apache-2.0), Qwen team; verify the exact checkpoint.
-- SenseVoice (Apache-2.0), FunAudioLLM.
-- Index-Translate (repository code Apache-2.0; model weights may have separate
-  terms — check the Hugging Face model card before redistribution or commercial use).
+Bundled models (full installers; see THIRD_PARTY-MODELS.md):
+- Qwen3-ASR-0.6B (Apache-2.0; verify the checkpoint card).
+- Qwen3-1.7B-Abliterated Q4 (derived from Qwen3-1.7B, Apache-2.0; verify the
+  derivative model card).
+- Index-Translate-2B Q4 (repository code Apache-2.0; model weights may have
+  separate terms — check the model card).
+- faster-whisper small.en (English installer; faster-whisper code is MIT; model
+  card terms apply).
 
 This NOTICE is informational and does not replace the upstream license texts.

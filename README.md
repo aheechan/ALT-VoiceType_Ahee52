@@ -486,8 +486,10 @@ Open-source and offline-first. Contributions welcome:
 ## License
 
 - Code: **Apache-2.0**
-- Model weights are not stored in Git
-- Follow each upstream model license
+- The source repository does **not** contain model weights
+- The full Windows installers **do bundle** model weights
+- Model weights keep their own upstream terms; see [THIRD_PARTY-MODELS.md](THIRD_PARTY-MODELS.md)
+- Do not describe the bundled model weights as Apache-2.0 merely because the code is
 
 ---
 
