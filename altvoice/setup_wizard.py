@@ -38,6 +38,9 @@ def build_config(
     profile_info = PROFILES[profile]
     cfg.audio.max_seconds = float(profile_info.get("duration_s", "30"))
     cfg.servers.gpu_layers = 0 if profile == "12gb-safe" else 99
+    cfg.servers.startup_timeout_s = 120.0
+    cfg.translator.timeout_s = 90.0
+    cfg.corrector.timeout_s = 45.0
     cfg.asr.device = "cpu" if (profile == "12gb-safe" or current_edition().code == "en") else "cuda"
 
     asr_spec = models["asr"]

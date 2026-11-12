@@ -120,6 +120,10 @@ class VoicePipeline:
             status("翻译中…")
             translate_start = time.perf_counter()
             try:
+                if isinstance(self.translator, NullTranslator):
+                    raise TranslationError(
+                        "翻译服务未就绪；请重新预热/启动程序，并查看 translator.log"
+                    )
                 translation = self.translator.translate(
                     corrected,
                     target_lang=target,

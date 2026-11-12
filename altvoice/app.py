@@ -53,6 +53,7 @@ class VoiceAppController:
         self._pipeline_lock = threading.RLock()
         self._warming = False
         self._servers: ServerManager | None = None
+        self._translation_ready: bool | None = None
         self._temp_dir = temp_dir
         self._lock = threading.RLock()
         self._bootstrap_model_paths(config_provided=config is not None)
@@ -142,11 +143,22 @@ class VoiceAppController:
             self.on_status("预热 ASR…")
             engine.load()
             if cfg.servers.enabled:
+                cfg.servers.startup_timeout_s = max(120.0, float(cfg.servers.startup_timeout_s or 0))
+                cfg.translator.timeout_s = max(90.0, float(cfg.translator.timeout_s or 0))
+                cfg.corrector.timeout_s = max(45.0, float(cfg.corrector.timeout_s or 0))
                 self._servers = ServerManager.from_config(cfg, self.profile)
                 self.on_status("预热中…")
                 for error in self._servers.start_all(on_status=self.on_status):
                     self.on_error(error)
             failed_servers = self._servers.failed if self._servers is not None else set()
+            translator_failed = bool(cfg.translator.enabled and "translator" in failed_servers)
+            self._translation_ready = bool(cfg.translator.enabled and not translator_failed)
+            if cfg.translator.enabled and translator_failed and self.target_lang != (cfg.asr.language or "zh"):
+                raise RuntimeError(
+                    "翻译服务启动失败，已停止加载；请查看 "
+                    f"{cfg.servers.log_dir or '%APPDATA%\\ALT-VoiceType\\logs'} "
+                    "中的 translator.log 后重试。"
+                )
             corrector = NullCorrector()
             if (
                 cfg.corrector.enabled
@@ -499,6 +511,16 @@ class VoiceAppController:
     def set_target_lang(self, code: str) -> None:
         code = normalize_language(code)
         if code:
+            source = (self.config.asr.language or "zh").lower()
+            if (
+                code != source
+                and self._pipeline is not None
+                and self._translation_ready is False
+            ):
+                self.on_error(
+                    "翻译服务未就绪，无法切换输出语言；请查看 translator.log 并重新预热。"
+                )
+                return
             self.target_lang = code
             self.mode = "translate"
             self.config.translator.target_language = code

@@ -162,7 +162,7 @@ class ASRConfig:
 @dataclass
 class CorrectorConfig:
     enabled: bool = True
-    base_url: str = "http://127.0.0.1:8091/v1"
+    base_url: str = f"http://127.0.0.1:{8191 if current_edition().code == 'en' else 8091}/v1"
     model: str = "qwen3-1.7b-instruct"
     api_key: str = "EMPTY"
     timeout_s: float = 20.0
@@ -175,7 +175,7 @@ class CorrectorConfig:
 @dataclass
 class TranslatorConfig:
     enabled: bool = True
-    base_url: str = "http://127.0.0.1:8092/v1"
+    base_url: str = f"http://127.0.0.1:{8192 if current_edition().code == 'en' else 8092}/v1"
     model: str = "Index-Translate-9B"
     api_key: str = "EMPTY"
     timeout_s: float = 45.0

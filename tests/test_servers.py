@@ -137,7 +137,7 @@ class FakeServer:
         self.fail = fail
         self.started = False
 
-    def is_ready(self):
+    def is_ready(self, timeout_s=1.0, expected_alias=None):
         return self.ready
 
     def start(self):
