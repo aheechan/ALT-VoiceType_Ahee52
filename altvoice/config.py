@@ -278,6 +278,19 @@ class AppConfig:
         except ValueError as exc:
             raise ValueError(f"invalid hotkey.combo: {exc}") from exc
 
+    def migrate_edition_ports(self) -> bool:
+        """Move legacy English configs off the Chinese edition's ports."""
+        if current_edition().code != "en":
+            return False
+        changed = False
+        for section in (self.corrector, self.translator):
+            url = section.base_url
+            for old, new in ((":8091/", ":8191/"), (":8092/", ":8192/")):
+                if old in url:
+                    section.base_url = url.replace(old, new)
+                    changed = True
+        return changed
+
     def save(self, path: str | Path | None = None) -> Path:
         target = Path(path) if path else default_config_path()
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -301,6 +314,11 @@ class AppConfig:
             raise ValueError(f"config root must be an object: {target}")
         cfg = cls.from_dict(data)
         cfg.validate()
+        if cfg.migrate_edition_ports():
+            try:
+                cfg.save(target)
+            except OSError:
+                pass
         return cfg
 
 
