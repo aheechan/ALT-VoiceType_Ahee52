@@ -110,21 +110,36 @@ class LlamaServer:
     def running(self) -> bool:
         return self._process is not None and self._process.poll() is None
 
-    def is_ready(self, timeout_s: float = 1.0) -> bool:
+    def is_ready(self, timeout_s: float = 1.0, expected_alias: str | None = None) -> bool:
         try:
             with urllib.request.urlopen(self.spec.health_url(), timeout=timeout_s) as response:
                 if response.status != 200:
                     return False
                 body = response.read().decode("utf-8", errors="replace")
             data = json.loads(body)
-            return isinstance(data, dict) and isinstance(data.get("data"), list)
+            if not isinstance(data, dict) or not isinstance(data.get("data"), list):
+                return False
+            if expected_alias:
+                ids = {
+                    str(item.get("id", ""))
+                    for item in data["data"]
+                    if isinstance(item, dict)
+                }
+                if expected_alias not in ids:
+                    return False
+            return True
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError):
             return False
 
     def start(self) -> bool:
         """Start the server. Returns True when a new process was launched."""
-        if self.is_ready():
+        if self.is_ready(expected_alias=self.spec.alias):
             return False
+        if self.is_ready():
+            raise ServerError(
+                f"{self.spec.name}: port {self.spec.port} is occupied by a different "
+                f"model (expected alias {self.spec.alias!r}); see {self.spec.log_path()}"
+            )
         if self.running:
             return False
         if not Path(self.spec.model_path).exists():
@@ -161,7 +176,7 @@ class LlamaServer:
     def wait_ready(self, timeout_s: float = 90.0) -> None:
         deadline = time.monotonic() + timeout_s
         while time.monotonic() < deadline:
-            if self.is_ready():
+            if self.is_ready(expected_alias=self.spec.alias):
                 return
             if self._process is not None and self._process.poll() is not None:
                 raise ServerError(
@@ -183,9 +198,9 @@ class LlamaServer:
         payload = json.dumps(
             {
                 "model": self.spec.alias,
-                "messages": [{"role": "user", "content": "ok"}],
+                "messages": [{"role": "user", "content": "Reply with OK."}],
                 "temperature": 0.0,
-                "max_tokens": 1,
+                "max_tokens": 8,
                 "stream": False,
             }
         ).encode("utf-8")
@@ -201,8 +216,16 @@ class LlamaServer:
                 if response.status != 200:
                     raise ServerError(f"{self.spec.name}: probe returned {response.status}")
             data = json.loads(body)
-            if not isinstance(data.get("choices"), list):
+            if not isinstance(data.get("choices"), list) or not data["choices"]:
                 raise ServerError(f"{self.spec.name}: probe response has no choices")
+            choice = data["choices"][0] if isinstance(data["choices"][0], dict) else {}
+            message = choice.get("message") if isinstance(choice.get("message"), dict) else {}
+            content = str(message.get("content") or "").strip()
+            if not content:
+                raise ServerError(
+                    f"{self.spec.name}: probe returned empty content; the service is "
+                    f"reachable but not usable for translation"
+                )
         except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
             raise ServerError(f"{self.spec.name}: inference probe failed: {exc}") from exc
 
@@ -228,16 +251,21 @@ class ServerManager:
     def __init__(self, servers: list[LlamaServer] | None = None) -> None:
         self.servers = servers or []
         self.failed: set[str] = set()
+        self.startup_timeout_s = 90.0
+        self.probe_timeout_s = 30.0
 
     @classmethod
     def from_config(cls, config: AppConfig, profile: str | None = None) -> "ServerManager":
         if not config.servers.enabled:
             return cls([])
         active_profile = profile or config.profile
+        from .edition import current_edition
+
+        english = current_edition().code == "en"
         specs: list[ServerSpec] = []
         for name, cfg, default_port in (
-            ("corrector", config.corrector, 8091),
-            ("translator", config.translator, 8092),
+            ("corrector", config.corrector, 8191 if english else 8091),
+            ("translator", config.translator, 8192 if english else 8092),
         ):
             if not cfg.enabled or not cfg.autostart or not cfg.model_path:
                 continue
@@ -264,7 +292,9 @@ class ServerManager:
                     log_dir=config.servers.log_dir,
                 )
             )
-        return cls([LlamaServer(spec) for spec in specs])
+        manager = cls([LlamaServer(spec) for spec in specs])
+        manager.startup_timeout_s = max(30.0, float(config.servers.startup_timeout_s or 90.0))
+        return manager
 
     def start_all(self, on_status=None) -> list[str]:
         status = on_status or (lambda _msg: None)
@@ -272,13 +302,13 @@ class ServerManager:
         self.failed.clear()
         for server in self.servers:
             try:
-                if server.is_ready():
+                if server.is_ready(expected_alias=server.spec.alias):
                     status(f"{server.spec.name} 服务已在运行")
                 else:
                     status(f"启动 {server.spec.name} 模型服务…")
                     server.start()
-                    server.wait_ready(timeout_s=30.0)
-                server.probe(timeout_s=15.0)
+                    server.wait_ready(timeout_s=self.startup_timeout_s)
+                server.probe(timeout_s=self.probe_timeout_s)
                 status(f"{server.spec.name} 服务就绪")
             except Exception as exc:
                 errors.append(str(exc))

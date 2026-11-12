@@ -1,9 +1,11 @@
-﻿"""Single-instance guard for the tray application."""
+"""Single-instance guard for the tray application."""
 
 from __future__ import annotations
 
 import ctypes
 import os
+
+from .edition import current_edition
 
 ERROR_ALREADY_EXISTS = 183
 
@@ -11,8 +13,8 @@ ERROR_ALREADY_EXISTS = 183
 class SingleInstance:
     """A session-local named mutex on Windows; a lock file elsewhere."""
 
-    def __init__(self, name: str = "Local\\ALT-VoiceType-SingleInstance") -> None:
-        self.name = name
+    def __init__(self, name: str | None = None) -> None:
+        self.name = name or f"Local\\{current_edition().data_dir_name}-SingleInstance"
         self.acquired = False
         self._handle = None
         self._file = None
