@@ -422,6 +422,11 @@ class VoiceAppController:
                     self.on_error(f"写入历史失败：{exc}")
             if result.error:
                 self.on_error(result.error)
+            # Never paste the source language into a different target language.
+            # Keep the result panel visible and let the user copy/retry instead.
+            if result.error and result.target_lang != result.source_lang:
+                self.on_result(result)
+                return
             # Always paste at the caret; the preview setting only controls whether
             # the main window is brought forward with the two result panels.
             if self.config.ui.focus_guard:
