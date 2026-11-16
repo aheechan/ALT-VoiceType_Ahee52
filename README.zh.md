@@ -811,3 +811,10 @@ $iscc = "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
 ---
 
 **ALT-VoiceType_Ahee52** · offline voice input for Windows
+
+
+---
+
+## 支持
+
+如果这个项目帮你省了点时间，可以[请我喝杯咖啡](https://ko-fi.com/ahee52)。

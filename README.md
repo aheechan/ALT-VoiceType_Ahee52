@@ -1,122 +1,500 @@
-﻿# ALT-VoiceType
+# ALT-VoiceType_Ahee52
 
-**Offline Windows voice input with context-aware Chinese ASR and natural multilingual translation.**
+**English** | [中文](README.zh.md)
 
-ALT-VoiceType is a system-tray voice input assistant: press `Alt`, speak, press `Alt` again, and the corrected
-text (or its translation) is inserted into the focused application. Everything runs locally.
+![ALT-VoiceType](altvoice/assets/logo.png)
 
-> **Status: M1 preview.** The repository contains the architecture, model profiles,
-> ASR adapters, correction/translation prompt layer, Windows text-injection primitives,
-> the global Alt hook, controller, tray/preview UI and the ASR bake-off harness.
-> PySide6, a microphone and model weights are required to run the interactive app;
-> see [docs/RUN.md](docs/RUN.md). Release notes are in [CHANGELOG.md](CHANGELOG.md)
-> and the build/validation checklist is in [docs/RELEASE.md](docs/RELEASE.md).
+**Fully offline voice input for Windows: Chinese ASR, context-aware correction, and natural multilingual translation.**
 
-## Target hardware
+Press the hotkey, speak, press it again. Everything runs locally and the result is pasted at the current caret position.
 
-| Profile | VRAM | ASR | Corrector | Translator |
-|---|---:|---|---|---|
-| `12gb-balanced` **(default baseline)** | 12 GB | Qwen3-ASR-0.6B | Qwen3-1.7B-Instruct Q8 | Index-Translate-9B Q4 |
-| `12gb-max` | 12 GB | Qwen3-ASR-1.7B BF16 | Qwen3-1.7B Q8 | Index-Translate-9B Q4 |
-| `12gb-safe` | 12 GB | Qwen3-ASR-0.6B | Qwen3-1.7B Q8 | Index-Translate-2B Q4 |
-| `16gb-quality` | 16 GB | Qwen3-ASR-1.7B BF16 | Qwen3-4B-Instruct Q4 | Index-Translate-9B Q4 |
-| `24gb-quality` | 24 GB | Qwen3-ASR-1.7B BF16 | Qwen3-4B-Instruct Q4 | Index-Translate-9B Q4 |
-| `cpu-safe` | CPU | SenseVoice-Small (sherpa-onnx) | rules only | Index-Translate-2B Q4 (~2.1 GB total) |
+> Author: **Ahee52**  
+> Status: 0.1.0 preview  
+> Current package: **CPU ASR + bundled CUDA llama.cpp**  
+> Config/logs: `%APPDATA%\ALT-VoiceType`  
+> Installed models: `<install>\models`  
+> Source models: `%LOCALAPPDATA%\ALT-VoiceType\models`
 
-`12gb-balanced` is tuned for an RTX 3070 12 GB (~9.1 GB of weights); `12gb-max` uses the
-1.7B ASR and is tight (~11.2 GB), best with background GPU apps closed. Qwen3-ASR is the
-Windows default because FireRedASR2S is only tested on Ubuntu 22.04 upstream; FireRedASR2-AED
-remains an optional quality engine if you can run it.
+---
 
-## Quick start (development)
+## Choose an edition
+
+| | Chinese edition | English edition |
+|---|---|---|
+| Product | ALT-VoiceType | ALT-VoiceType English |
+| Default input | Chinese | English |
+| Default output | Chinese | English |
+| ASR | Qwen3-ASR-0.6B | faster-whisper small.en |
+| Installer | about 4.42 GB | about 3.57 GB |
+| Installed | about 6.0 GB | about 5.6 GB |
+| Data | `%APPDATA%\ALT-VoiceType` | `%APPDATA%\ALT-VoiceType-EN` |
+| Release | `v0.1.0-zh` | `v0.1.0-en` |
+
+Downloads:
+
+- Chinese edition: <https://github.com/aheechan/ALT-VoiceType_Ahee52/releases/tag/v0.1.0-zh>
+- English edition: <https://github.com/aheechan/ALT-VoiceType_Ahee52/releases/tag/v0.1.0-en>
+
+Both editions can be installed side by side.
+
+Full upload walkthrough: [docs/UPLOAD-BILINGUAL.md](docs/UPLOAD-BILINGUAL.md).
+
+---
+
+## What is this repository?
+
+A runnable Windows voice-input project, not just an installer download page.
+
+```text
+altvoice/          ASR, correction, translation, hotkeys, injection, UI
+tests/             105 unit/UI tests
+packaging/         PyInstaller + Inno Setup
+scripts/           helper scripts
+docs/              architecture, deployment, upload guide
+benchmarks/        ASR benchmark manifests
+```
+
+You can use the installer, run from source, modify the pipeline, or contribute CUDA/English/minority-language support.
+
+---
+
+## Two ways to use it
+
+| Route | For | Requires |
+|---|---|---|
+| **Installer** | End users | Download 4.42 GB of split files |
+| **Source** | Developers / explorers | Python, models, microphone |
+
+---
+
+## Author's trade-off: why CPU ASR
+
+The author explored the faster **CUDA + PyTorch** route but did not ship it in the current package:
+
+1. **Size** — CUDA PyTorch adds about 2.5–3.5 GB installed, 1.5–2.5 GB to the installer.
+2. **GPU/driver differences** — RTX 20/30/40/50 need different CUDA levels; RTX 50 (Blackwell) needs CUDA 12.8+.
+3. **Machine differences** — Toolkit, driver, DLL, and PATH conflicts make CUDA less reproducible.
+
+Current package:
+
+```text
+ASR: CPU + Torch
+Correction/translation: bundled CUDA llama.cpp
+```
+
+This is a deliberate choice for **reliability, reproducibility, and size**, not a claim that CUDA cannot be faster.
+
+**The community is encouraged to build a CUDA + PyTorch edition.** The ASR adapter, device configuration, and model-service layer expose extension points.
+
+---
+
+## Fixed models and three tiers
+
+| Role | Model | Size |
+|---|---|---:|
+| ASR | Qwen3-ASR-0.6B | 1.75 GB |
+| Correction | Qwen3-1.7B-Abliterated Q4 | 1.03 GB |
+| Translation | Index-Translate-2B Q4 | 1.22 GB |
+| **Total** | | **4.00 GB** |
+
+| Tier | Duration | Resource | Notes |
+|---|---:|---|---|
+| **eco** | 20 s | CPU | Lowest resource |
+| **standard** | 45 s | GPU target | Default |
+| **extended** | 120 s | GPU target | Long dictation |
+
+In the current CPU-ASR package, `standard`/`extended` use GPU for correction/translation; ASR remains CPU.
+
+---
+
+## English edition
+
+The English edition is a separate product with its own installer and data dir:
+
+```text
+Product: ALT-VoiceType English
+Installer: ALT-VoiceType-EN-Setup-0.1.0.exe
+Data: %APPDATA%\ALT-VoiceType-EN
+ASR: faster-whisper small.en (English-only, CPU)
+Correction/translation: Qwen3-1.7B + Index-Translate-2B
+```
+
+Installer: about **3.57 GB**; installed: about **5.6 GB**.
+
+- English input by default
+- English output by default
+- English main window, settings, and tray menu
+- Separate AppId, shortcut, history, and logs
+- Can coexist with the Chinese edition
+- Separate release: `v0.1.0-en`
+
+Source build:
 
 ```powershell
-# Python 3.11 or 3.12
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -e ".[dev]"
-# full local app: tray + microphone + Qwen3-ASR + model downloader
-pip install -e ".[ui,audio,asr-qwen,download]"
-
-python -m altvoice doctor
-python -m altvoice profiles
-python -m altvoice setup --profile 12gb-balanced
-python -m altvoice models --profile 12gb-balanced --commands
-python -m altvoice download --profile 12gb-balanced
-python -m altvoice health
-python -m altvoice audio --list
-python -m altvoice history --limit 5
-
-# ASR bake-off: compare engines on your own recordings
-python -m altvoice bakeoff --manifest benchmarks/asr_manifest.example.jsonl --dry-run
-
-# Unit tests do not need a GPU or model weights
-python -m unittest discover -s tests -v
-
-# Interactive tray (needs the ui/audio extras and an ASR model)
+$env:ALT_VOICE_EDITION = "en"
 python -m altvoice run
 ```
 
-Optional runtime dependencies are intentionally split so the core can be tested on a clean machine:
+## Installer
 
-```powershell
-pip install -e ".[audio]"       # microphone capture
-pip install -e ".[asr-qwen]"    # Qwen3-ASR via qwen-asr
-pip install -e ".[asr-sherpa]"  # CPU fallback via sherpa-onnx
-pip install -e ".[download]"   # huggingface_hub + hf_xet model downloader
-pip install -e ".[llm]"         # local OpenAI-compatible clients
-pip install -e ".[ui]"          # PySide6 tray (M1)
-```
-
-## Design principles
-
-1. **Local first.** No cloud calls at runtime; audio is deleted after transcription.
-2. **ASR alone is not enough.** A context-aware corrector fixes homophones, names, punctuation
-   and disfluencies without rewriting the speaker's meaning.
-3. **Natural translation is a product problem.** Whole-utterance translation, rolling context,
-   style presets and human evaluation, not just a bigger model.
-4. **12 GB is the baseline.** Every model choice has a measured VRAM budget and a fallback.
-5. **The MVP is a voice input assistant, not a TSF IME.** True IME integration (composition,
-   candidate window, language bar) is a later phase.
-
-## Repository layout
+Download into one folder:
 
 ```text
-altvoice/
-├─ altvoice/                 # Python package
-│  ├─ asr/                   # FireRedASR / Qwen3-ASR / sherpa-onnx adapters
-│  ├─ correct/               # context correction prompt + diff guard
-│  ├─ translate/             # Index-Translate prompt + client
-│  ├─ inject/                # Windows clipboard / SendInput
-│  ├─ hotkey/                # Alt gesture state machine (M1 hook)
-│  ├─ llm/                   # OpenAI-compatible local client
-│  ├─ audio.py               # WAV I/O, silence trimming, capture
-│  ├─ config.py              # JSON config + languages
-│  ├─ models.py              # model catalog + VRAM profiles
-│  ├─ pipeline.py            # ASR -> correct -> translate -> inject
-│  ├─ bakeoff.py             # M0 CER/latency harness
-│  └─ cli.py                 # `python -m altvoice`
-├─ benchmarks/               # manifest example + local audio (gitignored)
-├─ docs/                     # PLAN / ARCHITECTURE / ADR / MODELS / UX
-├─ tests/                    # stdlib unittest, no GPU required
-└─ pyproject.toml
+ALT-VoiceType-Setup-0.1.0.exe
+ALT-VoiceType-Setup-0.1.0-1.bin
+ALT-VoiceType-Setup-0.1.0-2.bin
+ALT-VoiceType-Setup-0.1.0-3.bin
+SHA256SUMS.txt
+README-GitHub.txt
 ```
 
-## Documentation
+Run the exe. The installer shows a **directory chooser**, so the user can select C/D/E.
 
-- [Status and next steps](docs/STATUS.md)
-- [Development plan](docs/PLAN.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [ADR-0001: stack and 12 GB baseline](docs/ADR/0001-stack-and-12gb-baseline.md)
-- [ADR-0002: Windows default ASR](docs/ADR/0002-windows-asr-default.md)
-- [Models and licenses](docs/MODELS.md)
-- [Interaction design](docs/UX.md)
-- [M0 ASR bake-off](docs/M0-BAKEOFF.md)
-- [Running the M1 tray preview](docs/RUN.md)
-- [Packaging and Windows installer](packaging/README.md)
+Measured:
 
-## Licenses
+```text
+Installer: about 4.42 GB
+Installed: about 6.0 GB
+Peak disk: about 14 GB
+```
 
-ALT-VoiceType code is Apache-2.0. Model weights are **not** included; each model keeps its own license.
-See [docs/MODELS.md](docs/MODELS.md) before redistribution or commercial use.
+Includes the app, three models, and a bundled CUDA `llama.cpp` runtime.
 
+---
+
+## Run from source
+
+Requirements: Windows 10/11 x64, Python 3.11/3.12, Git, microphone.
+
+```powershell
+git clone https://github.com/aheechan/ALT-VoiceType_Ahee52.git
+cd ALT-VoiceType_Ahee52
+
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+pip install -e ".[ui,audio,asr-whisper,download]"
+
+python -m altvoice setup --profile 12gb-balanced
+python -m altvoice health
+python -m altvoice run
+```
+
+Source models are read from:
+
+```text
+%LOCALAPPDATA%\ALT-VoiceType\models
+```
+
+Config:
+
+```text
+%APPDATA%\ALT-VoiceType\config.json
+```
+
+Logs:
+
+```text
+%APPDATA%\ALT-VoiceType\logs
+```
+
+### Models
+
+ASR, Qwen3-ASR-0.6B:
+
+<https://huggingface.co/Qwen/Qwen3-ASR-0.6B>
+
+```powershell
+huggingface-cli download Qwen/Qwen3-ASR-0.6B `
+  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType\models\qwen3_asr_0_6b"
+```
+
+Translation, Index-Translate-2B:
+
+<https://huggingface.co/IndexTeam/Index-Translate-2B-GGUF>
+
+```powershell
+huggingface-cli download IndexTeam/Index-Translate-2B-GGUF `
+  --include "*Index-Translate-2B.Q4_K_M.gguf" `
+  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType\models\index_translate_2b_q4"
+```
+
+Correction, Qwen3-1.7B-Abliterated Q4:
+
+<https://huggingface.co/mradermacher/Qwen3-1.7B-abliterated-v2-i1-GGUF>
+
+Place it in:
+
+```text
+%LOCALAPPDATA%\ALT-VoiceType\models\qwen3_1_7b_abliterated_q4
+```
+
+### English edition models
+
+The English edition uses its own model directory:
+
+```text
+%LOCALAPPDATA%\ALT-VoiceType-EN\models
+```
+
+| Role | Model | Destination |
+|---|---|---|
+| ASR | faster-whisper small.en | `faster_whisper_small_en` |
+| Correction | Qwen3-1.7B-Abliterated Q4 | `qwen3_1_7b_abliterated_q4` |
+| Translation | Index-Translate-2B Q4 | `index_translate_2b_q4` |
+
+faster-whisper:
+
+<https://huggingface.co/Systran/faster-whisper-small.en>
+
+```powershell
+huggingface-cli download Systran/faster-whisper-small.en `
+  --local-dir "$env:LOCALAPPDATA\ALT-VoiceType-EN\models\faster_whisper_small_en"
+```
+
+Source English run:
+
+```powershell
+$env:ALT_VOICE_EDITION = "en"
+pip install -e ".[ui,audio,asr-whisper,download]"
+python -m altvoice setup --profile 12gb-balanced
+python -m altvoice health
+python -m altvoice run
+```
+
+`health` should report:
+
+```text
+whisper    available
+Requested ASR: whisper
+```
+
+Source users also need `llama-server.exe`:
+
+```powershell
+winget install ggml.llamacpp
+```
+
+The installer already includes a CUDA runtime.
+
+### Build both editions
+
+Chinese app and installer:
+
+```powershell
+$env:ALT_VOICE_EDITION = "zh"
+$env:PYTHONPATH = ".pylibs"
+python -m PyInstaller --noconfirm --workpath build --distpath dist packaging/altvoice.spec
+
+$iscc = "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
+& $iscc "/DSourceDir=$PWD\dist\ALT-VoiceType" `
+  "/DModelsDir=D:\ALT-VoiceType\models" `
+  "/DLlamaDir=D:\llama.cpp" `
+  packaging\installer-bundle.iss
+```
+
+English app and installer:
+
+```powershell
+$env:ALT_VOICE_EDITION = "en"
+$env:PYTHONPATH = ".pylibs;.whisperlibs"
+python -m PyInstaller --noconfirm --workpath build-en --distpath dist-en packaging/altvoice-en.spec
+
+& $iscc "/DSourceDir=$PWD\dist-en\ALT-VoiceType-EN" `
+  "/DModelsDir=D:\ALT-VoiceType\models" `
+  "/DLlamaDir=D:\llama.cpp" `
+  "/DWhisperModelDir=$env:LOCALAPPDATA\ALT-VoiceType-EN\models" `
+  packaging\installer-en.iss
+```
+
+Outputs:
+
+```text
+dist\installer
+dist\installer-en
+```
+
+Full upload walkthrough:
+
+[docs/UPLOAD-BILINGUAL.md](docs/UPLOAD-BILINGUAL.md)
+
+---
+
+## How it works
+
+```text
+Global hook
+→ Audio capture
+→ VAD / trim
+→ ASR (Qwen3-ASR-0.6B)
+→ Correction (Qwen3-1.7B-Abliterated)
+→ Number normalization
+→ Translation (Index-Translate-2B)
+→ Windows text injection
+→ Two-panel UI
+```
+
+- Background threads for all heavy work.
+- Automatic window updates do not steal focus.
+- Alt is not exclusively grabbed.
+- 0.39 s recording tail.
+- ESC cancels recording.
+- Local `qwen-asr` / `llama.cpp`; no cloud API.
+
+---
+
+## Cache and automatic cleanup
+
+| Data | Location | Lifetime |
+|---|---|---|
+| Recording buffer | process memory | released after recognition/cancel |
+| Temporary WAV | `%TEMP%\altvoice_*.wav` | deleted after processing; stale >1h removed on startup |
+| History | `%APPDATA%\ALT-VoiceType\history.db` | 7 days / 500 entries, auto-pruned |
+| Session context | process memory | gone on exit |
+| Logs | `%APPDATA%\ALT-VoiceType\logs` | no full transcripts |
+| Models | `<install>\models` | removed with uninstall |
+
+Clear history manually:
+
+```powershell
+Remove-Item "$env:APPDATA\ALT-VoiceType\history.db"
+```
+
+---
+
+## CUDA extension
+
+Current package does **not** include CUDA PyTorch; ASR is CPU.
+
+Recommended:
+
+```text
+PyTorch 2.8 + cu128
+CUDA 12.8
+NVIDIA driver 570+
+```
+
+A cu128 build can cover:
+
+```text
+RTX 20  sm_75
+RTX 30  sm_86
+RTX 40  sm_89
+RTX 50  sm_120
+```
+
+Estimated increase: +2.5–3.5 GB installed, +1.5–2.5 GB installer.
+
+Ship as a separate installer:
+
+```text
+ALT-VoiceType-CUDA-Setup-0.1.0.exe
+```
+
+---
+
+## Hotkeys and ESC
+
+Default: `lalt`.
+
+Configurable: `lalt`, `ralt`, `lalt+q`, `ralt+space`, `alt+shift`.
+
+While recording:
+
+```text
+ESC → cancel this recording
+```
+
+No recognition, insertion, or history entry after cancel.
+
+---
+
+## Development, tests, packaging
+
+```powershell
+python -m unittest discover -s tests
+```
+
+Current: **105 tests OK**.
+
+```powershell
+$env:PYTHONPATH = ".pylibs"
+python -m PyInstaller --noconfirm --workpath build --distpath dist packaging/altvoice.spec
+```
+
+```powershell
+$iscc = "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
+& $iscc "/DSourceDir=$PWD\dist\ALT-VoiceType" `
+  "/DModelsDir=$PWD\models" `
+  "/DLlamaDir=C:\path\to\llama.cpp" `
+  packaging\installer-bundle.iss
+```
+
+Manual GitHub upload:
+
+[docs/UPLOAD-MANUAL.md](docs/UPLOAD-MANUAL.md)
+
+---
+
+## Troubleshooting
+
+### Translation always Chinese
+
+Check:
+
+```text
+%APPDATA%\ALT-VoiceType\logs\translator.log
+```
+
+Common causes: missing `llama-server`, GPU initialization failure, or the model returning only `reasoning_content`.
+
+The installer bundles CUDA `llama-server` and uses:
+
+```text
+--reasoning off
+```
+
+### Alt does nothing
+
+Check the configured hotkey, wait for “loaded”, inspect `app.log`.
+
+### Slow recognition
+
+CPU ASR loads slowly on first use; click **Warm up models** and observe the 20/45/120 s limits.
+
+### Unknown publisher
+
+The installer is unsigned. Use “More info → Run anyway” or verify with `SHA256SUMS.txt`.
+
+---
+
+## Contribute
+
+Open-source and offline-first. Contributions welcome:
+
+- CUDA + PyTorch acceleration
+- English and minority-language input
+- Correction rules and number normalization
+- Smaller packaging
+- RTX 20/30/40/50 testing
+- UI, docs, translations
+
+**Help people across the world communicate without barriers.**
+
+---
+
+## License
+
+- Code: **Apache-2.0**
+- The source repository does **not** contain model weights
+- The full Windows installers **do bundle** model weights
+- Model weights keep their own upstream terms; see [THIRD_PARTY-MODELS.md](THIRD_PARTY-MODELS.md)
+- Do not describe the bundled model weights as Apache-2.0 merely because the code is
+
+---
+
+**ALT-VoiceType_Ahee52** · offline voice input for Windows
+
+## Support
+
+If this project saved you some time, you can [buy me a coffee](https://ko-fi.com/ahee52).
