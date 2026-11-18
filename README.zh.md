@@ -806,6 +806,7 @@ $iscc = "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
 - 源码仓库**不包含**模型权重
 - 完整 Windows 安装包**包含**模型权重
 - 模型权重保留各自的上游许可证；见 [THIRD_PARTY-MODELS.md](THIRD_PARTY-MODELS.md)
+- 随包分发的 PyAV FFmpeg 库是 GPL 构建（含 libx264/libx265）；见 [THIRD_PARTY-MODELS.md](THIRD_PARTY-MODELS.md)
 - 不能因为代码是 Apache-2.0，就把随包分发的模型权重也描述成 Apache-2.0
 
 ---

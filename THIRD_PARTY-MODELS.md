@@ -35,7 +35,9 @@ and its current upstream terms.
 | faster-whisper | MIT |
 | CTranslate2 | MIT |
 | onnxruntime | MIT |
-| PyAV / FFmpeg | BSD-style / LGPL or GPL depending on the FFmpeg build |
+| PyAV Python bindings | BSD-3-Clause |
+| Bundled FFmpeg libraries (PyAV wheel) | GPL-enabled; includes libx264 and libx265, not LGPL-only |
+| External ffmpeg.exe (if found on PATH) | Depends on the installed build; the tested build is GPLv3 (`--enable-gpl --enable-version3`) |
 | NumPy | BSD-3-Clause |
 | librosa | ISC |
 | numba / llvmlite | BSD-2-Clause / BSD-3-Clause |

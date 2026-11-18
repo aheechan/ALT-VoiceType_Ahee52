@@ -26,7 +26,11 @@ Runtime / library components:
 - faster-whisper (MIT) — English ASR adapter; model weights have separate terms.
 - CTranslate2 (MIT) — faster-whisper runtime.
 - onnxruntime (MIT) — faster-whisper dependency.
-- PyAV / FFmpeg (BSD-style / LGPL or GPL depending on the FFmpeg build) — audio decoding.
+- PyAV Python bindings (BSD-3-Clause) — audio decoding.
+- FFmpeg shared libraries bundled by the PyAV wheel — GPL-enabled build.
+  The bundled set includes libx264 and libx265, so it is not an LGPL-only FFmpeg build.
+  No ffmpeg.exe is bundled; the app may call an external ffmpeg found on PATH, and
+  that external build may also be GPL.
 - NumPy (BSD-3-Clause).
 - librosa (ISC), numba/llvmlite (BSD-2-Clause/BSD-3-Clause) — audio loading.
 - hf_xet (Apache-2.0) — resumable model downloads.
@@ -45,3 +49,15 @@ Bundled models (full installers; see THIRD_PARTY-MODELS.md):
   card terms apply).
 
 This NOTICE is informational and does not replace the upstream license texts.
+
+GPL compliance for the FFmpeg build:
+- The Windows installers include a GPL-enabled FFmpeg build (libx264/libx265
+  enabled, not LGPL-only). FFmpeg is licensed under the GNU GPL; the GPL text
+  must be shipped with the installer.
+- When redistributing an installer that contains this FFmpeg build, you must
+  also make the corresponding FFmpeg source available, or provide a written
+  offer valid for at least three years.
+- FFmpeg source: https://ffmpeg.org/download.html
+- FFmpeg license information: https://ffmpeg.org/legal.html
+- The application code remains Apache-2.0; FFmpeg is a separate program
+  distributed alongside it (aggregation), not a derivative work.

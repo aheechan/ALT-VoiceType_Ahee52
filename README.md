@@ -489,6 +489,7 @@ Open-source and offline-first. Contributions welcome:
 - The source repository does **not** contain model weights
 - The full Windows installers **do bundle** model weights
 - Model weights keep their own upstream terms; see [THIRD_PARTY-MODELS.md](THIRD_PARTY-MODELS.md)
+- Bundled PyAV FFmpeg libraries are GPL-enabled (libx264/libx265); see [THIRD_PARTY-MODELS.md](THIRD_PARTY-MODELS.md)
 - Do not describe the bundled model weights as Apache-2.0 merely because the code is
 
 ---
