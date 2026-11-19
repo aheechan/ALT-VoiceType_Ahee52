@@ -592,6 +592,18 @@ class VoiceAppController:
         self.warm_up()
         return True
 
+    def paste_text(self, text: str) -> None:
+        """Paste arbitrary text into the last target window."""
+        value = (text or "").strip()
+        if not value:
+            return
+        self.restore_target_focus()
+        injector = get_injector(
+            self.config.injection.method,
+            restore_clipboard=self.config.injection.restore_clipboard,
+        )
+        injector.inject(value)
+
     def translate_text(self, text: str, target_lang: str, source_lang: str | None = None) -> str:
         """Translate arbitrary pasted text through the shared local translator."""
         value = (text or "").strip()
