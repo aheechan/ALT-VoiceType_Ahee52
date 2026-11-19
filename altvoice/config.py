@@ -224,6 +224,7 @@ class UIConfig:
     start_minimized: bool = True
     focus_guard: bool = True
     locale: str = "zh"
+    always_on_top: bool = True
 
 
 @dataclass

@@ -475,12 +475,10 @@ class MainWindow(QWidget):
     text_translated = Signal(int, str, str)
 
     def __init__(self, tray: "TrayApp") -> None:
-        super().__init__(
-            None,
-            Qt.WindowType.Tool
-            | Qt.WindowType.FramelessWindowHint
-            | Qt.WindowType.WindowStaysOnTopHint,
-        )
+        flags = Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint
+        if tray.controller.config.ui.always_on_top:
+            flags |= Qt.WindowType.WindowStaysOnTopHint
+        super().__init__(None, flags)
         self._tray = tray
         self._placed = False
         self._drag = None
@@ -657,6 +655,17 @@ class MainWindow(QWidget):
         self._min_height = self.sizeHint().height()
         self.setMinimumSize(440, self._min_height)
         self.resize(440, self._min_height)
+
+    def set_always_on_top(self, enabled: bool) -> None:
+        was_visible = self.isVisible()
+        flags = self.windowFlags()
+        if enabled:
+            flags |= Qt.WindowType.WindowStaysOnTopHint
+        else:
+            flags &= ~Qt.WindowType.WindowStaysOnTopHint
+        self.setWindowFlags(flags)
+        if was_visible:
+            self.show()
 
     def _select_language(self, code: str) -> None:
         index = self.language.findData(code)
@@ -1027,6 +1036,7 @@ class TrayApp(QObject):
         dialog = SettingsDialog(self.controller.config)
         dialog.profile_changed.connect(self._reload_profile)
         dialog.hotkey_changed.connect(self._apply_hotkey)
+        dialog.always_on_top_changed.connect(self._apply_always_on_top)
         dialog.finished.connect(lambda _code=0: self._clear_settings())
         self._settings_dialog = dialog
         dialog.show()
@@ -1202,6 +1212,10 @@ class TrayApp(QObject):
             self._main.text_output.setPlainText(text_out)
             if text_target:
                 self._main._select_text_target(text_target)
+
+    def _apply_always_on_top(self, enabled: bool) -> None:
+        if self._main is not None:
+            self._main.set_always_on_top(enabled)
 
     def _switch_input_language(self, code: str) -> None:
         if self.controller.switch_input_language(code) and self._main is not None:

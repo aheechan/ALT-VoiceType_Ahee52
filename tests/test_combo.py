@@ -9,11 +9,12 @@ class ComboTests(unittest.TestCase):
         self.assertEqual(parse_combo("Alt+Q").text, "alt+q")
         self.assertEqual(parse_combo("alt+shift").text, "alt+shift")
 
-    def test_requires_alt_and_one_main_key(self):
+    def test_any_key_or_modifier_combination(self):
+        self.assertEqual(parse_combo("q").text, "q")
+        self.assertEqual(parse_combo("ctrl+shift+k").text, "ctrl+shift+k")
+        self.assertEqual(parse_combo("ctrl+shift").text, "ctrl+shift")
         with self.assertRaises(ValueError):
-            parse_combo("q")
-        with self.assertRaises(ValueError):
-            parse_combo("ctrl+shift")
+            parse_combo("")
 
     def test_parse_left_and_right_alt(self):
         left = parse_combo("lalt+q")
