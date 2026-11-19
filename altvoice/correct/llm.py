@@ -1,4 +1,4 @@
-﻿"""LLM-backed Chinese ASR correction."""
+"""LLM-backed Chinese ASR correction."""
 
 from __future__ import annotations
 
@@ -26,6 +26,7 @@ class LLMCorrector(Corrector):
         )
         self.max_edit_ratio = float(max_edit_ratio)
         self.max_tokens = int(max_tokens)
+        self.source_language = "zh"
 
     def correct(
         self,
@@ -37,7 +38,9 @@ class LLMCorrector(Corrector):
         original = (text or "").strip()
         if not original:
             return CorrectionResult(text="", raw_text="", accepted=True)
-        messages = build_correction_messages(original, context, glossary, scene)
+        messages = build_correction_messages(
+            original, context, glossary, scene, source_lang=self.source_language
+        )
         try:
             response = self.client.chat(
                 messages,

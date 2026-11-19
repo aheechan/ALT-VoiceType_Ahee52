@@ -23,7 +23,8 @@ from .inject import InjectionError, get_injector
 from .models import detect_vram_gb, select_profile
 from .pipeline import PipelineResult, VoicePipeline
 from .servers import ServerManager
-from .translate import IndexTranslateTranslator, NullTranslator
+from .textlang import detect_language
+from .translate import IndexTranslateTranslator, NullTranslator, TranslationError
 
 
 class VoiceAppController:
@@ -56,6 +57,7 @@ class VoiceAppController:
         self._translation_ready: bool | None = None
         self._temp_dir = temp_dir
         self._lock = threading.RLock()
+        self._relocate_portable_models()
         self._bootstrap_model_paths(config_provided=config is not None)
         self._recording = False
         self._cancelled = False
@@ -75,6 +77,32 @@ class VoiceAppController:
             except Exception as exc:
                 self.on_error(f"历史记录不可用：{exc}")
         self._cleanup_temp_audio()
+
+    def _relocate_portable_models(self) -> None:
+        """Keep a moved portable folder working when ALT_VOICE_MODELS_DIR changes."""
+        override = os.environ.get("ALT_VOICE_MODELS_DIR")
+        if not override:
+            return
+        base = Path(override)
+        cfg = self.config
+        cfg.models_dir = str(base)
+        asr_dir = base / (
+            "faster_whisper_small_en" if cfg.asr.engine == "faster_whisper" else "qwen3_asr_0_6b"
+        )
+        if not cfg.asr.model_path or not Path(cfg.asr.model_path).exists():
+            if asr_dir.exists():
+                cfg.asr.model_path = str(asr_dir)
+        for section, dirname in (
+            (cfg.corrector, "qwen3_1_7b_abliterated_q4"),
+            (cfg.translator, "index_translate_2b_q4"),
+        ):
+            if section.model_path and Path(section.model_path).exists():
+                continue
+            model_dir = base / dirname
+            if model_dir.exists():
+                files = list(model_dir.glob("*.gguf"))
+                if files:
+                    section.model_path = str(files[0])
 
     def _bootstrap_model_paths(self, config_provided: bool = False) -> None:
         """Fill omitted model paths for a fresh installed build."""
@@ -173,6 +201,7 @@ class VoiceAppController:
                     max_edit_ratio=cfg.corrector.max_edit_ratio,
                     max_tokens=cfg.corrector.max_tokens,
                 )
+                corrector.source_language = cfg.asr.language
             translator = NullTranslator()
             if cfg.translator.enabled and "translator" not in failed_servers:
                 translator = IndexTranslateTranslator(
@@ -512,6 +541,76 @@ class VoiceAppController:
             return set_foreground_window(self._target_hwnd)
         except Exception:
             return False
+
+    def switch_input_language(self, code: str) -> bool:
+        """Switch ASR model/language and warm it without restarting the app."""
+        code = normalize_language(code)
+        if code not in ("zh", "en"):
+            self.on_error(f"不支持的输入语言：{code}")
+            return False
+        old_source = (self.config.asr.language or "zh").lower()
+        if code == old_source:
+            return True
+        cfg = self.config
+        model_dir = Path(cfg.models_dir)
+        mapping = {
+            "zh": ("qwen3", "qwen3_asr_0_6b"),
+            "en": ("faster_whisper", "faster_whisper_small_en"),
+        }
+        engine, dirname = mapping[code]
+        candidate = model_dir / dirname
+        if not candidate.exists():
+            fallback = Path(os.environ.get("LOCALAPPDATA", "")) / (
+                "ALT-VoiceType-EN" if code == "en" else "ALT-VoiceType"
+            ) / "models" / dirname
+            if fallback.exists():
+                candidate = fallback
+            else:
+                self.on_error(f"找不到 {code} ASR 模型：{candidate}")
+                return False
+        cfg.asr.engine = engine
+        cfg.asr.model_path = str(candidate)
+        cfg.asr.language = code
+        cfg.asr.device = "cpu"
+        if self.target_lang == old_source:
+            self.target_lang = code
+            cfg.translator.target_language = code
+        with self._pipeline_lock:
+            if self._pipeline is not None:
+                self._pipeline.close()
+                self._pipeline = None
+            if self._servers is not None:
+                self._servers.stop_all()
+                self._servers = None
+            self._translation_ready = None
+            if self._config_path:
+                try:
+                    cfg.save(self._config_path)
+                except OSError:
+                    pass
+        self.on_status(f"切换输入语言：{code}，正在预热 ASR…")
+        self.warm_up()
+        return True
+
+    def translate_text(self, text: str, target_lang: str, source_lang: str | None = None) -> str:
+        """Translate arbitrary pasted text through the shared local translator."""
+        value = (text or "").strip()
+        if not value:
+            return ""
+        target = normalize_language(target_lang) or "en"
+        source = normalize_language(source_lang or detect_language(value)) or "en"
+        if target == source:
+            return value
+        pipeline = self.ensure_pipeline()
+        translator = pipeline.translator
+        if isinstance(translator, NullTranslator):
+            raise TranslationError("翻译服务未就绪；请查看 translator.log")
+        return translator.translate(
+            value,
+            target_lang=target,
+            style=self.config.translator.style,
+            source_lang=source,
+        )
 
     def set_target_lang(self, code: str) -> None:
         code = normalize_language(code)

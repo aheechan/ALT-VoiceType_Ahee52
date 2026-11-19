@@ -11,6 +11,13 @@ from typing import Any, get_type_hints
 
 from .edition import current_edition
 
+
+def _service_port(base: int) -> int:
+    try:
+        return base + int(os.environ.get("ALT_VOICE_PORT_OFFSET", "0"))
+    except ValueError:
+        return base
+
 # Languages shown in the tray. The list is intentionally short for v0.1; the
 # translation model itself supports more, and adding a code here is enough.
 LANGUAGES: dict[str, str] = {
@@ -109,6 +116,9 @@ def language_prompt_name(code: str) -> str:
 
 
 def default_config_dir() -> Path:
+    override = os.environ.get("ALT_VOICE_DATA_DIR")
+    if override:
+        return Path(override)
     if os.name == "nt":
         base = os.environ.get("APPDATA") or str(Path.home())
         return Path(base) / current_edition().data_dir_name
@@ -116,6 +126,9 @@ def default_config_dir() -> Path:
 
 
 def default_models_dir() -> Path:
+    override = os.environ.get("ALT_VOICE_MODELS_DIR")
+    if override:
+        return Path(override)
     # Installed builds keep weights next to the executable so the user can
     # choose the install drive and uninstalling removes the weights too.
     if getattr(sys, "frozen", False):
@@ -162,7 +175,7 @@ class ASRConfig:
 @dataclass
 class CorrectorConfig:
     enabled: bool = True
-    base_url: str = f"http://127.0.0.1:{8191 if current_edition().code == 'en' else 8091}/v1"
+    base_url: str = f"http://127.0.0.1:{_service_port(8191 if current_edition().code == 'en' else 8091)}/v1"
     model: str = "qwen3-1.7b-instruct"
     api_key: str = "EMPTY"
     timeout_s: float = 20.0
@@ -175,7 +188,7 @@ class CorrectorConfig:
 @dataclass
 class TranslatorConfig:
     enabled: bool = True
-    base_url: str = f"http://127.0.0.1:{8192 if current_edition().code == 'en' else 8092}/v1"
+    base_url: str = f"http://127.0.0.1:{_service_port(8192 if current_edition().code == 'en' else 8092)}/v1"
     model: str = "Index-Translate-9B"
     api_key: str = "EMPTY"
     timeout_s: float = 45.0
@@ -210,6 +223,7 @@ class UIConfig:
     preview: bool = False
     start_minimized: bool = True
     focus_guard: bool = True
+    locale: str = "zh"
 
 
 @dataclass

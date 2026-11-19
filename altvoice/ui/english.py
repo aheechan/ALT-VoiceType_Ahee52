@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 
-from ..edition import is_english
+from ..i18n import EN as BASE_EN, is_english
 
 EN = {
     "加载中…": "Loading…",
@@ -65,7 +65,7 @@ def tr(text: str) -> str:
         return text
     if text in EN:
         return EN[text]
-    result = text
+    result = BASE_EN.get(text, text)
     if result.startswith("错误："):
         result = "Error: " + result[3:]
     if result.startswith("输出语言："):

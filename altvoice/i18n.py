@@ -1,8 +1,8 @@
-"""Small UI string table for the two product editions."""
+"""Runtime UI language table (Chinese / English)."""
 
 from __future__ import annotations
 
-from .edition import is_english
+_LOCALE = "zh"
 
 EN = {
     "ALT-VoiceType": "ALT-VoiceType English",
@@ -56,15 +56,34 @@ EN = {
     "中文 → 中文 · 直接转写，不翻译": "Chinese → Chinese · transcription only",
     "识别后显示确认弹窗": "Show confirmation window",
     "识别显示确认弹窗": "Show result window",
-    "切换到模型档位会立即停止旧模型并重新预热新模型。": "Changing the tier stops the old models and warms the new ones.",
-    "模型档位在下次启动时生效；确认弹窗开关立即生效。": "Model tier changes apply immediately; preview applies immediately.",
-    "快捷键支持 lalt（左 Alt）、ralt（右 Alt），或左/右 Alt + 任意按键；\n点击保存后立即生效。Alt 组合键不会被独占，Alt+Tab 等系统快捷键仍可用。\n切换模型档位会立即停止旧模型并重新预热新模型。": "Use lalt (left Alt), ralt (right Alt), or either Alt plus any key.\nChanges apply immediately. Alt is not captured globally, so Alt+Tab keeps working.\nChanging tiers stops and reloads models.",
     "权限": "Permissions",
     "确认": "OK",
+    "中文": "Chinese",
+    "英文": "English",
+    "EN": "EN",
+    "文本翻译器": "Text translator",
+    "隐藏翻译器": "Hide translator",
+    "文本输入窗": "Text input",
+    "文本翻译": "Translation",
+    "粘贴文本": "Paste text",
+    "自动识别语言": "Auto-detect language",
 }
 
 
+def current_locale() -> str:
+    return "en" if _LOCALE == "en" else "zh"
+
+
+def set_locale(locale: str) -> None:
+    global _LOCALE
+    _LOCALE = "en" if str(locale).lower().startswith("en") else "zh"
+
+
+def is_english() -> bool:
+    return _LOCALE == "en"
+
+
 def tr(text: str) -> str:
-    if not is_english():
+    if not isinstance(text, str) or not is_english():
         return text
     return EN.get(text, text)

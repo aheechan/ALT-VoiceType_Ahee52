@@ -22,6 +22,12 @@ from urllib.parse import urlparse
 
 from .config import AppConfig, default_config_dir
 
+_LOCAL_NO_PROXY = "127.0.0.1,localhost,::1"
+for _key in ("NO_PROXY", "no_proxy"):
+    _current = os.environ.get(_key, "")
+    if _LOCAL_NO_PROXY not in _current:
+        os.environ[_key] = ",".join(v for v in (_current, _LOCAL_NO_PROXY) if v)
+
 
 class ServerError(RuntimeError):
     """Raised when a local model server cannot be started or becomes healthy."""
@@ -262,10 +268,14 @@ class ServerManager:
         from .edition import current_edition
 
         english = current_edition().code == "en"
+        try:
+            offset = int(os.environ.get("ALT_VOICE_PORT_OFFSET", "0"))
+        except ValueError:
+            offset = 0
         specs: list[ServerSpec] = []
         for name, cfg, default_port in (
-            ("corrector", config.corrector, 8191 if english else 8091),
-            ("translator", config.translator, 8192 if english else 8092),
+            ("corrector", config.corrector, (8191 if english else 8091) + offset),
+            ("translator", config.translator, (8192 if english else 8092) + offset),
         ):
             if not cfg.enabled or not cfg.autostart or not cfg.model_path:
                 continue

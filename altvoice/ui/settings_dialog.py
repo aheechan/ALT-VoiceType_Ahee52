@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..config import AppConfig
-from ..edition import is_english
+from ..i18n import is_english
 from ..hotkey.combo import parse_combo
 from ..models import PROFILE_LABELS, PROFILE_ORDER, PROFILES
 from .english import translate_widget_tree

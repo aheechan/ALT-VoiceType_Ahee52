@@ -14,7 +14,11 @@ class SingleInstance:
     """A session-local named mutex on Windows; a lock file elsewhere."""
 
     def __init__(self, name: str | None = None) -> None:
-        self.name = name or f"Local\\{current_edition().data_dir_name}-SingleInstance"
+        self.name = (
+            name
+            or os.environ.get("ALT_VOICE_INSTANCE_NAME")
+            or f"Local\\{current_edition().data_dir_name}-SingleInstance"
+        )
         self.acquired = False
         self._handle = None
         self._file = None

@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import sys
+import threading
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -38,7 +39,8 @@ from ..hotkey.windows import HotkeyError, WindowsAltHook
 from ..health import HealthReport, check_health
 from ..pipeline import PipelineResult
 from ..single_instance import SingleInstance
-from ..i18n import tr
+from ..i18n import current_locale, is_english, set_locale, tr
+from ..textlang import detect_language
 from .english import install_qt_english, translate_widget_tree, tr as ui_tr
 from .history_dialog import HistoryDialog
 from .settings_dialog import SettingsDialog
@@ -470,6 +472,8 @@ class TypingEdit(QTextEdit):
 class MainWindow(QWidget):
     """Draggable main window: controls, inline result confirmation, meter."""
 
+    text_translated = Signal(int, str, str)
+
     def __init__(self, tray: "TrayApp") -> None:
         super().__init__(
             None,
@@ -519,6 +523,11 @@ class MainWindow(QWidget):
         title.setObjectName("title")
         header.addWidget(title)
         header.addStretch(1)
+        self.locale_button = QPushButton("EN" if not is_english() else "中文")
+        self.locale_button.setObjectName("secondary")
+        self.locale_button.setFixedWidth(48)
+        self.locale_button.clicked.connect(self._tray._toggle_ui_language)
+        header.addWidget(self.locale_button)
         hide_button = QPushButton("—")
         hide_button.setObjectName("secondary")
         hide_button.setFixedWidth(32)
@@ -539,10 +548,11 @@ class MainWindow(QWidget):
 
         input_row = QHBoxLayout()
         input_row.addWidget(QLabel("输入语言"))
-        input_value = QLabel("中文（固定）")
-        input_value.setStyleSheet("color: #FFFFFF;")
-        input_row.addWidget(input_value)
-        input_row.addStretch(1)
+        self.input_language = QComboBox()
+        self.input_language.addItem("中文", "zh")
+        self.input_language.addItem("English", "en")
+        self.input_language.currentIndexChanged.connect(self._input_language_changed)
+        input_row.addWidget(self.input_language, 1)
         layout.addLayout(input_row)
 
         layout.addWidget(QLabel("输出语言"))
@@ -582,6 +592,48 @@ class MainWindow(QWidget):
         result_layout.addLayout(result_buttons)
         layout.addWidget(self.result_frame)
 
+        self.translator_panel = QWidget()
+        translator_layout = QVBoxLayout(self.translator_panel)
+        translator_layout.setContentsMargins(0, 4, 0, 2)
+        translator_layout.setSpacing(6)
+        translator_layout.addWidget(QLabel("文本输入窗"))
+        self.text_input = QTextEdit()
+        self.text_input.setFixedHeight(78)
+        self.text_input.setPlaceholderText("输入或粘贴文本，自动识别语言并翻译")
+        translator_layout.addWidget(self.text_input)
+        paste_row = QHBoxLayout()
+        self.text_paste = QPushButton("粘贴文本")
+        self.text_paste.setObjectName("secondary")
+        self.text_paste.clicked.connect(self._paste_text)
+        paste_row.addWidget(self.text_paste)
+        paste_row.addStretch(1)
+        translator_layout.addLayout(paste_row)
+        out_row = QHBoxLayout()
+        out_row.addWidget(QLabel("文本翻译"))
+        out_row.addStretch(1)
+        out_row.addWidget(QLabel("输出语言"))
+        self.text_target = QComboBox()
+        for code in TARGET_LANGUAGES:
+            self.text_target.addItem(f"{LANGUAGES[code]}  ({code})", code)
+        self.text_target.currentIndexChanged.connect(self._translate_text)
+        out_row.addWidget(self.text_target, 1)
+        translator_layout.addLayout(out_row)
+        self.text_output = QTextEdit()
+        self.text_output.setFixedHeight(84)
+        self.text_output.setReadOnly(True)
+        translator_layout.addWidget(self.text_output)
+        self.translator_panel.setVisible(False)
+        layout.addWidget(self.translator_panel)
+
+        self._text_timer = QTimer(self)
+        self._text_timer.setSingleShot(True)
+        self._text_timer.setInterval(450)
+        self._text_timer.timeout.connect(self._translate_text)
+        self.text_input.textChanged.connect(lambda: self._text_timer.start())
+        self.text_translated.connect(self._apply_text_translation)
+        self._text_seq = 0
+        self._translating = False
+
         self.meter = LevelMeter()
         layout.addWidget(self.meter)
 
@@ -590,11 +642,16 @@ class MainWindow(QWidget):
         settings.setObjectName("secondary")
         settings.clicked.connect(self._tray._show_settings)
         footer.addWidget(settings)
+        self.translator_button = QPushButton("文本翻译器")
+        self.translator_button.setObjectName("secondary")
+        self.translator_button.clicked.connect(self._toggle_translator)
+        footer.addWidget(self.translator_button)
         footer.addStretch(1)
         layout.addLayout(footer)
 
         self.refresh()
         translate_widget_tree(self)
+        self.locale_button.setText("中文" if is_english() else "EN")
         self.setWindowTitle(tr("ALT-VoiceType"))
         self.adjustSize()
         self._min_height = self.sizeHint().height()
@@ -612,6 +669,65 @@ class MainWindow(QWidget):
     def _language_changed(self, _index: int) -> None:
         self._tray._set_target_lang(self.language.currentData())
         self.refresh()
+
+    def _input_language_changed(self, _index: int) -> None:
+        code = self.input_language.currentData()
+        if code:
+            self._tray._switch_input_language(code)
+
+    def _toggle_translator(self) -> None:
+        visible = not self.translator_panel.isVisible()
+        self.translator_panel.setVisible(visible)
+        self.translator_button.setText(ui_tr("隐藏翻译器" if visible else "文本翻译器"))
+        if visible:
+            self.adjustSize()
+            self.resize(max(self.width(), 440), max(self.height(), self._min_height + 220))
+            self.text_input.setFocus()
+        else:
+            self.adjustSize()
+
+    def _paste_text(self) -> None:
+        text = QApplication.clipboard().text()
+        if text:
+            self.text_input.setPlainText(text)
+
+    def _translate_text(self) -> None:
+        if not self.translator_panel.isVisible():
+            return
+        text = self.text_input.toPlainText().strip()
+        self._text_seq += 1
+        sequence = self._text_seq
+        if not text:
+            self.text_output.clear()
+            return
+        target = self.text_target.currentData() or self._tray.controller.target_lang
+        self.text_output.setPlainText(ui_tr("翻译中…"))
+        self._translating = True
+
+        def worker() -> None:
+            try:
+                result = self._tray.controller.translate_text(text, target)
+                self.text_translated.emit(sequence, result, "")
+            except Exception as exc:
+                self.text_translated.emit(sequence, "", str(exc))
+
+        threading.Thread(target=worker, name="text-translator", daemon=True).start()
+
+    def _apply_text_translation(self, sequence: int, result: str, error: str) -> None:
+        if sequence != self._text_seq:
+            return
+        self._translating = False
+        if error:
+            self.text_output.setPlainText(f"{ui_tr('翻译失败')}: {error}")
+        else:
+            self.text_output.setPlainText(result)
+
+    def _select_text_target(self, code: str) -> None:
+        index = self.text_target.findData(code)
+        if index >= 0:
+            self.text_target.blockSignals(True)
+            self.text_target.setCurrentIndex(index)
+            self.text_target.blockSignals(False)
 
     def _copy_source(self) -> None:
         self._copy_button(self.source_copy, "复制识别文字", self.source_text.full_text())
@@ -635,6 +751,13 @@ class MainWindow(QWidget):
         code = self._tray.controller.target_lang
         source = (self._tray.controller.config.asr.language or "zh").lower()
         self._select_language(code)
+        self._select_text_target(code)
+        if self.input_language.currentData() != source:
+            self.input_language.blockSignals(True)
+            index = self.input_language.findData(source)
+            if index >= 0:
+                self.input_language.setCurrentIndex(index)
+            self.input_language.blockSignals(False)
         if code == source:
             self.mode_label.setText(ui_tr(f"{LANGUAGES.get(source, source)} → {LANGUAGES.get(code, code)} · 直接转写"))
         else:
@@ -765,6 +888,7 @@ class TrayApp(QObject):
             on_audio_level=self.audio_level.emit,
         )
         self.hotkey = self._make_hotkey()
+        set_locale(self.controller.config.ui.locale)
         self.tray = QSystemTrayIcon(_make_icon())
         self.tray.setToolTip(tr(f"ALT-VoiceType · {self.controller.config.hotkey.combo} 开始/停止"))
         self._setup_dialog: SetupDialog | None = None
@@ -1018,6 +1142,31 @@ class TrayApp(QObject):
     def _accept_result(self, result: PipelineResult, text: str) -> None:
         self.controller.restore_target_focus()
         self.controller.commit(result, text)
+
+    def _toggle_ui_language(self) -> None:
+        code = "zh" if is_english() else "en"
+        set_locale(code)
+        self.controller.config.ui.locale = code
+        if self.controller._config_path:
+            try:
+                self.controller.config.save(self.controller._config_path)
+            except OSError:
+                pass
+        if self._settings_dialog is not None:
+            self._settings_dialog.close()
+        if self._main is not None:
+            self._main.close()
+            self._main.deleteLater()
+            self._main = None
+        self.menu.clear()
+        self._build_menu()
+        translate_widget_tree(self.menu)
+        self.tray.setToolTip(tr(f"ALT-VoiceType · {self.controller.config.hotkey.combo} 开始/停止"))
+        self._show_panel(auto=True)
+
+    def _switch_input_language(self, code: str) -> None:
+        if self.controller.switch_input_language(code) and self._main is not None:
+            self._main.refresh()
 
     def _set_target_lang(self, code: str) -> None:
         self.controller.set_target_lang(code)

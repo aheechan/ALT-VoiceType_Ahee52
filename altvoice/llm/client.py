@@ -1,14 +1,21 @@
-﻿"""Minimal OpenAI-compatible chat client using only the standard library."""
+"""Minimal OpenAI-compatible chat client using only the standard library."""
 
 from __future__ import annotations
 
 import json
+import os
 import socket
 import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from typing import Any
+
+_LOCAL_NO_PROXY = "127.0.0.1,localhost,::1"
+for _key in ("NO_PROXY", "no_proxy"):
+    _current = os.environ.get(_key, "")
+    if _LOCAL_NO_PROXY not in _current:
+        os.environ[_key] = ",".join(v for v in (_current, _LOCAL_NO_PROXY) if v)
 
 
 class LLMError(RuntimeError):

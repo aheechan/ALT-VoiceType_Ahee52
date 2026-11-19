@@ -60,6 +60,7 @@ def build_correction_messages(
     context: list[dict[str, str]] | None = None,
     glossary: dict[str, str] | None = None,
     scene: str = "daily",
+    source_lang: str = "zh",
 ) -> list[dict[str, str]]:
     user = f"""场景：{scene}
 
@@ -74,7 +75,7 @@ def build_correction_messages(
 
 请只修正识别错误，输出 JSON。"""
     return [
-        {"role": "system", "content": SYSTEM_PROMPT_EN if is_english() else SYSTEM_PROMPT},
+        {"role": "system", "content": SYSTEM_PROMPT_EN if source_lang == "en" else SYSTEM_PROMPT},
         {"role": "user", "content": user},
     ]
 
