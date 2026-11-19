@@ -592,12 +592,21 @@ class VoiceAppController:
         self.warm_up()
         return True
 
-    def paste_text(self, text: str) -> None:
-        """Paste arbitrary text into the last target window."""
+    def paste_text(self, text: str, target_hwnd: int = 0) -> None:
+        """Paste text into an explicit target, or the last voice target."""
         value = (text or "").strip()
         if not value:
             return
-        self.restore_target_focus()
+        if target_hwnd:
+            from .inject.windows import set_foreground_window
+
+            set_foreground_window(target_hwnd)
+        elif self._target_hwnd:
+            self.restore_target_focus()
+        else:
+            # Never paste into the translator panel itself.
+            self._copy_to_clipboard(value)
+            return
         injector = get_injector(
             self.config.injection.method,
             restore_clipboard=self.config.injection.restore_clipboard,

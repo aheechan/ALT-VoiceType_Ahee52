@@ -11,6 +11,7 @@ from .context import ContextStore
 from .correct import CorrectionResult, Corrector, NullCorrector
 from .inject import InjectionError, Injector, NullInjector
 from .numerals import normalize_numbers
+from .textlang import detect_language
 from .translate import NullTranslator, TranslationError, Translator
 
 
@@ -99,6 +100,9 @@ class VoicePipeline:
         raw_text = (raw_text or "").strip()
         target = normalize_language(target_lang) or "zh"
         source = normalize_language(source_lang) or "zh"
+        detected = detect_language(raw_text)
+        if detected in ("zh", "en", "ja", "ko") and detected != source:
+            source = detected
         active_scene = scene or self.context.scene
 
         status("纠错中…")

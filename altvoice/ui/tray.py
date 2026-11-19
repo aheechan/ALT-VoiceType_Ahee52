@@ -619,11 +619,11 @@ class MainWindow(QWidget):
         self.text_output.setReadOnly(True)
         translator_layout.addWidget(self.text_output)
         paste_row = QHBoxLayout()
+        paste_row.addStretch(1)
         self.text_paste = QPushButton("粘贴文本")
         self.text_paste.setObjectName("secondary")
         self.text_paste.clicked.connect(self._paste_translation)
         paste_row.addWidget(self.text_paste)
-        paste_row.addStretch(1)
         translator_layout.addLayout(paste_row)
         self.translator_panel.setVisible(False)
         layout.addWidget(self.translator_panel)
@@ -693,8 +693,18 @@ class MainWindow(QWidget):
             QTimer.singleShot(1200, lambda: self.text_paste.setText(ui_tr("粘贴文本")))
             return
         QApplication.clipboard().setText(text)
+        target = 0
+        if os.name == "nt":
+            try:
+                from ..inject.windows import get_foreground_window
+
+                target = get_foreground_window()
+                if target == int(self.winId()):
+                    target = 0
+            except Exception:
+                target = 0
         self.hide()
-        QTimer.singleShot(120, lambda: self._tray._paste_translated(text))
+        QTimer.singleShot(120, lambda: self._tray._paste_translated(text, target))
 
     def _translate_text(self) -> None:
         if not self.translator_panel.isVisible():
@@ -1148,16 +1158,22 @@ class TrayApp(QObject):
         self.controller.restore_target_focus()
         self.controller.commit(result, text)
 
-    def _paste_translated(self, text: str) -> None:
+    def _paste_translated(self, text: str, target: int = 0) -> None:
         try:
-            self.controller.paste_text(text)
+            self.controller.paste_text(text, target)
         except Exception as exc:
             self._show_error(str(exc))
 
     def _toggle_ui_language(self) -> None:
         code = "zh" if is_english() else "en"
-        set_locale(code)
         old_geometry = self._main.geometry() if self._main is not None else None
+        translator_visible = bool(
+            self._main is not None and self._main.translator_panel.isVisible()
+        )
+        text_in = self._main.text_input.toPlainText() if translator_visible else ""
+        text_out = self._main.text_output.toPlainText() if translator_visible else ""
+        text_target = self._main.text_target.currentData() if translator_visible else None
+        set_locale(code)
         self.controller.config.ui.locale = code
         if self.controller._config_path:
             try:
@@ -1178,6 +1194,14 @@ class TrayApp(QObject):
         if old_geometry is not None and self._main is not None:
             self._main._placed = True
             self._main.setGeometry(old_geometry)
+        if translator_visible and self._main is not None:
+            self._main._toggle_translator()
+            self._main.text_input.blockSignals(True)
+            self._main.text_input.setPlainText(text_in)
+            self._main.text_input.blockSignals(False)
+            self._main.text_output.setPlainText(text_out)
+            if text_target:
+                self._main._select_text_target(text_target)
 
     def _switch_input_language(self, code: str) -> None:
         if self.controller.switch_input_language(code) and self._main is not None:
